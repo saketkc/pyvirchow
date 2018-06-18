@@ -28,7 +28,6 @@ install:
 - pip install https://github.com/Syntaf/travis-sphinx/archive/master.zip
 - make install
 script:
-- riboraptor
 - make test
 - travis-sphinx build --source=$TRAVIS_BUILD_DIR/docs
 after_success:
