@@ -7,7 +7,6 @@ import pytest
 
 from click.testing import CliRunner
 
-from pywsi import pywsi
 from pywsi import cli
 
 
