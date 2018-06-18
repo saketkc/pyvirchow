@@ -21,14 +21,6 @@ pywsi.cli module
     :undoc-members:
     :show-inheritance:
 
-pywsi.pywsi module
-------------------
-
-.. automodule:: pywsi.pywsi
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------

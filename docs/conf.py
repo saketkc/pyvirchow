@@ -166,4 +166,4 @@ texinfo_documents = [
 ]
 
 
-
+numpydoc_show_class_members = False
