@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """Console script for pywsi."""
 import sys
 import click

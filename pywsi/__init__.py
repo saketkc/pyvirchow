@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """Top-level package for pywsi."""
 
 __author__ = """Saket Choudhary"""
