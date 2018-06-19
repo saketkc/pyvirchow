@@ -1,2 +1,2 @@
-from macenko import MacenkoNormalization
-from reinhard import ReinhardNormalization
+from .macenko import MacenkoNormalization
+from .reinhard import ReinhardNormalization
