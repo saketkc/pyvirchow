@@ -27,13 +27,13 @@ class MacenkoNormalization(object):
 
         Input: RGB Slide
         1. Convert RGB to OD
-        2. Remove data with OD intensity less than β
+        2. Remove data with OD intensity less than beta
         3. Calculate SVD on the OD tuples
         4. Create plane from the SVD directions corresponding to the
         two largest singular values
         5. Project data onto the plane, and normalize to unit length
         6. Calculate angle of each point wrt the first SVD direction
-        7. Find robust extremes (α th and (100 − α)th percentiles) of the
+        7. Find robust extremes (alpha th and (100 − alpha)th percentiles) of the
         angle
         8. Convert extreme values back to OD space
 
