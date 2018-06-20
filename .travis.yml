@@ -27,16 +27,20 @@ install:
 - pip install -U sphinx mock pytest-cov codecov pip
 - pip install -U numpydoc ipython sphinxcontrib-fulltoc guzzle_sphinx_theme
 - pip install https://github.com/Syntaf/travis-sphinx/archive/master.zip
-- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then pip install -U https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp27-none-linux_x86_64.whl;
-  elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then pip install -U https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp35-cp35m-linux_x86_64.whl;
-  elif [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then pip install -U https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp36-cp36m-linux_x86_64.whl;
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+    pip install -U https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp27-none-linux_x86_64.whl;
+  elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+    pip install -U https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp35-cp35m-linux_x86_64.whl;
+  elif [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+    pip install -U https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp36-cp36m-linux_x86_64.whl;
+  fi
 - make install
 script:
 - make test
 - travis-sphinx build --source=$TRAVIS_BUILD_DIR/docs
 after_success:
 - codecov --token=60f295c4-8b5c-45f3-a65e-8f45d7e59a11
-- travis-sphinx deploy1
+- travis-sphinx deploy
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
