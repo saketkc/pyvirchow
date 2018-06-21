@@ -3,11 +3,24 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import cv2
+from skimage.morphology import closing
+from skimage.morphology import dilation
+from skimage.morphology import erosion
+from skimage.morphology import opening
+from skimage.morphology import disk
+
 import numpy as np
 
 
-def imerode(image, kernel_size=5):
+def _get_kernel(kernel_size, use_disk=True):
+    if not use_disk:
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    else:
+        kernel = disk(kernel_size)
+    return kernel
+
+
+def imerode(image, kernel_size=5, use_disk=True):
     """Erode an image.
 
     Parameters
@@ -16,18 +29,20 @@ def imerode(image, kernel_size=5):
            np.uint8 binary thresholded image
     kernel_size: int
                  Integer
+    use_disk: bool
+              Use disk instead of a NxN kernel
 
     Returns
     -------
     eroded: array_like
             np.uint8 eroded image
     """
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    eroded = cv2.erode(image, kernel, iterations=1)
+    kernel = _get_kernel(kernel_size, use_disk)
+    eroded = erosion(image, kernel)
     return eroded
 
 
-def imdilate(image, kernel_size=5):
+def imdilate(image, kernel_size=5, use_disk=True):
     """Dilate an image
 
     Parameters
@@ -42,12 +57,12 @@ def imdilate(image, kernel_size=5):
     dilated: array_like
              np.uint8 eroded image
     """
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    dilated = cv2.dilate(image, kernel, iterations=1)
+    kernel = _get_kernel(kernel_size, use_disk)
+    dilated = dilation(image, kernel)
     return dilated
 
 
-def imopen(image, kernel_size):
+def imopen(image, kernel_size=5, use_disk=True):
     """Open an image.
 
     Parameters
@@ -62,12 +77,12 @@ def imopen(image, kernel_size):
     opened: array_like
             np.uint8 opened
     """
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    opened = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+    kernel = _get_kernel(kernel_size, use_disk)
+    opened = opening(image, kernel)
     return opened
 
 
-def imclose(image, kernel_size):
+def imclose(image, kernel_size=5, use_disk=True):
     """Close an image.
 
     Parameters
@@ -82,12 +97,12 @@ def imclose(image, kernel_size):
     closed: array_like
             np.uint8 opened
     """
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    closed = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+    kernel = _get_kernel(kernel_size, use_disk)
+    closed = closing(image, kernel)
     return closed
 
 
-def open_close(image, open_kernel_size=5, close_kernel_size=5):
+def open_close(image, open_kernel_size=5, close_kernel_size=5, use_disk=True):
     """Open followed by closing an image.
 
     Parameters
@@ -104,6 +119,6 @@ def open_close(image, open_kernel_size=5, close_kernel_size=5):
     closed: array_like
             np.uint8 opened-closed
     """
-    opened = imopen(image, open_kernel_size)
-    closed = imclose(opened, close_kernel_size)
+    opened = imopen(image, open_kernel_size, use_disk)
+    closed = imclose(opened, close_kernel_size, use_disk)
     return closed

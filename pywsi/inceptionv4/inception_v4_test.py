@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 
 import tensorflow as tf
 
-from . import inception
+from pywsi.inceptionv4 import inception
 
 
 class InceptionTest(tf.test.TestCase):

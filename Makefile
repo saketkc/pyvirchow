@@ -68,7 +68,7 @@ coverage: ## check code coverage quickly with the default Python
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/pywsi.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ pywsi pywsi/inception/inception.py pywsi/inception/inception_resnet_v2.py pywsi/inception/inception_utils.py pywsi/inception/inception_v1.py pywsi/inception/inception_v2.py pywsi/inception/inception_v3.py pywsi/inception/inception_v4.py pywsi/inception/inception_v4_test.py pywsi/inception/__init__.py
+	sphinx-apidoc -o docs/ pywsi pywsi/inceptionv4/inception.py pywsi/inceptionv4/inception_resnet_v2.py pywsi/inceptionv4/inception_utils.py pywsi/inceptionv4/inception_v1.py pywsi/inceptionv4/inception_v2.py pywsi/inceptionv4/inception_v3.py pywsi/inceptionv4/inception_v4.py pywsi/inceptionv4/inception_v4_test.py pywsi/inceptionv4/__init__.py
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html

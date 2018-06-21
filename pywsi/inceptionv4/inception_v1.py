@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 
 import tensorflow as tf
 
-from . import inception_utils
+from pywsi.inceptionv4 import inception_utils
 
 slim = tf.contrib.slim
 trunc_normal = lambda stddev: tf.truncated_normal_initializer(0.0, stddev)

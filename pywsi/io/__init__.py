@@ -3,12 +3,20 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import six
 import ntpath
 import warnings
-import cv2
 import openslide
 from openslide import OpenSlide
 import matplotlib.pyplot as plt
+from skimage.io import imread
+from skimage.color import rgb2gray
+from skimage.color import rgb2hsv
+from skimage.color import rgb2lab
+from skimage.color import lab2rgb
+
+from skimage.filters import threshold_mean
+from skimage.filters import threshold_otsu, rank
 
 
 def path_leaf(path):
@@ -41,17 +49,16 @@ def read_as_rgb(image_path):
     rgb_image: array_like
                np.uint8 array of RGB values
     """
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = imread(image_path)
     return image
 
 
-def read_as_lab(image_path):
+def read_as_lab(image):
     """Read image as RGB
 
     Parameters
     ----------
-    image_path: str
+    imag: str
                 Path to image
 
     Returns
@@ -59,63 +66,51 @@ def read_as_lab(image_path):
     lab_image: array_like
                np.uint8 array of LAB values
     """
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    if isinstance(image, six.string_types):
+        image = read_as_rgb(image)
+    image = rgb2lab(image)
     return image
 
 
-def rgb_to_hsv(image):
+def read_as_hsv(image):
     """Convert RGB image to HSV
 
     Parameters
     ----------
-    image: array_like
-           np.uint8 array of RGB values
+    image: array_like or str
+           np.uint8 array of RGB values or image path
 
     Returns
     -------
     hsv_image: array_like
                np.uint8 array of HSV values
     """
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    if isinstance(image, six.string_types):
+        image = read_as_rgb(image)
+    hsv_image = rgb2hsv(image)
     return hsv_image
 
 
-def rgb_to_lab(image):
-    """Convert RGB image to LAB coordinates
+def read_as_gray(image):
+    """Convert RGB image to gray
 
     Parameters
     ----------
-    image: array_like
-           np.uint8 array of RGB values
+    image: array_like or str
+           np.uint8 array of RGB values or image path
 
     Returns
     -------
-    lab_image: array_like
-               np.float32 array of LAB values
+    gray_image: array_like
+               np.uint8 array of HSV values
     """
-    lab_image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB).astype(np.float32)
-    return lab_image
+    if isinstance(image, six.string_types):
+        image = read_as_rgb(image)
+    gray_image = rgb2gray(image)
+    return gray_image
 
 
-def lab_to_rgb(image):
-    """Convert LAB image to RGB coordinates
-
-    Parameters
-    ----------
-    image: array_like
-           np.float32 array of LAB values
-
-    Returns
-    -------
-    rgb_image: array_like
-               np.uint8 array of LAB values
-    """
-    rgb_image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_LAB2RGB)
-    return rgb_image
-
-
-def imshow(image, ax=None, figsize=(10, 10)):
+def imshow(image, is_gray=True, ax=None, figsize=(10, 10)):
     """Visualize an rgb image.
 
     Parameters
@@ -136,7 +131,10 @@ def imshow(image, ax=None, figsize=(10, 10)):
         fig, ax = plt.subplots(figsize=figsize)
     else:
         fig = ax.get_figure()
-    ax.imshow(image)
+    if is_gray:
+        ax.imshow(image, cmap='gray')
+    else:
+        ax.imshow(image)
     ax.axis('off')
     fig.tight_layout()
     return ax
@@ -197,7 +195,7 @@ class WSIReader(OpenSlide):
             width, height = patch_size
         patch = self.read_region((xstart, ystart), level,
                                  (width, height)).convert('RGB')
-        return patch
+        return np.array(patch)
 
     def get_patch_by_magnification(self,
                                    xstart,
@@ -234,12 +232,12 @@ class WSIReader(OpenSlide):
         patch = self.read_region(
             (xstart, ystart), possible_level,
             (rescaled_width, rescaled_height)).convert('RGB')
-        return patch
+        return np.array(patch)
 
     def show_all_properties(self):
         """Print all properties.
         """
-        print('Properties')
+        print('Properties:')
         for key in self.properties.keys():
             print('{} : {}'.format(key, self.properties[key]))
 
@@ -249,6 +247,19 @@ class WSIReader(OpenSlide):
                   magnification=None,
                   level=None,
                   patch_size=1000):
+        """Visualize patch.
+
+        xstart: int
+                X coordinate of top left corner of patch
+        ystart: int
+                Y coordinate of top left corner of patch
+        magnification: int
+                       If provided, uses a magnification
+        level: int
+               What level of pyramid to use
+        patch_size: int
+                    Size of Patch
+        """
         if not magnification and not level:
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
