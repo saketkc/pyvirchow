@@ -3,8 +3,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from ..io import rgb_to_lab
-from ..io import lab_to_rgb
+from ..io import read_as_lab
+from skimage.color import lab2rgb
 
 
 class ReinhardNormalization(object):
@@ -26,7 +26,7 @@ class ReinhardNormalization(object):
                       np.uint8 of rgb values
 
         """
-        target_image = lab_to_rgb(target_image)
+        target_image = lab2rgb(target_image)
         self.target_l, self.target_a, self.target_b = cv2.split(target_image)
         self.target_mean, self.target_std = self.get_mean_and_std(target_image)
 
@@ -51,7 +51,7 @@ class ReinhardNormalization(object):
         source_b = np.clip(source_b, 0, 255)
 
         transfer = cv2.merge([source_l, source_a, source_b])
-        transfer = lab_to_rgb(transfer)
+        transfer = lab2rgb(transfer)
         return transfer
 
     @staticmethod
