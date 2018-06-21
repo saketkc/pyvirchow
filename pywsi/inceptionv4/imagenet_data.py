@@ -20,7 +20,7 @@ from __future__ import print_function
 
 
 
-from inception.dataset import Dataset
+from pywsi.inceptionv4.dataset import Dataset
 
 
 class ImagenetData(Dataset):

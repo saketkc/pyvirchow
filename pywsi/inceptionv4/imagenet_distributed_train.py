@@ -23,8 +23,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-import .inception_distributed_train
-from .imagenet_data import ImagenetData
+from pywsi.inceptionv4 import inception_distributed_train
+from pywsi.inceptionv4.imagenet_data import ImagenetData
 
 FLAGS = tf.app.flags.FLAGS
 
