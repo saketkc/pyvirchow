@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import six
 from ..io import WSIReader
-from . import otsu_thresholding, plot_contours
+from .operations import otsu_thresholding, plot_contours
 
 
 class TissuePatch(object):
