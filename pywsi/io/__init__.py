@@ -9,14 +9,21 @@ import warnings
 import openslide
 from openslide import OpenSlide
 import matplotlib.pyplot as plt
+import numpy as np
+
 from skimage.io import imread
+from skimage.color import label2rgb
 from skimage.color import rgb2gray
 from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
-from skimage.color import lab2rgb
 
-from skimage.filters import threshold_mean
-from skimage.filters import threshold_otsu, rank
+from skimage.filters import threshold_otsu
+
+from skimage.measure import label, regionprops
+
+from skimage.segmentation import clear_border
+from ..morphology import open_close
+import matplotlib.patches as mpatches
 
 
 def path_leaf(path):
@@ -269,3 +276,87 @@ class WSIReader(OpenSlide):
         else:
             patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
         return imshow(patch)
+
+
+def get_channel_hsv(hsv_image, channel='saturation'):
+    """Get only particular channel values from hsv image
+
+
+    Parameters
+    ----------
+    hsv_image: np.unit8 image
+               Input hsv image
+
+    channel: string
+             'hue'/'saturation'/'value'
+    """
+    assert channel in ['hue', 'saturation',
+                       'value'], "Unkown channel specified"
+    if channel == 'hue':
+        return hsv_image[:, :, 0]
+
+    if channel == 'saturation':
+        return hsv_image[:, :, 1]
+
+    if channel == 'value':
+        return hsv_image[:, :, 2]
+
+
+def otsu_thresholding(rgb_image,
+                      channel='saturation',
+                      open_kernel_size=5,
+                      close_kernel_size=5,
+                      use_disk=True):
+    """Perform OTSU thresholding followed by closing-then-opening
+
+    rgb_image: np.uint8
+               Input RGB image
+    channel: string
+             Channel on which to perform thresholding
+    open_kernel_size: int
+                      Size of opening kernel
+    close_kernel_size: int
+                       Size of closing kernel
+    use_disk: bool
+              Should use disk instead of a square
+    """
+    hsv_image = rgb2hsv(rgb_image)
+    hsv_ch = get_channel_hsv(hsv_image, channel)
+    otsu = threshold_otsu(hsv_ch)
+    thresholded = hsv_ch > otsu
+
+    close_then_open = open_close(thresholded, open_kernel_size,
+                                 close_kernel_size, use_disk)
+    return close_then_open
+
+
+def plot_contours(bw_image, rgb_image, ax=None):
+    """Plot contours over a otsu thresholded binary image.
+
+    Parameters
+    ----------
+    bw_image: np.uint8
+              Input
+    """
+    cleared = clear_border(bw_image)
+    label_image = label(cleared)
+    image_label_overlay = label2rgb(label_image, image=rgb_image)
+
+    if not ax:
+        fig, ax = plt.subplots(figsize=(10, 6))
+    else:
+        fig = ax.get_figure()
+    ax.imshow(image_label_overlay)
+    for region in regionprops(label_image):
+        minr, minc, maxr, maxc = region.bbox
+        rect = mpatches.Rectangle(
+            (minc, minr),
+            maxc - minc,
+            maxr - minr,
+            fill=False,
+            edgecolor='red',
+            linewidth=2)
+        ax.add_patch(rect)
+    ax.set_axis_off()
+    fig.tight_layout()
+    return ax

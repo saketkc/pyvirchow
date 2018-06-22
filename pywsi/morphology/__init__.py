@@ -62,7 +62,7 @@ def imdilate(image, kernel_size=5, use_disk=True):
     return dilated
 
 
-def imopen(image, kernel_size=5, use_disk=True):
+def imopening(image, kernel_size=5, use_disk=True):
     """Open an image.
 
     Parameters
@@ -82,7 +82,7 @@ def imopen(image, kernel_size=5, use_disk=True):
     return opened
 
 
-def imclose(image, kernel_size=5, use_disk=True):
+def imclosing(image, kernel_size=5, use_disk=True):
     """Close an image.
 
     Parameters
@@ -119,6 +119,6 @@ def open_close(image, open_kernel_size=5, close_kernel_size=5, use_disk=True):
     closed: array_like
             np.uint8 opened-closed
     """
-    opened = imopen(image, open_kernel_size, use_disk)
-    closed = imclose(opened, close_kernel_size, use_disk)
+    opened = imopening(image, open_kernel_size, use_disk)
+    closed = imclosing(opened, close_kernel_size, use_disk)
     return closed
