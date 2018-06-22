@@ -70,8 +70,7 @@ class TissuePatch(object):
         if target_level is None and target_magnification is None:
             raise ValueError(
                 'At least one of target_level and target_magnification\
-                should be specified.'
-            )
+                should be specified.')
 
         if target_level:
             # Prefer this if it is specified
