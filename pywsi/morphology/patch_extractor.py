@@ -1,26 +1,29 @@
 from __future__ import absolute_import
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import six
+from .operations import otsu_thresholding, plot_contours, contours_and_bounding_boxes
 from ..io import WSIReader
-from .operations import otsu_thresholding, plot_contours
-
+import numpy as np
+import pickle
 
 class TissuePatch(object):
-    def __init__(self, reference_image):
+    def __init__(self, reference_image, level0_mag=None):
         if isinstance(reference_image, six.string_types):
-            self.ref_img = WSIReader(reference_image)
+            self.ref_img = WSIReader(reference_image, level0_mag)
         else:
-            assert isinstance(
-                reference_image,
-                WSIReader), 'input image should be string or WSIReader'
+            assert isinstance(reference_image,
+                              WSIReader) is True, 'input image should be string or WSIReader'
             self.ref_img = reference_image
         self.otsu_thresholed = self.threshold()
-        self.ref_level = 9
 
-    def threshold(self, level=9, channel='saturation'):
+    def threshold(self,
+                  level=5,
+                  channel='saturation',
+                  open_kernel_size=5,
+                  close_kernel_size=10,
+                  use_disk=True):
         """Perform otsu thresholding
 
         Parameters
@@ -31,23 +34,45 @@ class TissuePatch(object):
         channel: string
                  'hue'/'saturation'/'value'
         """
-        self.ref_level = level
-        self.ref_magnification = self.ref_img.magnifications[self.ref_level]
-        zoomed_out_patch_rgb = self.ref_img.get_patch_by_level(
+        self.ref_thresholding_level = level
+        self.ref_magnification = self.ref_img.magnifications[self.ref_thresholding_level]
+        self.zoomed_out_patch_rgb = self.ref_img.get_patch_by_level(
             0, 0, level, None)
-        self.otsu_thresholded = otsu_thresholding(zoomed_out_patch_rgb)
+        self.magnification_factor = self.ref_magnification / self.ref_img.level0_mag
+        self.otsu_thresholded = otsu_thresholding(self.zoomed_out_patch_rgb,
+                                                  channel, open_kernel_size,
+                                                  close_kernel_size, use_disk)
         return self.otsu_thresholded
+
+    def get_bounding_boxes(self):
+        """Get bounding boxes for the reference zoomed out version."""
+        _, bounding_boxes = contours_and_bounding_boxes(self.otsu_thresholded, self.zoomed_out_patch_rgb)
+        return bounding_boxes
 
     def draw_contours(self):
         """Draw contours and rectangular boxes"""
-        plot_contours(self.otsu_thresholded)
+        plot_contours(self.otsu_thresholded, self.zoomed_out_patch_rgb)
+
+    def save_mask(self, savedir):
+        """Save tissue patch.
+
+        savedir: string
+                Path to directory where to save the pickle
+        """
+        ID = self.ref_img.ID
+        os.makedirs(savedir, exist_ok=True)
+        filepath = os.path.join(savedir, ID+'_TissuePatch.pickle')
+        pickler = open(filepath, 'wb')
+        pickle.dump(self, pickler)
+        pickler.close()
+
 
     def extract_masked_patch(self,
                              x0,
                              y0,
                              target_level=None,
                              target_magnification=None,
-                             patch_size=299):
+                             patch_size=300):
         """Extract patch at a particular level
 
         Parameters
@@ -72,12 +97,26 @@ class TissuePatch(object):
                 'At least one of target_level and target_magnification\
                 should be specified.')
 
-        if target_level:
+        if target_level is not None:
             # Prefer this if it is specified
             target_magnification = self.ref_img.magnifications[target_level]
-        magnification_factor = target_magnification / self.ref_img.level0_mag
-        x0 = x0 * magnification_factor
-        y0 = y0 * magnification_factor
-        final_size = magnification_factor * patch_size
+        else:
+            filtered_mag = list(
+                filter(lambda x: x >= target_magnification, self.ref_img.magnifications))
+            # What is the possible magnification available?
+            target_magnification = min(filtered_mag)
+            possible_level = self.ref_img.magnifications.index(target_magnification)
+        print('target_mag: {}'.format(target_magnification))
+        print('mags: {}'.format(self.ref_img.magnifications))
+        magnification_factor = target_magnification / self.ref_magnification
+        x0 = int(x0 * self.magnification_factor)
+        y0 = int(y0 * self.magnification_factor)
+        #final_size = int(self.magnification_factor * patch_size)
+        final_size = int(patch_size * self.ref_magnification/target_magnification)
+        print('target_magnification: {} | ref_mag: {}'.format(target_magnification, self.ref_img.level0_mag))
+        print('Final size: {} | Patch size: {}'.format(final_size, patch_size))
+        print('x0: {} | x1: {}'.format(x0, x0+final_size))
+        print('y0: {} | y1: {}'.format(y0, y0+final_size))
+
         patch = self.otsu_thresholded[x0:x0 + final_size, y0:y0 + final_size]
-        return patch
+        return np.array(patch)

@@ -3,22 +3,22 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from skimage.morphology import closing
-from skimage.morphology import dilation
-from skimage.morphology import erosion
-from skimage.morphology import opening
-from skimage.morphology import disk
-
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.filters import threshold_otsu
-
-from skimage.measure import label, regionprops
-
-from skimage.segmentation import clear_border
 import matplotlib.patches as mpatches
+
 from skimage.color import label2rgb
 from skimage.color import rgb2hsv
+
+from skimage.filters import threshold_otsu
+
+from skimage.morphology import closing
+from skimage.morphology import dilation
+from skimage.morphology import disk
+from skimage.morphology import erosion
+from skimage.morphology import opening
+from skimage.measure import label, regionprops
+from skimage.segmentation import clear_border
 
 from ..io.operations import get_channel_hsv
 
@@ -135,6 +135,28 @@ def open_close(image, open_kernel_size=5, close_kernel_size=5, use_disk=True):
     return closed
 
 
+def close_open(image, open_kernel_size=5, close_kernel_size=5, use_disk=True):
+    """Close followed by opening an image.
+
+    Parameters
+    ----------
+    image: array_like
+           np.uint8 binary thresholded image
+    open_kernel_size: int
+                      Integer
+    close_kernel_size: int
+                       Integer
+
+    Returns
+    -------
+    closed: array_like
+            np.uint8 opened-closed
+    """
+    closed = imclosing(image, close_kernel_size, use_disk)
+    opened = imopening(closed, open_kernel_size, use_disk)
+    return opened
+
+
 def otsu_thresholding(rgb_image,
                       channel='saturation',
                       open_kernel_size=5,
@@ -154,14 +176,42 @@ def otsu_thresholding(rgb_image,
               Should use disk instead of a square
     """
     hsv_image = rgb2hsv(rgb_image)
+    hsv_image = np.array(hsv_image)
     hsv_ch = get_channel_hsv(hsv_image, channel)
     otsu = threshold_otsu(hsv_ch)
-    thresholded = hsv_ch > otsu
+    thresholded = (hsv_ch > otsu)
 
-    close_then_open = open_close(thresholded, open_kernel_size,
+    close_then_open = close_open(thresholded, open_kernel_size,
                                  close_kernel_size, use_disk)
+    assert close_then_open.dtype == bool, 'Mask not boolean'
     return close_then_open
 
+
+def contours_and_bounding_boxes(bw_image, rgb_image):
+    """Extract contours and bounding_boxes.
+
+    Parameters
+    ----------
+    bw_image: np.uint8
+              Input thresholded image
+    rgb_image: np.uint8
+               Input rgb image
+
+
+    Returns
+    -------
+    image_label_overlay: label
+    """
+    cleared = clear_border(bw_image)
+    label_image = label(cleared)
+    image_label_overlay = label2rgb(label_image, image=rgb_image)
+
+    bounding_boxes = []
+    for region in regionprops(label_image):
+        minr, minc, maxr, maxc = region.bbox
+        box = ((minc, minr), maxc - minc, maxr - minr)
+        bounding_boxes.append(box)
+    return image_label_overlay, bounding_boxes
 
 def plot_contours(bw_image, rgb_image, ax=None):
     """Plot contours over a otsu thresholded binary image.
@@ -171,20 +221,17 @@ def plot_contours(bw_image, rgb_image, ax=None):
     bw_image: np.uint8
               Input
     """
-    cleared = clear_border(bw_image)
-    label_image = label(cleared)
-    image_label_overlay = label2rgb(label_image, image=rgb_image)
-
+    image_label_overlay, bounding_boxes = contours_and_bounding_boxes(bw_image, rgb_image)
     if not ax:
         fig, ax = plt.subplots(figsize=(10, 6))
     else:
         fig = ax.get_figure()
-    ax.imshow(image_label_overlay)
-    for region in regionprops(label_image):
-        minr, minc, maxr, maxc = region.bbox
+    ax.imshow(rgb_image)
+    for xy, width, height in bounding_boxes:
         rect = mpatches.Rectangle(
-            (minc, minr),
-            maxc - minc,
+            xy,
+            width,
+            height,
             fill=False,
             edgecolor='red',
             linewidth=2)

@@ -133,7 +133,7 @@ def imshow(image, is_gray=True, ax=None, figsize=(10, 10)):
         ax.imshow(image, cmap='gray')
     else:
         ax.imshow(image)
-    ax.axis('off')
+    ax.set_axis_off()
     fig.tight_layout()
     return ax
 
@@ -158,13 +158,14 @@ class WSIReader(OpenSlide):
                 warnings.warn(
                     '''Inferred and provided level0 mag mismatch.
                               Provided {}, but found {}.
-                    Will use the latter.'''
-                    .format(inferred_level0_mag, level0_mag), UserWarning)
+                    Will use the latter.'''.format(inferred_level0_mag,
+                                                   level0_mag), UserWarning)
                 self.level0_mag = level0_mag
         else:
             self.level0_mag = level0_mag
 
         self.uid = path_leaf(image_path)
+        self.filepath = image_path
         width, height = self.dimensions
         self.width = width
         self.height = height
@@ -190,6 +191,7 @@ class WSIReader(OpenSlide):
         """
         if not patch_size:
             width, height = self.level_dimensions[level]
+            print('patch  width, height: {} {}'.format(width, height))
         else:
             width, height = patch_size
         patch = self.read_region((xstart, ystart), level,
@@ -231,6 +233,7 @@ class WSIReader(OpenSlide):
         patch = self.read_region(
             (xstart, ystart), possible_level,
             (rescaled_width, rescaled_height)).convert('RGB')
+        print ('rescaled_width: {}'.format(rescaled_width))
         return np.array(patch)
 
     def show_all_properties(self):
