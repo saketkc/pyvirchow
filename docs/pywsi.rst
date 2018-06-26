@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     pywsi.io
+    pywsi.misc
     pywsi.morphology
     pywsi.normalization
 

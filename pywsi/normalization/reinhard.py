@@ -36,6 +36,7 @@ class ReinhardNormalization(object):
 
     def transform(self, source_image):
         """Perform normalization on source image.
+
         Parameters
         ----------
         source_image: array_like
