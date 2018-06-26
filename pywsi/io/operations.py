@@ -233,7 +233,7 @@ class WSIReader(OpenSlide):
         patch = self.read_region(
             (xstart, ystart), possible_level,
             (rescaled_width, rescaled_height)).convert('RGB')
-        print ('rescaled_width: {}'.format(rescaled_width))
+        print('rescaled_width: {}'.format(rescaled_width))
         return np.array(patch)
 
     def show_all_properties(self):

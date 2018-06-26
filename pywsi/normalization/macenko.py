@@ -33,7 +33,8 @@ class MacenkoNormalization(object):
         two largest singular values
         5. Project data onto the plane, and normalize to unit length
         6. Calculate angle of each point wrt the first SVD direction
-        7. Find robust extremes (alpha th and (100 - alpha)th percentiles) of the  angle
+        7. Find robust extremes (alpha th and (100 - alpha)th
+        percentiles) of the  angle
         8. Convert extreme values back to OD space
 
         """
@@ -72,7 +73,7 @@ class MacenkoNormalization(object):
         OD = RGB2OD(source_image)
         OD = OD.reshape((-1, 3))
         OD = (OD[(OD > self.beta).any(axis=1), :])
-        ## do-PCA
+        # do-PCA
         OD_cov = np.cov(OD, rowvar=False)
         w, v = LA.eigh(OD_cov)
         # Project OD into first two directions

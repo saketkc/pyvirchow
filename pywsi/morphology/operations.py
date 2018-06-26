@@ -213,6 +213,7 @@ def contours_and_bounding_boxes(bw_image, rgb_image):
         bounding_boxes.append(box)
     return image_label_overlay, bounding_boxes
 
+
 def plot_contours(bw_image, rgb_image, ax=None):
     """Plot contours over a otsu thresholded binary image.
 
@@ -221,7 +222,8 @@ def plot_contours(bw_image, rgb_image, ax=None):
     bw_image: np.uint8
               Input
     """
-    image_label_overlay, bounding_boxes = contours_and_bounding_boxes(bw_image, rgb_image)
+    image_label_overlay, bounding_boxes = contours_and_bounding_boxes(
+        bw_image, rgb_image)
     if not ax:
         fig, ax = plt.subplots(figsize=(10, 6))
     else:
@@ -229,12 +231,7 @@ def plot_contours(bw_image, rgb_image, ax=None):
     ax.imshow(rgb_image)
     for xy, width, height in bounding_boxes:
         rect = mpatches.Rectangle(
-            xy,
-            width,
-            height,
-            fill=False,
-            edgecolor='red',
-            linewidth=2)
+            xy, width, height, fill=False, edgecolor='red', linewidth=2)
         ax.add_patch(rect)
     ax.set_axis_off()
     fig.tight_layout()
