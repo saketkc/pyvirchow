@@ -257,4 +257,4 @@ def plot_contours(bw_image, rgb_image, ax=None):
         ax.add_patch(rect)
     ax.set_axis_off()
     fig.tight_layout()
-    return ax
+    return ax, bounding_boxes

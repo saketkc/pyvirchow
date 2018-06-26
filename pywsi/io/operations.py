@@ -332,4 +332,6 @@ class WSIReader(OpenSlide):
             scale_factor = self.get_level_scale_factor(level)
 
         ax = imshow(patch, figsize=figsize)
-        _ = draw_annotation(annotation_json, xstart, ystart, scale_factor, ax)
+        annotation_polygons = draw_annotation(annotation_json, xstart, ystart,
+                                              scale_factor, ax)
+        self.annotation_polygons = annotation_polygons

@@ -56,7 +56,8 @@ class TissuePatch(object):
 
     def draw_contours(self):
         """Draw contours and rectangular boxes"""
-        plot_contours(self.otsu_thresholded, self.zoomed_out_patch_rgb)
+        ax, self.tissue_bounding_boxes = plot_contours(
+            self.otsu_thresholded, self.zoomed_out_patch_rgb)
 
     def save_mask(self, savedir):
         """Save tissue patch.
