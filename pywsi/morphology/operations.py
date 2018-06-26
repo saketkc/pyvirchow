@@ -20,7 +20,29 @@ from skimage.morphology import opening
 from skimage.measure import label, regionprops
 from skimage.segmentation import clear_border
 
-from ..io.operations import get_channel_hsv
+
+def get_channel_hsv(hsv_image, channel='saturation'):
+    """Get only particular channel values from hsv image
+
+
+    Parameters
+    ----------
+    hsv_image: np.unit8 image
+               Input hsv image
+
+    channel: string
+             'hue'/'saturation'/'value'
+    """
+    assert channel in ['hue', 'saturation',
+                       'value'], "Unkown channel specified"
+    if channel == 'hue':
+        return hsv_image[:, :, 0]
+
+    if channel == 'saturation':
+        return hsv_image[:, :, 1]
+
+    if channel == 'value':
+        return hsv_image[:, :, 2]
 
 
 def _get_kernel(kernel_size, use_disk=True):

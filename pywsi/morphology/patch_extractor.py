@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 
 import os
 import six
-from .operations import otsu_thresholding, plot_contours, contours_and_bounding_boxes
 from ..io import WSIReader
+from .operations import otsu_thresholding, plot_contours, contours_and_bounding_boxes
 import numpy as np
 import pickle
 

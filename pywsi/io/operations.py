@@ -16,6 +16,8 @@ from skimage.color import rgb2gray
 from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
 
+from ..morphology.mask import draw_annotation
+
 
 def path_leaf(path):
     """Get base and tail of filepath
@@ -198,6 +200,44 @@ class WSIReader(OpenSlide):
                                  (width, height)).convert('RGB')
         return np.array(patch)
 
+    def get_mag_scale_factor(self, magnification):
+        """Given a magnification, get scale factor.
+
+        If the magnification is not in the list of possible magnifications,
+        get the next highest possible magnification.
+
+        Parameters
+        ----------
+        magnification: float
+                       Desired magnification
+
+        Returns
+        -------
+        scale_factor: float
+                      Corresponding scale factor
+        """
+        filtered_mag = list(
+            filter(lambda x: x >= magnification, self.magnifications))
+        # What is the possible magnification available?
+        possible_mag = min(filtered_mag)
+        scale_factor = possible_mag / self.level0_mag
+        return scale_factor
+
+    def get_level_scale_factor(self, level):
+        """Given a level, get scale factor.
+
+        Parameters
+        ----------
+        level: float
+               Desired level
+
+        Returns
+        -------
+        scale_factor: float
+                      Corresponding scale factor
+        """
+        return self.magnifications[level] / self.level0_mag
+
     def get_patch_by_magnification(self,
                                    xstart,
                                    ystart,
@@ -233,7 +273,6 @@ class WSIReader(OpenSlide):
         patch = self.read_region(
             (xstart, ystart), possible_level,
             (rescaled_width, rescaled_height)).convert('RGB')
-        print('rescaled_width: {}'.format(rescaled_width))
         return np.array(patch)
 
     def show_all_properties(self):
@@ -248,7 +287,8 @@ class WSIReader(OpenSlide):
                   ystart,
                   magnification=None,
                   level=None,
-                  patch_size=1000):
+                  patch_size=1000,
+                  figsize=(10, 10)):
         """Visualize patch.
 
         xstart: int
@@ -270,28 +310,26 @@ class WSIReader(OpenSlide):
                                                     magnification, patch_size)
         else:
             patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
-        return imshow(patch)
+        return imshow(patch, figsize=figsize)
 
+    def visualize_with_annotation(self,
+                                  xstart,
+                                  ystart,
+                                  annotation_json,
+                                  magnification=None,
+                                  level=None,
+                                  patch_size=1000,
+                                  figsize=(10, 10)):
+        if not magnification and not level:
+            raise ValueError(
+                'Atleast one of magnification or level must be selected')
+        if magnification:
+            patch = self.get_patch_by_magnification(xstart, ystart,
+                                                    magnification, patch_size)
+            scale_factor = self.get_mag_scale_factor(magnification)
+        else:
+            patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
+            scale_factor = self.get_level_scale_factor(level)
 
-def get_channel_hsv(hsv_image, channel='saturation'):
-    """Get only particular channel values from hsv image
-
-
-    Parameters
-    ----------
-    hsv_image: np.unit8 image
-               Input hsv image
-
-    channel: string
-             'hue'/'saturation'/'value'
-    """
-    assert channel in ['hue', 'saturation',
-                       'value'], "Unkown channel specified"
-    if channel == 'hue':
-        return hsv_image[:, :, 0]
-
-    if channel == 'saturation':
-        return hsv_image[:, :, 1]
-
-    if channel == 'value':
-        return hsv_image[:, :, 2]
+        ax = imshow(patch, figsize=figsize)
+        _ = draw_annotation(annotation_json, xstart, ystart, scale_factor, ax)
