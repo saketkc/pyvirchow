@@ -16,6 +16,9 @@ from skimage.color import rgb2gray
 from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
 
+import json
+from matplotlib.patches import Polygon
+
 
 def translate_and_scale_polygon(polygon,
                                 x0,
@@ -373,7 +376,7 @@ class WSIReader(OpenSlide):
                   ystart,
                   magnification=None,
                   level=None,
-                  patch_size=1000,
+                  patch_size=None,
                   figsize=(10, 10)):
         """Visualize patch.
 
@@ -404,7 +407,7 @@ class WSIReader(OpenSlide):
                                   annotation_json,
                                   magnification=None,
                                   level=None,
-                                  patch_size=1000,
+                                  patch_size=None,
                                   figsize=(10, 10)):
         if not magnification and not level:
             raise ValueError(

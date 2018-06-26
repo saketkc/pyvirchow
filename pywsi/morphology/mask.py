@@ -1,7 +1,5 @@
 from skimage import draw
 import numpy as np
-import json
-from matplotlib.patches import Polygon
 
 
 def poly2mask(vertex_row_coords, vertex_col_coords, shape):
