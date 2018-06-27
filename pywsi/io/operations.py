@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from collections import OrderedDict
 import six
 import ntpath
 import warnings
@@ -54,14 +55,15 @@ def translate_and_scale_polygon(polygon,
              object with scaled coordinates
     """
     if edgecolor == 'normal':
-        edgecolor = '#31a354'
+        edgecolor = '#00441b'
     elif edgecolor == 'tumor':
         edgecolor = '#ca0020'  #'#f03b20'
 
     polygon = polygon - np.array([x0, y0])
     polygon = polygon * scale_factor
     polygon = np.round(polygon).astype(int)
-    polygon = Polygon(polygon, edgecolor=edgecolor, facecolor=None, fill=False)
+    polygon = Polygon(
+        polygon, edgecolor=edgecolor, facecolor=None, fill=False, linewidth=4)
     return polygon
 
 
@@ -92,19 +94,33 @@ def draw_annotation(json_filepath, x0, y0, scale_factor, ax=None):
     tumor_patches = json_parsed['tumor']
     normal_patches = json_parsed['normal']
     polygons = []
-    for tumor_patch in tumor_patches:
+    labelelled_polygons = []
+    for index, tumor_patch in enumerate(tumor_patches):
         polygon = np.array(tumor_patch['vertices'])
         polygon = translate_and_scale_polygon(polygon, x0, y0, scale_factor,
                                               'tumor')
+        if index == 0:
+            polygon.set_label('tumor')
+            labelelled_polygons.append(polygon)
+        # For legend
         polygons.append(polygon)
-    for normal_patch in normal_patches:
+    for index, normal_patch in enumerate(normal_patches):
         polygon = np.array(normal_patch['vertices'])
         polygon = translate_and_scale_polygon(polygon, x0, y0, scale_factor,
                                               'normal')
+        if index == 0:
+            polygon.set_label('normal')
+            labelelled_polygons.append(polygon)
         polygons.append(polygon)
     if ax:
         for polygon in polygons:
             ax.add_patch(polygon)
+
+        ax.legend(
+            handles=labelelled_polygons,
+            loc=9,
+            bbox_to_anchor=(0.5, -0.1),
+            ncol=2)
     return polygons
 
 
@@ -276,13 +292,21 @@ class WSIReader(OpenSlide):
                 Top left pixel y coordinate
         magnification: int
                        Magnification to extract at
-        patch_size: tuple
+        patch_size: tuple or int
                     Patch size for renaming
 
         """
+        if isinstance(patch_size, int):
+            # If int provided, make a tuple
+            patch_size = (patch_size, patch_size)
         if not patch_size:
             width, height = self.level_dimensions[level]
-            print('patch  width, height: {} {}'.format(width, height))
+            # Adjust for the fact that the image top left
+            # does not start at (0, 0), but is instead
+            # moved to (xtart, ystart)
+            width -= int(xstart * self.magnifications[level] / self.level0_mag)
+            height -= int(
+                ystart * self.magnifications[level] / self.level0_mag)
         else:
             width, height = patch_size
         patch = self.read_region((xstart, ystart), level,
@@ -424,3 +448,74 @@ class WSIReader(OpenSlide):
         annotation_polygons = draw_annotation(annotation_json, xstart, ystart,
                                               scale_factor, ax)
         self.annotation_polygons = annotation_polygons
+
+    def get_annotation_bounding_boxes(self, json_filepath):
+        """Get bounding boxes for manually annotated regions.
+
+        Parameters
+        ----------
+        annotation_json: string
+                         Path to annotation json
+
+        Returns
+        -------
+        coordinates: array
+                     coordinates in top-left -> top-right -> bottom-right -> bottom-left
+
+        extreme_top_left_x, extreme_top_left_y: int, int
+                                                Coordinates of the top left box.
+                                                These coordinates can be used to
+                                                get autofocused annotation patches.
+                                                At least in principle.e
+        """
+        json_parsed = json.load(open(json_filepath))
+        tumor_patches = json_parsed['tumor']
+        normal_patches = json_parsed['normal']
+        rectangles = OrderedDict()
+        rectangles['tumor'] = []
+        rectangles['normal'] = []
+        extreme_top_left_x = self.dimensions[0]
+        extreme_top_left_y = self.dimensions[1]
+        for tumor_patch in tumor_patches:
+            polygon = np.array(tumor_patch['vertices'])
+            xmin, ymin = polygon.min(axis=0)
+            xmax, ymax = polygon.max(axis=0)
+            if xmin < extreme_top_left_x:
+                extreme_top_left_x = xmin
+            if ymin < extreme_top_left_y:
+                extreme_top_left_y = ymin
+            rectangle = OrderedDict()
+            rectangle['top_left'] = (xmin, ymax)
+            rectangle['top_right'] = (xmax, ymax)
+            rectangle['bottom_right'] = (xmax, ymin)
+            rectangle['bottom_left'] = (xmin, ymin)
+            rectangles['tumor'].append(rectangle)
+        for normal_patch in normal_patches:
+            polygon = np.array(normal_patch['vertices'])
+            xmin, ymin = polygon.min(axis=0)
+            xmax, ymax = polygon.max(axis=0)
+            rectangle = OrderedDict()
+            rectangle['top_left'] = (xmin, ymax)
+            rectangle['top_right'] = (xmax, ymax)
+            rectangle['bottom_right'] = (xmax, ymin)
+            rectangle['bottom_left'] = (xmin, ymin)
+            rectangles['normal'].append(rectangle)
+        return rectangles, (extreme_top_left_x, extreme_top_left_y)
+
+    def autofocus_annotation(self,
+                             json_filepath,
+                             magnification=None,
+                             level=None,
+                             patch_size=None,
+                             figsize=(10, 10)):
+        """Autofocus on annotated patch by loading the extreme left
+        of bounding box of the annotation
+
+        """
+        _, (xstart, ystart) = self.get_annotation_bounding_boxes(json_filepath)
+        if not magnification and not level:
+            raise ValueError(
+                'Atleast one of magnification or level must be selected')
+        return self.visualize_with_annotation(xstart, ystart, json_filepath,
+                                              magnification, level, patch_size,
+                                              figsize)

@@ -65,10 +65,11 @@ class TissuePatch(object):
         savedir: string
                 Path to directory where to save the pickle
         """
-        ID = self.ref_img.ID
+        ID = self.ref_img.uid
         os.makedirs(savedir, exist_ok=True)
-        filepath = os.path.join(savedir, ID + '_TissuePatch.pickle')
-        pickler = open(filepath, 'wb')
+        filepath = os.path.join(savedir, ID + '_TissuePatch.npy')
+        np.save(filepath, np.array(self.otsu_thresholded))
+        pickler = open(filepath.replace('.npy', '.pickle'), 'wb')
         pickle.dump(self, pickler)
         pickler.close()
 
@@ -89,6 +90,7 @@ class TissuePatch(object):
         self.ref_thresholding_level = pickler.ref_thresholding_level
         self.ref_magnification = pickler.ref_magnification
         self.otsu_thresholded = pickler.otsu_thresholded
+        self.ref_img = WSIReader(pickler.filepath, self.ref_magnification)
 
     def extract_masked_patch(self,
                              x0,
@@ -149,3 +151,10 @@ class TissuePatch(object):
 
         patch = self.otsu_thresholded[x0:x0 + final_size, y0:y0 + final_size]
         return np.array(patch)
+
+    def __getstate__(self):
+        """Return state values to be pickled."""
+        uid = self.ref_img.uid
+        return (self.ref_thresholding_level, self.ref_magnification,
+                self.zoomed_out_patch_rgb, self.magnification_factor,
+                self.otsu_thresholded, uid, self.ref_img.filepath)
