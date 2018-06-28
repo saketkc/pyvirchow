@@ -634,7 +634,12 @@ class WSIReader(OpenSlide):
                                                   scale_factor, 'normal')
             polygons.append(polygon)
         img = Image.new('L', (shape[0], shape[1]), 0)
+        draw = ImageDraw.Draw(img)
         for polygon in polygons:
-            ImageDraw.Draw(img).polygon(polygon.get_xy(), outline=1, fill=1)
+            coordinates = polygon.get_xy()
+            coordinates_int = []
+            for x,y in coordinates:
+                coordinates_int.append((int(x), int(y)))
+            draw.polygon(coordinates_int, outline=1, fill=1)
         mask = np.array(img)
-        return mask
+        return mask, polygons
