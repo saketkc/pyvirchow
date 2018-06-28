@@ -11,7 +11,7 @@ from ..io.operations import WSIReader
 
 
 class TissuePatch(object):
-    def __init__(self, reference_image, level0_mag=None):
+    def __init__(self, reference_image, level=5, level0_mag=None):
         if isinstance(reference_image, six.string_types):
             self.ref_img = WSIReader(reference_image, level0_mag)
         else:
@@ -19,10 +19,10 @@ class TissuePatch(object):
                 reference_image,
                 WSIReader) is True, 'input image should be string or WSIReader'
             self.ref_img = reference_image
-        self.otsu_thresholded = self.threshold()
+        self.otsu_thresholded = self.threshold(level=level)
 
     def threshold(self,
-                  level=6,
+                  level=5,
                   channel='saturation',
                   open_kernel_size=5,
                   close_kernel_size=10,

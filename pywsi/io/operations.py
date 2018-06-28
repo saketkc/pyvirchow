@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+import os
 import six
 import ntpath
 import warnings
@@ -21,33 +22,32 @@ import json
 from matplotlib.patches import Polygon
 from PIL import Image, ImageDraw
 
-from skimage import draw
 
-
-def poly2mask(vertex_row_coords, vertex_col_coords, shape):
+def poly2mask(polygons, shape):
     """Create mask from coordinates.
 
     Parameters
     ----------
-    vertex_row_coords: array_like
-                       Row indexes to be set to 1
-
-    vertex_col_coords: array_like
-                       Column indexes (following row indexes) set to 1
-
+    polygons: array_like
+              Array of vertices [(x1,y1), (x2, y2)]
     shape: tuple
+           (width, height)
 
     Returns
     -------
-
     mask: np.uint8
           Boolean masked array
     """
 
-    fill_row_coords, fill_col_coords = draw.polygon(vertex_row_coords,
-                                                    vertex_col_coords, shape)
-    mask = np.zeros(shape, dtype=np.bool)
-    mask[fill_row_coords, fill_col_coords] = True
+    img = Image.new('L', shape, 0)
+    draw = ImageDraw.Draw(img)
+    for polygon in polygons:
+        coordinates = polygon.get_xy()
+        coordinates_int = []
+        for x, y in coordinates:
+            coordinates_int.append((int(x), int(y)))
+        draw.polygon(coordinates_int, outline=1, fill=1)
+    mask = np.array(img)
     return mask
 
 
@@ -112,6 +112,7 @@ def draw_annotation(json_filepath, x0, y0, scale_factor, ax=None):
                   Scale coordinates by this (magnification/level0_magnification)
     ax: matploltib.axes
         If not None, add patches to this axis
+
     Returns
     -------
     polygon: array_like
@@ -462,6 +463,23 @@ class WSIReader(OpenSlide):
                                   level=None,
                                   patch_size=None,
                                   figsize=(10, 10)):
+        """Visualize patch with manually annotated regions marked in red/green.
+
+        Parameters
+        ----------
+        x0, y0: int
+                Coordinates of top-left of patch
+        annotation_json: string
+                         Path to json containing annotated coordinates
+        magnification: float
+                       Magnification
+        level: int
+               0-9 level with 0 being the highest zoom level
+        patch_size: int
+                    Patch size to extract (the final size might not necessarily be this)
+
+
+        """
         if not magnification and not level:
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
@@ -548,7 +566,11 @@ class WSIReader(OpenSlide):
         return self.visualize_with_annotation(
             x0, y0, json_filepath, magnification, level, patch_size, figsize)
 
-    def annotation_masked_slow(self, json_filepath, magnification=None, level=None):
+    def annotation_masked(self,
+                          json_filepath,
+                          magnification=None,
+                          level=None,
+                          savedir=None):
         """Create a masked image for the annotated regions.
 
         """
@@ -569,77 +591,33 @@ class WSIReader(OpenSlide):
         json_parsed = json.load(open(json_filepath))
         tumor_patches = json_parsed['tumor']
         normal_patches = json_parsed['normal']
-        polygons = []
+        normal_polygons = []
+        tumor_polygons = []
         for index, tumor_patch in enumerate(tumor_patches):
             polygon = np.array(tumor_patch['vertices'])
             polygon = translate_and_scale_polygon(polygon, x0, y0,
                                                   scale_factor, 'tumor')
-            polygons.append(polygon)
+            tumor_polygons.append(polygon)
         for index, normal_patch in enumerate(normal_patches):
             polygon = np.array(normal_patch['vertices'])
             polygon = translate_and_scale_polygon(polygon, x0, y0,
                                                   scale_factor, 'normal')
-            polygons.append(polygon)
+            normal_polygons.append(polygon)
+        tumor_mask = poly2mask(tumor_polygons, (shape[0], shape[1]))
+        normal_mask = poly2mask(normal_polygons, (shape[0], shape[1]))
+        combined_mask = poly2mask(normal_polygons + tumor_polygons,
+                                  (shape[0], shape[1]))
+        if savedir:
+            ID = self.uid
+            os.makedirs(savedir, exist_ok=True)
+            tumor_filepath = os.path.join(savedir,
+                                          ID + '_AnnotationTumorMask.npy')
+            np.save(tumor_filepath, tumor_mask)
+            normal_filepath = os.path.join(savedir,
+                                           ID + '_AnnotationNormalMask.npy')
+            np.save(normal_filepath, normal_mask)
+            combined_filepath = os.path.join(
+                savedir, ID + '_AnnotationCombinedMask.npy')
+            np.save(combined_filepath, combined_mask)
 
-        grid = np.zeros(shape)
-        x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]))
-        x, y = x.flatten(), y.flatten()
-        points = np.vstack((x, y)).T
-
-        polygon = polygons[0]
-        path = polygon.get_path()
-        grid = path.contains_points(points)
-        print ('x len: {}'.format(len(x)))
-        print ('y len: {}'.format(len(y)))
-
-        print ('shape: {}'.format(shape))
-        print ('grid len: {}'.format(len(grid)))
-        print ('points len: {}'.format(len(points)))
-        print ('path len: {}'.format(len(path)))
-
-        for polygon in polygons[1:]:
-            path = polygon.get_path()
-            grid = np.logical_or(grid, path.contains_points(points))
-        print(grid)
-        grid = grid.reshape((shape[1], shape[0]))
-        return grid
-
-    def annotation_masked(self, json_filepath, magnification=None, level=None):
-        x0 = 0
-        y0 = 0
-        patch_size = None
-        if not magnification and not level:
-            raise ValueError(
-                'Atleast one of magnification or level must be selected')
-        if magnification:
-            patch = self.get_patch_by_magnification(x0, y0, magnification,
-                                                    patch_size)
-            scale_factor = self.get_mag_scale_factor(magnification)
-        else:
-            patch = self.get_patch_by_level(x0, y0, level, patch_size)
-            scale_factor = self.get_level_scale_factor(level)
-        shape = patch.shape
-        json_parsed = json.load(open(json_filepath))
-        tumor_patches = json_parsed['tumor']
-        normal_patches = json_parsed['normal']
-        polygons = []
-        for index, tumor_patch in enumerate(tumor_patches):
-            polygon = np.array(tumor_patch['vertices'])
-            polygon = translate_and_scale_polygon(polygon, x0, y0,
-                                                  scale_factor, 'tumor')
-            polygons.append(polygon)
-        for index, normal_patch in enumerate(normal_patches):
-            polygon = np.array(normal_patch['vertices'])
-            polygon = translate_and_scale_polygon(polygon, x0, y0,
-                                                  scale_factor, 'normal')
-            polygons.append(polygon)
-        img = Image.new('L', (shape[0], shape[1]), 0)
-        draw = ImageDraw.Draw(img)
-        for polygon in polygons:
-            coordinates = polygon.get_xy()
-            coordinates_int = []
-            for x,y in coordinates:
-                coordinates_int.append((int(x), int(y)))
-            draw.polygon(coordinates_int, outline=1, fill=1)
-        mask = np.array(img)
-        return mask, polygons
+        return tumor_mask, normal_mask, combined_mask
