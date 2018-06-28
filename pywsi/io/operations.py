@@ -18,8 +18,38 @@ from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
 
 import json
+from matplotlib.path import Path
 from matplotlib.patches import Polygon
 
+from skimage import draw
+import numpy as np
+
+
+def poly2mask(vertex_row_coords, vertex_col_coords, shape):
+    """Create mask from coordinates.
+
+    Parameters
+    ----------
+    vertex_row_coords: array_like
+                       Row indexes to be set to 1
+
+    vertex_col_coords: array_like
+                       Column indexes (following row indexes) set to 1
+
+    shape: tuple
+
+    Returns
+    -------
+
+    mask: np.uint8
+          Boolean masked array
+    """
+
+    fill_row_coords, fill_col_coords = draw.polygon(vertex_row_coords,
+                                                    vertex_col_coords, shape)
+    mask = np.zeros(shape, dtype=np.bool)
+    mask[fill_row_coords, fill_col_coords] = True
+    return mask
 
 def translate_and_scale_polygon(polygon,
                                 x0,
@@ -519,3 +549,56 @@ class WSIReader(OpenSlide):
         return self.visualize_with_annotation(xstart, ystart, json_filepath,
                                               magnification, level, patch_size,
                                               figsize)
+
+
+    def annotation_masked(self,
+                          json_filepath,
+                          magnification=None,
+                          level=None):
+        """Create a masked image for the annotated regions.
+
+        """
+        x0 = 0
+        y0 = 0
+        if not magnification and not level:
+            raise ValueError(
+                'Atleast one of magnification or level must be selected')
+        if magnification:
+            patch = self.get_patch_by_magnification(xstart, ystart,
+                                                    magnification, patch_size)
+            scale_factor = self.get_mag_scale_factor(magnification)
+        else:
+            patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
+            scale_factor = self.get_level_scale_factor(level)
+        shape = zoomed_out_patch_rgb.shape
+        json_parsed = json.load(open(json_filepath))
+        tumor_patches = json_parsed['tumor']
+        normal_patches = json_parsed['normal']
+        polygons = []
+        for index, tumor_patch in enumerate(tumor_patches):
+            polygon = np.array(tumor_patch['vertices'])
+            polygon = translate_and_scale_polygon(polygon, x0, y0, scale_factor,
+                                                    'tumor')
+            polygons.append(polygon)
+        for index, normal_patch in enumerate(normal_patches):
+            polygon = np.array(normal_patch['vertices'])
+            polygon = translate_and_scale_polygon(polygon, x0, y0, scale_factor,
+                                                    'normal')
+            polygons.append(polygon)
+
+        grid = np.zeros(shape)
+        x, y = np.meshgrid(shape[0], shape[1])
+        x, y = x.flatten(), y.flatten()
+        points = np.vstack((x,y)).T
+
+        polygon = polygons[0]
+        path = polygon.get_path()
+        grid = path.contains_points(points)
+
+
+        for polygon in polygons:
+            path = polygon.get_path()
+            grid = np.logical_or(grid, path.contains_points(points))
+
+        grid = grid.reshape((shape[1], shape[0]))
+        return grid
