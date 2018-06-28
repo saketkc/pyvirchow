@@ -18,11 +18,10 @@ from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
 
 import json
-from matplotlib.path import Path
 from matplotlib.patches import Polygon
+from PIL import Image, ImageDraw
 
 from skimage import draw
-import numpy as np
 
 
 def poly2mask(vertex_row_coords, vertex_col_coords, shape):
@@ -50,6 +49,7 @@ def poly2mask(vertex_row_coords, vertex_col_coords, shape):
     mask = np.zeros(shape, dtype=np.bool)
     mask[fill_row_coords, fill_col_coords] = True
     return mask
+
 
 def translate_and_scale_polygon(polygon,
                                 x0,
@@ -311,14 +311,14 @@ class WSIReader(OpenSlide):
             for downsample in self.level_downsamples
         ]
 
-    def get_patch_by_level(self, xstart, ystart, level, patch_size=None):
+    def get_patch_by_level(self, x0, y0, level, patch_size=None):
         """Get patch by specifying magnification
 
         Parameters
         ----------
-        xstart: int
+        x0: int
                 Top left pixel x coordinate
-        ystart: int
+        y0: int
                 Top left pixel y coordinate
         magnification: int
                        Magnification to extract at
@@ -333,13 +333,12 @@ class WSIReader(OpenSlide):
             width, height = self.level_dimensions[level]
             # Adjust for the fact that the image top left
             # does not start at (0, 0), but is instead
-            # moved to (xtart, ystart)
-            width -= int(xstart * self.magnifications[level] / self.level0_mag)
-            height -= int(
-                ystart * self.magnifications[level] / self.level0_mag)
+            # moved to (xtart, y0)
+            width -= int(x0 * self.magnifications[level] / self.level0_mag)
+            height -= int(y0 * self.magnifications[level] / self.level0_mag)
         else:
             width, height = patch_size
-        patch = self.read_region((xstart, ystart), level,
+        patch = self.read_region((x0, y0), level,
                                  (width, height)).convert('RGB')
         return np.array(patch)
 
@@ -382,17 +381,17 @@ class WSIReader(OpenSlide):
         return self.magnifications[level] / self.level0_mag
 
     def get_patch_by_magnification(self,
-                                   xstart,
-                                   ystart,
+                                   x0,
+                                   y0,
                                    magnification,
                                    patch_size=None):
         """Get patch by specifying magnification
 
         Parameters
         ----------
-        xstart: int
+        x0: int
                 Top left pixel x coordinate
-        ystart: int
+        y0: int
                 Top left pixel y coordinate
         magnification: int
                        Magnification to extract at
@@ -414,7 +413,7 @@ class WSIReader(OpenSlide):
             rescaled_width, rescaled_height = self.level_dimensions[
                 possible_level]
         patch = self.read_region(
-            (xstart, ystart), possible_level,
+            (x0, y0), possible_level,
             (rescaled_width, rescaled_height)).convert('RGB')
         return np.array(patch)
 
@@ -426,17 +425,17 @@ class WSIReader(OpenSlide):
             print('{} : {}'.format(key, self.properties[key]))
 
     def visualize(self,
-                  xstart,
-                  ystart,
+                  x0,
+                  y0,
                   magnification=None,
                   level=None,
                   patch_size=None,
                   figsize=(10, 10)):
         """Visualize patch.
 
-        xstart: int
+        x0: int
                 X coordinate of top left corner of patch
-        ystart: int
+        y0: int
                 Y coordinate of top left corner of patch
         magnification: int
                        If provided, uses a magnification
@@ -449,15 +448,15 @@ class WSIReader(OpenSlide):
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
         if magnification:
-            patch = self.get_patch_by_magnification(xstart, ystart,
-                                                    magnification, patch_size)
+            patch = self.get_patch_by_magnification(x0, y0, magnification,
+                                                    patch_size)
         else:
-            patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
+            patch = self.get_patch_by_level(x0, y0, level, patch_size)
         return imshow(patch, figsize=figsize)
 
     def visualize_with_annotation(self,
-                                  xstart,
-                                  ystart,
+                                  x0,
+                                  y0,
                                   annotation_json,
                                   magnification=None,
                                   level=None,
@@ -467,15 +466,15 @@ class WSIReader(OpenSlide):
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
         if magnification:
-            patch = self.get_patch_by_magnification(xstart, ystart,
-                                                    magnification, patch_size)
+            patch = self.get_patch_by_magnification(x0, y0, magnification,
+                                                    patch_size)
             scale_factor = self.get_mag_scale_factor(magnification)
         else:
-            patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
+            patch = self.get_patch_by_level(x0, y0, level, patch_size)
             scale_factor = self.get_level_scale_factor(level)
 
         ax = imshow(patch, figsize=figsize)
-        annotation_polygons = draw_annotation(annotation_json, xstart, ystart,
+        annotation_polygons = draw_annotation(annotation_json, x0, y0,
                                               scale_factor, ax)
         self.annotation_polygons = annotation_polygons
 
@@ -542,63 +541,100 @@ class WSIReader(OpenSlide):
         of bounding box of the annotation
 
         """
-        _, (xstart, ystart) = self.get_annotation_bounding_boxes(json_filepath)
+        _, (x0, y0) = self.get_annotation_bounding_boxes(json_filepath)
         if not magnification and not level:
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
-        return self.visualize_with_annotation(xstart, ystart, json_filepath,
-                                              magnification, level, patch_size,
-                                              figsize)
+        return self.visualize_with_annotation(
+            x0, y0, json_filepath, magnification, level, patch_size, figsize)
 
-
-    def annotation_masked(self,
-                          json_filepath,
-                          magnification=None,
-                          level=None):
+    def annotation_masked_slow(self, json_filepath, magnification=None, level=None):
         """Create a masked image for the annotated regions.
 
         """
         x0 = 0
         y0 = 0
+        patch_size = None
         if not magnification and not level:
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
         if magnification:
-            patch = self.get_patch_by_magnification(xstart, ystart,
-                                                    magnification, patch_size)
+            patch = self.get_patch_by_magnification(x0, y0, magnification,
+                                                    patch_size)
             scale_factor = self.get_mag_scale_factor(magnification)
         else:
-            patch = self.get_patch_by_level(xstart, ystart, level, patch_size)
+            patch = self.get_patch_by_level(x0, y0, level, patch_size)
             scale_factor = self.get_level_scale_factor(level)
-        shape = zoomed_out_patch_rgb.shape
+        shape = patch.shape
         json_parsed = json.load(open(json_filepath))
         tumor_patches = json_parsed['tumor']
         normal_patches = json_parsed['normal']
         polygons = []
         for index, tumor_patch in enumerate(tumor_patches):
             polygon = np.array(tumor_patch['vertices'])
-            polygon = translate_and_scale_polygon(polygon, x0, y0, scale_factor,
-                                                    'tumor')
+            polygon = translate_and_scale_polygon(polygon, x0, y0,
+                                                  scale_factor, 'tumor')
             polygons.append(polygon)
         for index, normal_patch in enumerate(normal_patches):
             polygon = np.array(normal_patch['vertices'])
-            polygon = translate_and_scale_polygon(polygon, x0, y0, scale_factor,
-                                                    'normal')
+            polygon = translate_and_scale_polygon(polygon, x0, y0,
+                                                  scale_factor, 'normal')
             polygons.append(polygon)
 
         grid = np.zeros(shape)
-        x, y = np.meshgrid(shape[0], shape[1])
+        x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]))
         x, y = x.flatten(), y.flatten()
-        points = np.vstack((x,y)).T
+        points = np.vstack((x, y)).T
 
         polygon = polygons[0]
         path = polygon.get_path()
         grid = path.contains_points(points)
+        print ('x len: {}'.format(len(x)))
+        print ('y len: {}'.format(len(y)))
 
+        print ('shape: {}'.format(shape))
+        print ('grid len: {}'.format(len(grid)))
+        print ('points len: {}'.format(len(points)))
+        print ('path len: {}'.format(len(path)))
 
-        for polygon in polygons:
+        for polygon in polygons[1:]:
             path = polygon.get_path()
             grid = np.logical_or(grid, path.contains_points(points))
-
+        print(grid)
         grid = grid.reshape((shape[1], shape[0]))
         return grid
+
+    def annotation_masked(self, json_filepath, magnification=None, level=None):
+        x0 = 0
+        y0 = 0
+        patch_size = None
+        if not magnification and not level:
+            raise ValueError(
+                'Atleast one of magnification or level must be selected')
+        if magnification:
+            patch = self.get_patch_by_magnification(x0, y0, magnification,
+                                                    patch_size)
+            scale_factor = self.get_mag_scale_factor(magnification)
+        else:
+            patch = self.get_patch_by_level(x0, y0, level, patch_size)
+            scale_factor = self.get_level_scale_factor(level)
+        shape = patch.shape
+        json_parsed = json.load(open(json_filepath))
+        tumor_patches = json_parsed['tumor']
+        normal_patches = json_parsed['normal']
+        polygons = []
+        for index, tumor_patch in enumerate(tumor_patches):
+            polygon = np.array(tumor_patch['vertices'])
+            polygon = translate_and_scale_polygon(polygon, x0, y0,
+                                                  scale_factor, 'tumor')
+            polygons.append(polygon)
+        for index, normal_patch in enumerate(normal_patches):
+            polygon = np.array(normal_patch['vertices'])
+            polygon = translate_and_scale_polygon(polygon, x0, y0,
+                                                  scale_factor, 'normal')
+            polygons.append(polygon)
+        img = Image.new('L', (shape[0], shape[1]), 0)
+        for polygon in polygons:
+            ImageDraw.Draw(img).polygon(polygon.get_xy(), outline=1, fill=1)
+        mask = np.array(img)
+        return mask
