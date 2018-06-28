@@ -364,7 +364,7 @@ class WSIReader(OpenSlide):
         # What is the possible magnification available?
         possible_mag = min(filtered_mag)
         scale_factor = possible_mag / self.level0_mag
-        return scale_factor
+        return scale_factor, possible_mag
 
     def get_level_scale_factor(self, level):
         """Given a level, get scale factor.
@@ -583,11 +583,15 @@ class WSIReader(OpenSlide):
         if magnification:
             patch = self.get_patch_by_magnification(x0, y0, magnification,
                                                     patch_size)
-            scale_factor = self.get_mag_scale_factor(magnification)
+            scale_factor, possible_mag = self.get_mag_scale_factor(magnification)
+            level = self.magnifications.index(possible_mag)
         else:
             patch = self.get_patch_by_level(x0, y0, level, patch_size)
             scale_factor = self.get_level_scale_factor(level)
         shape = patch.shape
+        print('patch shape: {}'.format(shape))
+        shape = self.level_dimensions[level]
+        print('level shape: {}'.format(shape))
         json_parsed = json.load(open(json_filepath))
         tumor_patches = json_parsed['tumor']
         normal_patches = json_parsed['normal']
@@ -608,7 +612,7 @@ class WSIReader(OpenSlide):
         combined_mask = poly2mask(normal_polygons + tumor_polygons,
                                   (shape[0], shape[1]))
         if savedir:
-            ID = self.uid
+            ID = self.uid.replace('.tif', '')
             os.makedirs(savedir, exist_ok=True)
             tumor_filepath = os.path.join(savedir,
                                           ID + '_AnnotationTumorMask.npy')
@@ -619,5 +623,8 @@ class WSIReader(OpenSlide):
             combined_filepath = os.path.join(
                 savedir, ID + '_AnnotationCombinedMask.npy')
             np.save(combined_filepath, combined_mask)
+            colored_filepath = os.path.join(savedir,
+                                          ID + '_AnnotationColored.npy')
+            np.save(colored_filepath, patch)
 
         return tumor_mask, normal_mask, combined_mask

@@ -71,34 +71,56 @@ def extract_tumor_patches_cmd(indir, maskdir, level, patchsize, stride,
                 0           1            0
     """
     tumor_wsis = glob.glob(os.path.join(indir, 'tumor*.tif'), recursive=False)
+
+    print (tumor_wsis)
+    last_used_x = None
+    last_used_y = None
+    stride = int(patchsize/2)
     for tumor_wsi in tumor_wsis:
         wsi = WSIReader(tumor_wsi, 40)
         uid = wsi.uid.replace('.tif', '')
+        scale_factor = wsi.level0_mag/wsi.magnifications[level]
         normal_mask = np.load(
-            os.path.join(maskdir, 'level{}'.format(level),
+            os.path.join(maskdir, 'level_{}'.format(level),
                          uid + '_AnnotationNormalMask.npy'))
         tumor_mask = np.load(
-            os.path.join(maskdir, 'level{}'.format(level),
+            os.path.join(maskdir, 'level_{}'.format(level),
                          uid + '_AnnotationTumorMask.npy'))
-        subtracted_mask = tumor_mask * 1 - normal_mask * 1
-        subtracted_mask[np.where(subtracted_mask) < 0] = 0
-        x_ids, y_ids = np.where(subtracted_mask)
 
+        colored_patch= np.load(
+            os.path.join(maskdir, 'level_{}'.format(level),
+                         uid + '_AnnotationColored.npy'))
+        subtracted_mask = tumor_mask * 1 - normal_mask * 1
+        subtracted_mask[np.where(subtracted_mask < 0)] = 0
+        x_ids, y_ids = np.where(subtracted_mask)
         for x_center, y_center in zip(x_ids, y_ids):
-            out_file = '{}/{}_{}_{}_{}.png'.format(savedir, uid, x_center,
-                                                   y_center, patchsize)
+            out_file = '{}/level_{}/{}_{}_{}_{}.png'.format(savedir, level, uid, x_center,
+                                                            y_center, patchsize)
             x_topleft = int(x_center - patchsize / 2)
             y_topleft = int(y_center - patchsize / 2)
             x_topright = x_topleft + patchsize
             y_bottomright = y_topleft + patchsize
-            mask = subtracted_mask[np.arange(x_topleft, x_topright),
-                                   np.arange(y_topleft, y_bottomright)]
+            #print((x_topleft, x_topright, y_topleft, y_bottomright))
+            mask = subtracted_mask[x_topleft:x_topright,
+                                   y_topleft:y_bottomright]
             # Feed only complete cancer cells
-            if np.all(mask):
-                patch = wsi.get_patch_by_level(
-                    x_topleft, y_topleft, level, patch_size=patchsize)
-                img = Image.fromarray(patch)
-                img.save(out_file)
+            # Feed if more thatn 50% cells are cancerous!
+            if np.sum(mask)>0.5*(patchsize*patchsize):
+                if last_used_x is None:
+                    last_used_x = x_center
+                    last_used_y = y_center
+                else:
+                    diff_x = np.abs(x_center-last_used_x)
+                    diff_y = np.abs(y_center-last_used_y)
+                if diff_x>=stride and diff_y>=stride:
+                    patch = colored_patch[x_topleft:x_topright,
+                                          y_topleft:y_bottomright, :]
+                    os.makedirs(os.path.dirname(out_file), exist_ok=True)
+                    img = Image.fromarray(patch)
+                    img.save(out_file)
+                    last_used_x = x_center
+                    last_used_y = y_center
+
 
 if __name__ == '__main__':
     extract_tumor_patches_cmd()
