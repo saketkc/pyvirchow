@@ -589,9 +589,7 @@ class WSIReader(OpenSlide):
             patch = self.get_patch_by_level(x0, y0, level, patch_size)
             scale_factor = self.get_level_scale_factor(level)
         shape = patch.shape
-        print('patch shape: {}'.format(shape))
         shape = self.level_dimensions[level]
-        print('level shape: {}'.format(shape))
         json_parsed = json.load(open(json_filepath))
         tumor_patches = json_parsed['tumor']
         normal_patches = json_parsed['normal']
