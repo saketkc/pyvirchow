@@ -32,7 +32,7 @@ setup(
     description="Python Boilerplate contains all the boilerplate you need to create a Python package.",
     entry_points={
         'console_scripts': [
-            'pywsi=pywsi.cli:main',
+            'pywsi=pywsi.cli:cli',
         ],
     },
     install_requires=requirements,
