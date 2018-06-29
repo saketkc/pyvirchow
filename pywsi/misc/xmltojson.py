@@ -54,6 +54,12 @@ def xmltojson(xml_path, savedir):
                 'name': annotation['name'],
                 'vertices': normal_coordinates
             })
+        elif annotation['partofgroup'] == 'Exclusion':
+            # Exclude
+            pass
+        elif annotation['partofgroup'] == 'None':
+            #continue
+            pass
         else:
             raise RuntimeError('Did not find an appropriate group id')
     with open(os.path.join(savedir, xml_path.replace('.xml', '.json')),

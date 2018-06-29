@@ -6,13 +6,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import sys
 import numpy as np
 
 import click
 from click_help_colors import HelpColorsGroup
-import six
-import pandas as pd
 import glob
 from pywsi.io.operations import WSIReader
 from pywsi.morphology.patch_extractor import TissuePatch
@@ -87,11 +84,14 @@ def extract_annotation_masks_cmd(indir, jsondir, level, savedir):
         json data (jsondir): tumor_jsons/tumor001.json
 
     """
-    tumor_wsis = glob.glob(os.path.join(indir, 'tumor*.tif'), recursive=False)
+    tumor_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
     for tumor_wsi in tqdm(tumor_wsis):
         wsi = WSIReader(tumor_wsi, 40)
         uid = wsi.uid.replace('.tif', '')
         json_filepath = os.path.join(jsondir, uid + '.json')
+        if not os.path.exists(json_filepath):
+            print('Skipping {} as annotation json not found'.format(uid))
+            continue
         out_dir = os.path.join(savedir, 'level_{}'.format(level))
         wsi.annotation_masked(
             json_filepath=json_filepath, level=level, savedir=out_dir)
@@ -127,8 +127,13 @@ def extract_annotation_masks_cmd(indir, jsondir, level, savedir):
     '--savedir',
     help='Root directory to save extract images to',
     required=True)
+@click.option(
+    '--threshold',
+    help='Threshold for a cell to be called tumor',
+    default=0,
+    type=int)
 def extract_tumor_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
-                              stride, savedir):
+                              stride, savedir, threshold):
     """Extract tumor only patches from tumor WSIs.
 
     We assume the masks have already been generated at level say x.
@@ -156,18 +161,24 @@ def extract_tumor_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
                 1           1            0
                 0           1            0
     """
-    tumor_wsis = glob.glob(os.path.join(indir, 'tumor*.tif'), recursive=False)
+    tumor_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
 
     # Assume that we want to generate these patches at level 0
     # So in order to ensure stride at a lower level
     # this needs to be discounted
-    stride = int(patchsize / (2**level))
+    #stride = int(patchsize / (2**level))
+    stride = min(int(patchsize / (2**level)), 4)
     for tumor_wsi in tqdm(tumor_wsis):
         last_used_x = None
         last_used_y = None
         wsi = WSIReader(tumor_wsi, 40)
         uid = wsi.uid.replace('.tif', '')
         scale_factor = wsi.level0_mag / wsi.magnifications[level]
+        filepath = os.path.join(annmaskdir, 'level_{}'.format(level),
+                                uid + '_AnnotationColored.npy')
+        if not os.path.exists(filepath):
+            print('Skipping {} as mask not found'.format(uid))
+            continue
         normal_mask = np.load(
             os.path.join(annmaskdir, 'level_{}'.format(level),
                          uid + '_AnnotationNormalMask.npy'))
@@ -197,7 +208,9 @@ def extract_tumor_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
                                    y_bottomright]
             # Feed only complete cancer cells
             # Feed if more thatn 50% cells are cancerous!
-            if np.sum(mask) > 0.5 * (patchsize * patchsize):
+            if threshold <= 0:
+                threshold = 0.5 * (patchsize * patchsize)
+            if np.sum(mask) > threshold:
                 if last_used_x is None:
                     last_used_x = x_center
                     last_used_y = y_center
@@ -280,7 +293,7 @@ def extract_normal_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
     # Assume that we want to generate these patches at level 0
     # So in order to ensure stride at a lower level
     # this needs to be discounted
-    stride = int(patchsize / (2**level))
+    stride = min(int(patchsize / (2**level)), 4)
     for wsi in tqdm(all_wsis):
         last_used_x = None
         last_used_y = None
