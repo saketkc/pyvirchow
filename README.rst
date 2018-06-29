@@ -10,7 +10,7 @@ pywsi
 
 
 * Free software: BSD license
-* Documentation: https://saket-choudhary.me/pywsi.
+* Documentation: https://www.saket-choudhary.me/pywsi/
 
 
 Features
