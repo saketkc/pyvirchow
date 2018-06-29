@@ -31,7 +31,8 @@ def cli():
     context_settings=CONTEXT_SETTINGS,
     help='Extract tumor patches from tumor WSIs')
 @click.option('--indir', help='Root directory with all tumor WSIs', required=True)
-@click.option('--maskdir', help='Root directory with all tumor WSIs', required=True)
+@click.option('--annmaskdir', help='Root directory with all annotation mask WSIs', required=True)
+@click.option('--tismaskdir', help='Root directory with all annotation mask WSIs', required=True)
 @click.option('--level', type=int, help='Level at which to extract patches', required=True)
 @click.option(
     '--patchsize',
@@ -41,7 +42,7 @@ def cli():
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
 @click.option('--savedir', help='Root directory to save extract images to', required=True)
-def extract_tumor_patches_cmd(indir, maskdir, level, patchsize, stride,
+def extract_tumor_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize, stride,
                               savedir):
     """Extract tumor only patches from tumor WSIs.
 
@@ -72,26 +73,27 @@ def extract_tumor_patches_cmd(indir, maskdir, level, patchsize, stride,
     """
     tumor_wsis = glob.glob(os.path.join(indir, 'tumor*.tif'), recursive=False)
 
-    print (tumor_wsis)
-    last_used_x = None
-    last_used_y = None
     stride = int(patchsize/2)
     for tumor_wsi in tumor_wsis:
+        last_used_x = None
+        last_used_y = None
         wsi = WSIReader(tumor_wsi, 40)
         uid = wsi.uid.replace('.tif', '')
         scale_factor = wsi.level0_mag/wsi.magnifications[level]
         normal_mask = np.load(
-            os.path.join(maskdir, 'level_{}'.format(level),
+            os.path.join(annmaskdir, 'level_{}'.format(level),
                          uid + '_AnnotationNormalMask.npy'))
         tumor_mask = np.load(
-            os.path.join(maskdir, 'level_{}'.format(level),
+            os.path.join(annmaskdir, 'level_{}'.format(level),
                          uid + '_AnnotationTumorMask.npy'))
+        tissue_mask = np.load(os.path.join(tismaskdir, 'level_{}'.format(level), uid+'_TissuePatch.npy'))
 
         colored_patch= np.load(
-            os.path.join(maskdir, 'level_{}'.format(level),
+            os.path.join(annmaskdir, 'level_{}'.format(level),
                          uid + '_AnnotationColored.npy'))
         subtracted_mask = tumor_mask * 1 - normal_mask * 1
         subtracted_mask[np.where(subtracted_mask < 0)] = 0
+        subtracted_mask = np.logical_and(subtracted_mask, tissue_mask)
         x_ids, y_ids = np.where(subtracted_mask)
         for x_center, y_center in zip(x_ids, y_ids):
             out_file = '{}/level_{}/{}_{}_{}_{}.png'.format(savedir, level, uid, x_center,
@@ -109,6 +111,8 @@ def extract_tumor_patches_cmd(indir, maskdir, level, patchsize, stride,
                 if last_used_x is None:
                     last_used_x = x_center
                     last_used_y = y_center
+                    diff_x = stride
+                    diff_y = stride
                 else:
                     diff_x = np.abs(x_center-last_used_x)
                     diff_y = np.abs(y_center-last_used_y)
