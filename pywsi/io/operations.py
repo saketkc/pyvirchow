@@ -583,7 +583,8 @@ class WSIReader(OpenSlide):
         if magnification:
             patch = self.get_patch_by_magnification(x0, y0, magnification,
                                                     patch_size)
-            scale_factor, possible_mag = self.get_mag_scale_factor(magnification)
+            scale_factor, possible_mag = self.get_mag_scale_factor(
+                magnification)
             level = self.magnifications.index(possible_mag)
         else:
             patch = self.get_patch_by_level(x0, y0, level, patch_size)
@@ -622,7 +623,7 @@ class WSIReader(OpenSlide):
                 savedir, ID + '_AnnotationCombinedMask.npy')
             np.save(combined_filepath, combined_mask)
             colored_filepath = os.path.join(savedir,
-                                          ID + '_AnnotationColored.npy')
+                                            ID + '_AnnotationColored.npy')
             np.save(colored_filepath, patch)
 
         return tumor_mask, normal_mask, combined_mask
