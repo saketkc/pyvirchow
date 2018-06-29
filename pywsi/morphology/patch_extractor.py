@@ -8,7 +8,7 @@ from .operations import otsu_thresholding, plot_contours, contours_and_bounding_
 import numpy as np
 import pickle
 from ..io.operations import WSIReader
-
+import matplotlib.pyplot as plt
 
 class TissuePatch(object):
     def __init__(self, reference_image, level=5, level0_mag=None):
@@ -91,6 +91,13 @@ class TissuePatch(object):
         self.ref_magnification = pickler.ref_magnification
         self.otsu_thresholded = pickler.otsu_thresholded
         self.ref_img = WSIReader(pickler.filepath, self.ref_magnification)
+
+    def visualize_mask(self, figsize=(10,10)):
+        """Visualize masked out region"""
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.set_axis_off()
+        ax.imshow(self.otsu_thresholded, cmap='gray')
+        return ax
 
     def extract_masked_patch(self,
                              x0,
