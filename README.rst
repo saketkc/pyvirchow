@@ -68,7 +68,7 @@ Step 3B. Extract normal patches
 Dataset download
 =================
 
-  FTP_
+FTP_
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
 .. _Notebook: notebooks/01.pywsi-demo.ipynb
