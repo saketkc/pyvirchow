@@ -65,6 +65,10 @@ Step 3B. Extract normal patches
    --savedir /CAMELYON16/training/extracted_normal_patches
 
 
+Dataset download
+=================
+
+ftp://parrot.genomics.cn/gigadb/pub/10.5524/100001_101000/100439/CAMELYON16/
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
 .. _Notebook: notebooks/01.pywsi-demo.ipynb
