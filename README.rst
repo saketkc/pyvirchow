@@ -7,8 +7,6 @@ pywsi
         :target: https://travis-ci.com/saketkc/pywsi
 
 
-
-
 * Free software: BSD license
 * Documentation: https://www.saket-choudhary.me/pywsi/
 
@@ -68,7 +66,8 @@ Step 3B. Extract normal patches
 Dataset download
 =================
 
-FTP_
+
+Link: FTP_
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
 .. _Notebook: notebooks/01.pywsi-demo.ipynb
