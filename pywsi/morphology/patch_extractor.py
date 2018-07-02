@@ -10,6 +10,7 @@ import pickle
 from ..io.operations import WSIReader
 import matplotlib.pyplot as plt
 
+
 class TissuePatch(object):
     def __init__(self, reference_image, level=5, level0_mag=None):
         if isinstance(reference_image, six.string_types):
@@ -92,7 +93,7 @@ class TissuePatch(object):
         self.otsu_thresholded = pickler.otsu_thresholded
         self.ref_img = WSIReader(pickler.filepath, self.ref_magnification)
 
-    def visualize_mask(self, figsize=(10,10)):
+    def visualize_mask(self, figsize=(10, 10)):
         """Visualize masked out region"""
         fig, ax = plt.subplots(figsize=figsize)
         ax.set_axis_off()

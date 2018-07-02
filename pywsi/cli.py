@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from collections import defaultdict
 import os
 import numpy as np
 
@@ -350,3 +351,55 @@ def extract_normal_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
                     img.save(out_file)
                     last_used_x = x_center
                     last_used_y = y_center
+
+
+@cli.command(
+    'patches-from-coords',
+    context_settings=CONTEXT_SETTINGS,
+    help='Extract patches from coordinates file')
+@click.option('--indir', help='Root directory with all WSIs', required=True)
+@click.option('--csv', help='Path to csv with coordinates', required=True)
+@click.option(
+    '--level',
+    type=int,
+    help='Level at which to extract patches',
+    required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def extract_patches_from_coords_cmd(indir, csv, level, patchsize, savedir):
+    """Extract patches from coordinates file at a particular level.
+
+    Assumption: Coordinates are assumed to be provided at level 0.
+    """
+    patches_to_extract = defaultdict(list)
+    with open(csv) as fh:
+        for line in fh:
+            filename, x0, y0 = line.split(',')
+            filename = filename.lower()
+            x0 = int(x0)
+            y0 = int(y0)
+            patches_to_extract[filename].append((x0, y0))
+
+    for filename, coordinates in tqdm(patches_to_extract.items()):
+        if 'normal' in filename:
+            filepath = os.path.join(indir, 'normal', filename + '.tif')
+        elif 'tumor' in filename:
+            filepath = os.path.join(indir, 'tumor', filename + '.tif')
+        else:
+            raise RuntimeError('Malformed filename?: {}'.format(filename))
+        wsi = WSIReader(filepath, 40)
+        uid = wsi.uid.replace('.tif', '')
+        for x0, y0 in coordinates:
+            patch = wsi.get_patch_by_level(x0, y0, level, patchsize)
+            out_file = '{}/level_{}/{}_{}_{}_{}.png'.format(
+                savedir, level, uid, x0, y0, patchsize)
+            os.makedirs(os.path.dirname(out_file), exist_ok=True)
+            img = Image.fromarray(patch)
+            img.save(out_file)
