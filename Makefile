@@ -65,6 +65,9 @@ coverage: ## check code coverage quickly with the default Python
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
+develop:
+	python setup.py develop --no-deps
+
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/pywsi.rst
 	rm -f docs/modules.rst

@@ -3,8 +3,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from ..io.operations import read_as_rgb
 import numpy as np
 from numpy import linalg as LA
+import six
 import spams
 
 
@@ -21,7 +23,7 @@ def OD2RGB(OD):
 
 
 class MacenkoNormalization(object):
-    def __init__(self):
+    def __init__(self, alpha=1, beta=0.15):
         """Implementation of Macenko's method.
         See: http://wwwx.cs.unc.edu/~mn/sites/default/files/macenko2009.pdf
 
@@ -38,11 +40,11 @@ class MacenkoNormalization(object):
         8. Convert extreme values back to OD space
 
         """
-        self.beta = 0.15
-        self.alpha = 1
+        self.beta = beta
+        self.alpha = alpha
         self.OD = None
 
-    def fit(self, target_image, beta=0.15):
+    def fit(self, target_image):
         """Fit attributes to target image.
 
         Parameters
@@ -50,7 +52,8 @@ class MacenkoNormalization(object):
         target_image:
 
         """
-        self.beta = beta
+        if isinstance(target_image, six.string_types):
+            target_image = read_as_rgb(target_image)
         self.target_stain_matrix = self.get_stain_matrix(target_image)
         self.target_concentrations = self.get_concentrations(
             target_image, self.target_stain_matrix)
@@ -118,12 +121,12 @@ class MacenkoNormalization(object):
             OD.T, D=stain_matrix.T, mode=2, lambda1=0.01, pos=True).toarray().T
         return coefs
 
-    def transform(self, source_image):
+    def transform(self, source_images):
         """Transform source image to target.
 
         Parameters
         ----------
-        source_image: array_like
+        source_image: list(array_like)
                       np.unit8 rgb input
 
         Returns
@@ -132,18 +135,24 @@ class MacenkoNormalization(object):
                        np.uint8 transformed image
 
         """
-        source_stain_matrix = self.get_stain_matrix(source_image)
-        source_concentrations = self.get_concentrations(
-            source_image, source_stain_matrix)
+        if not isinstance(source_images, list):
+            source_images = [source_images]
+        normalized_images = []
+        for source_image in source_images:
+            source_stain_matrix = self.get_stain_matrix(source_image)
+            source_concentrations = self.get_concentrations(
+                source_image, source_stain_matrix)
 
-        maxC_source = np.percentile(
-            source_concentrations, 99, axis=0).reshape((1, 2))
-        maxC_target = np.percentile(
-            self.target_concentrations, 99, axis=0).reshape((1, 2))
-        source_concentrations *= (maxC_target / maxC_source)
-        reconstructed = np.dot(source_concentrations,
-                               self.target_stain_matrix).reshape(
-                                   source_image.shape)
+            maxC_source = np.percentile(
+                source_concentrations, 99, axis=0).reshape((1, 2))
+            maxC_target = np.percentile(
+                self.target_concentrations, 99, axis=0).reshape((1, 2))
+            source_concentrations *= (maxC_target / maxC_source)
+            reconstructed = np.dot(source_concentrations,
+                                self.target_stain_matrix).reshape(
+                                    source_image.shape)
 
-        return OD2RGB(reconstructed).reshape(source_image.shape).astype(
-            np.uint8)
+            reconstructed = OD2RGB(reconstructed).reshape(source_image.shape).astype(
+                np.uint8)
+            normalized_images.append(reconstructed)
+        return normalized_images
