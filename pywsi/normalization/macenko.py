@@ -147,6 +147,8 @@ class MacenkoNormalization(object):
                 source_concentrations, 99, axis=0).reshape((1, 2))
             maxC_target = np.percentile(
                 self.target_concentrations, 99, axis=0).reshape((1, 2))
+            print('maxC_source: {}'.format(maxC_source))
+            print('maxC_target: {}'.format(maxC_target))
             source_concentrations *= (maxC_target / maxC_source)
             reconstructed = np.dot(source_concentrations,
                                 self.target_stain_matrix).reshape(
