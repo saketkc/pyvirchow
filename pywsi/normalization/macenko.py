@@ -23,7 +23,7 @@ def OD2RGB(OD):
 
 
 class MacenkoNormalization(object):
-    def __init__(self, alpha=1, beta=0.15):
+    def __init__(self, beta=0.15, alpha=1):
         """Implementation of Macenko's method.
         See: http://wwwx.cs.unc.edu/~mn/sites/default/files/macenko2009.pdf
 
@@ -80,7 +80,7 @@ class MacenkoNormalization(object):
         OD_cov = np.cov(OD, rowvar=False)
         w, v = LA.eigh(OD_cov)
         # Project OD into first two directions
-        v_first_two = v[:, [0, 1]]
+        v_first_two = v[:, [1, 2]]
         projected = np.dot(OD, v_first_two)
         # find the min and max vectors and project back to OD space
         angle = np.arctan2(projected[:, 1], projected[:, 0])
@@ -147,14 +147,32 @@ class MacenkoNormalization(object):
                 source_concentrations, 99, axis=0).reshape((1, 2))
             maxC_target = np.percentile(
                 self.target_concentrations, 99, axis=0).reshape((1, 2))
-            print('maxC_source: {}'.format(maxC_source))
-            print('maxC_target: {}'.format(maxC_target))
             source_concentrations *= (maxC_target / maxC_source)
             reconstructed = np.dot(source_concentrations,
-                                self.target_stain_matrix).reshape(
-                                    source_image.shape)
+                                   self.target_stain_matrix).reshape(
+                                       source_image.shape)
 
-            reconstructed = OD2RGB(reconstructed).reshape(source_image.shape).astype(
-                np.uint8)
+            reconstructed = OD2RGB(reconstructed).reshape(
+                source_image.shape).astype(np.uint8)
             normalized_images.append(reconstructed)
         return normalized_images
+
+    def get_hematoxylin_channel(self, image):
+        h, w, c = image.shape
+        #stain_matrix_source = self.get_stain_matrix(image)
+        #source_concentrations = self.get_concentrations(image, stain_matrix_source)
+        target_concentrations = self.get_concentrations(
+            image, self.target_stain_matrix)
+        H = target_concentrations[:, 0].reshape(h, w)
+        H = OD2RGB(H)
+        return H
+
+    def get_eosin_channel(self, image):
+        h, w, c = image.shape
+        #stain_matrix_source = self.get_stain_matrix(image)
+        #source_concentrations = self.get_concentrations(image, stain_matrix_source)
+        target_concentrations = self.get_concentrations(
+            image, self.target_stain_matrix)
+        E = target_concentrations[:, 1].reshape(h, w)
+        E = OD2RGB(E)
+        return E
