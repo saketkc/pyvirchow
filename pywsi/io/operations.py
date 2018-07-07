@@ -10,6 +10,8 @@ import ntpath
 import warnings
 import openslide
 from openslide import OpenSlide
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
