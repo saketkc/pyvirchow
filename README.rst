@@ -66,9 +66,9 @@ Step 3B. Extract normal patches
 Dataset download
 =================
 
+Link: Ftp_
 
-Link: ftp_
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
 .. _Notebook: notebooks/01.pywsi-demo.ipynb
-.. _ftp: ftp://parrot.genomics.cn/gigadb/pub/10.5524/100001_101000/100439/CAMELYON16/
+.. _Ftp: ftp://parrot.genomics.cn/gigadb/pub/10.5524/100001_101000/100439/CAMELYON16/
