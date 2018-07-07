@@ -54,7 +54,7 @@ Step 3A. Extract tumor patches
 
 
 Step 3B. Extract normal patches
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 

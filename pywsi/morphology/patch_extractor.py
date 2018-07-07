@@ -100,66 +100,6 @@ class TissuePatch(object):
         ax.imshow(self.otsu_thresholded, cmap='gray')
         return ax
 
-    def extract_masked_patch(self,
-                             x0,
-                             y0,
-                             target_level=None,
-                             target_magnification=None,
-                             patch_size=300):
-        """Extract patch at a particular level
-
-        NOTE: this should not be used.
-
-        Parameters
-        ----------
-        x0: int
-            x coordinate of top left of the patch to be extracted
-
-        y0: int
-            y coordinate of top left of the patch to be extracted
-
-        target_level: int
-                      At what level[0-9] should the patch be extracted
-
-        target_magnification: int
-                      At what magnification should the patch be extracted
-
-        Either of target_level or target_magnification should be specified
-
-        """
-        if target_level is None and target_magnification is None:
-            raise ValueError(
-                'At least one of target_level and target_magnification\
-                should be specified.')
-
-        if target_level is not None:
-            # Prefer this if it is specified
-            target_magnification = self.ref_img.magnifications[target_level]
-        else:
-            filtered_mag = list(
-                filter(lambda x: x >= target_magnification,
-                       self.ref_img.magnifications))
-            # What is the possible magnification available?
-            target_magnification = min(filtered_mag)
-            possible_level = self.ref_img.magnifications.index(
-                target_magnification)
-        print('target_mag: {}'.format(target_magnification))
-        print('mags: {}'.format(self.ref_img.magnifications))
-        magnification_factor = target_magnification / self.ref_magnification
-        x0 = int(x0 * self.magnification_factor)
-        y0 = int(y0 * self.magnification_factor)
-        #final_size = int(self.magnification_factor * patch_size)
-        final_size = int(
-            patch_size * self.ref_magnification / target_magnification)
-        print('target_magnification: {} | ref_mag: {}'.format(
-            target_magnification, self.ref_img.level0_mag))
-        print('Final size: {} | Patch size: {}'.format(final_size, patch_size))
-        print('x0: {} | x1: {}'.format(x0, x0 + final_size))
-        print('y0: {} | y1: {}'.format(y0, y0 + final_size))
-
-        patch = self.otsu_thresholded[x0:x0 + final_size, y0:y0 + final_size]
-        return np.array(patch)
-
     def __getstate__(self):
         """Return state values to be pickled."""
         uid = self.ref_img.uid
