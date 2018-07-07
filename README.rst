@@ -66,7 +66,7 @@ Step 3B. Extract normal patches
 Dataset download
 =================
 
-Link: Ftp_
+Ftp_
 
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
