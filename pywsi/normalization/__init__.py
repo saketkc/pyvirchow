@@ -5,3 +5,4 @@ from __future__ import unicode_literals
 
 from .macenko import MacenkoNormalization
 from .reinhard import ReinhardNormalization
+from .vahadane import VahadaneNormalization

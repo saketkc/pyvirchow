@@ -3,6 +3,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from ..io.operations import read_as_rgb
 import numpy as np
 from numpy import linalg as LA
@@ -23,7 +27,7 @@ def OD2RGB(OD):
 
 
 class MacenkoNormalization(object):
-    def __init__(self, beta=0.15, alpha=1):
+    def __init__(self, beta=0.15, alpha=1, lambda1=0.01):
         """Implementation of Macenko's method.
         See: http://wwwx.cs.unc.edu/~mn/sites/default/files/macenko2009.pdf
 
@@ -39,9 +43,20 @@ class MacenkoNormalization(object):
         percentiles) of the  angle
         8. Convert extreme values back to OD space
 
+
+        More formally, consider I is a n x 3 matrix (n rows, 3 columns for RGB),
+        we look for two matrixes C and S such that:
+            C = n x 2 : Matrix of Concentrations in Channel H[1] and Channel E[2]
+            S = 2 x 3 : Matrix of Stain vectors, 3 channels for H and 3 channels for E
+
+        This is achieved by doing a non negative matrix factorization of I
+
+        min_{C,S} ||I-CS||_2^2
+
         """
         self.beta = beta
         self.alpha = alpha
+        self.lambda1 = lambda1
         self.OD = None
 
     def fit(self, target_image):
@@ -54,6 +69,7 @@ class MacenkoNormalization(object):
         """
         if isinstance(target_image, six.string_types):
             target_image = read_as_rgb(target_image)
+        self.h, self.w, self.c = target_image.shape
         self.target_stain_matrix = self.get_stain_matrix(target_image)
         self.target_concentrations = self.get_concentrations(
             target_image, self.target_stain_matrix)
@@ -76,6 +92,7 @@ class MacenkoNormalization(object):
         OD = RGB2OD(source_image)
         OD = OD.reshape((-1, 3))
         OD = (OD[(OD > self.beta).any(axis=1), :])
+        self.OD = OD
         # do-PCA
         OD_cov = np.cov(OD, rowvar=False)
         w, v = LA.eigh(OD_cov)
@@ -95,6 +112,11 @@ class MacenkoNormalization(object):
                       np.array([np.cos(max_angle),
                                 np.sin(max_angle)]))
 
+        # For the sake of consistency,
+        # we assume that the first vector with more concentation is the
+        # Hematoxylin vector. The motivation for this is our visual understanding
+        # that the purple Hematoxylin generally appears to be dominant over
+        # the pink Eosin.
         if Vmax[0] > Vmin[0]:
             HE = np.array([Vmax, Vmin])
         else:
@@ -118,7 +140,8 @@ class MacenkoNormalization(object):
         """
         OD = RGB2OD(image).reshape((-1, 3))
         coefs = spams.lasso(
-            OD.T, D=stain_matrix.T, mode=2, lambda1=0.01, pos=True).toarray().T
+            OD.T, D=stain_matrix.T, mode=2, lambda1=self.lambda1,
+            pos=True).toarray().T
         return coefs
 
     def transform(self, source_images):
@@ -157,22 +180,94 @@ class MacenkoNormalization(object):
             normalized_images.append(reconstructed)
         return normalized_images
 
-    def get_hematoxylin_channel(self, image):
-        h, w, c = image.shape
-        #stain_matrix_source = self.get_stain_matrix(image)
-        #source_concentrations = self.get_concentrations(image, stain_matrix_source)
-        target_concentrations = self.get_concentrations(
-            image, self.target_stain_matrix)
-        H = target_concentrations[:, 0].reshape(h, w)
+    def get_hematoxylin_channel(self, source_image=None):
+        """Get hematoxylin channel concentration of source or target image.
+
+        If source image is providedd, then the returned value
+        represents the target stain vector remains the same,
+        the source image concentration is then calculated by an inverse calculation C = IS^{-1}
+
+
+        If no source image is provided, it simply returns the concentration
+        channel of the target image, first column in this case.
+
+        """
+        if source_image is not None:
+            h, w, _ = source_image.shape
+            stain_matrix_source = self.get_stain_matrix(source_image)
+            concentrations = self.get_concentrations(source_image,
+                                                     stain_matrix_source)
+        else:
+
+            h, w, _ = self.h, self.w, self.c
+            concentrations = self.target_concentrations
+        H = concentrations[:, 0].reshape(h, w)
         H = OD2RGB(H)
         return H
 
-    def get_eosin_channel(self, image):
-        h, w, c = image.shape
-        #stain_matrix_source = self.get_stain_matrix(image)
-        #source_concentrations = self.get_concentrations(image, stain_matrix_source)
-        target_concentrations = self.get_concentrations(
-            image, self.target_stain_matrix)
-        E = target_concentrations[:, 1].reshape(h, w)
+    def get_eosin_channel(self, source_image=None):
+        """Get eosin channel concentration of source or target image.
+
+        If source image is providedd, then the returned value
+        represents the target stain vector remains the same,
+        the source image concentration is then calculated by an inverse calculation C = IS^{-1}
+
+        If no source image is provided, it simply returns the concentration
+        channel of the target image, second column in this case.
+
+        """
+        if source_image is not None:
+            h, w, _ = source_image.shape
+            stain_matrix_source = self.get_stain_matrix(source_image)
+            concentrations = self.get_concentrations(source_image,
+                                                     stain_matrix_source)
+        else:
+            h, w, _ = self.h, self.w, self.c
+            concentrations = self.target_concentrations
+        E = concentrations[:, 1].reshape(h, w)
         E = OD2RGB(E)
+        return E
+
+    def get_hematoxylin_stain(self, vis=True):
+        """ Get the 3 channel values belonging to the hematoxylin stain
+
+        Parameters
+        ----------
+        vis: bool
+             Should visualize?
+
+        Returns
+        -------
+        H: array_like
+           A length 3 vector of RGB values
+        """
+        H = self.target_stain_matrix[0, :]
+        H = OD2RGB(H)
+        if vis:
+            fig, ax = plt.figure(figsize=(8, 8))
+            ax.set_axisoff()
+            vector = np.repeat(np.array([H]), 128, axis=0)
+            ax.imshow(vector)
+        return H
+
+    def get_eosin_stain(self, vis=True):
+        """ Get the 3 channel values belonging to the eosin stain
+
+        Parameters
+        ----------
+        vis: bool
+             Should visualize?
+
+        Returns
+        -------
+        E: array_like
+           A length 3 vector of RGB values
+        """
+        E = self.target_stain_matrix[1, :]
+        E = OD2RGB(E)
+        if vis:
+            fig, ax = plt.figure(figsize=(8, 8))
+            ax.set_axisoff()
+            vector = np.repeat(np.array([E]), 128, axis=0)
+            ax.imshow(vector)
         return E
