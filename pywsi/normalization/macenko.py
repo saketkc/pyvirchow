@@ -180,7 +180,7 @@ class MacenkoNormalization(object):
             normalized_images.append(reconstructed)
         return normalized_images
 
-    def get_hematoxylin_channel(self, source_image=None):
+    def get_hematoxylin_channel(self, source_image=None, total=True):
         """Get hematoxylin channel concentration of source or target image.
 
         If source image is providedd, then the returned value
@@ -201,11 +201,15 @@ class MacenkoNormalization(object):
 
             h, w, _ = self.h, self.w, self.c
             concentrations = self.target_concentrations
-        H = concentrations[:, 0].reshape(h, w)
+        if total:
+            H = np.multiply(np.array(concentrations[:, 0], ndmin=2).T,
+                            np.reshape(self.target_stain_matrix[0, :], (1, 3))).reshape(h, w, 3)
+        else:
+            H = concentrations[:, 0].reshape(h, w)
         H = OD2RGB(H)
         return H
 
-    def get_eosin_channel(self, source_image=None):
+    def get_eosin_channel(self, source_image=None, total=True):
         """Get eosin channel concentration of source or target image.
 
         If source image is providedd, then the returned value
@@ -224,7 +228,11 @@ class MacenkoNormalization(object):
         else:
             h, w, _ = self.h, self.w, self.c
             concentrations = self.target_concentrations
-        E = concentrations[:, 1].reshape(h, w)
+        if total:
+            E = np.multiply(np.array(concentrations[:, 1], ndmin=2).T,
+                            np.reshape(self.target_stain_matrix[1, :], (1, 3))).reshape(h, w, 3)
+        else:
+            E = concentrations[:, 1].reshape(h, w)
         E = OD2RGB(E)
         return E
 
@@ -244,10 +252,9 @@ class MacenkoNormalization(object):
         H = self.target_stain_matrix[0, :]
         H = OD2RGB(H)
         if vis:
-            fig, ax = plt.figure(figsize=(8, 8))
-            ax.set_axisoff()
-            vector = np.repeat(np.array([H]), 128, axis=0)
-            ax.imshow(vector)
+            fig, ax = plt.subplots(figsize=(8, 8))
+            ax.set_axis_off()
+            ax.plot([0, 1], [1, 1], c=H/255, linewidth=40)
         return H
 
     def get_eosin_stain(self, vis=True):
@@ -266,8 +273,7 @@ class MacenkoNormalization(object):
         E = self.target_stain_matrix[1, :]
         E = OD2RGB(E)
         if vis:
-            fig, ax = plt.figure(figsize=(8, 8))
-            ax.set_axisoff()
-            vector = np.repeat(np.array([E]), 128, axis=0)
-            ax.imshow(vector)
+            fig, ax = plt.subplots(figsize=(8, 8))
+            ax.set_axis_off()
+            ax.plot([0, 1], [1, 1], c=E/255, linewidth=40)
         return E
