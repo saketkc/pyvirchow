@@ -202,8 +202,10 @@ class MacenkoNormalization(object):
             h, w, _ = self.h, self.w, self.c
             concentrations = self.target_concentrations
         if total:
-            H = np.multiply(np.array(concentrations[:, 0], ndmin=2).T,
-                            np.reshape(self.target_stain_matrix[0, :], (1, 3))).reshape(h, w, 3)
+            H = np.multiply(
+                np.array(concentrations[:, 0], ndmin=2).T,
+                np.reshape(self.target_stain_matrix[0, :], (1, 3))).reshape(
+                    h, w, 3)
         else:
             H = concentrations[:, 0].reshape(h, w)
         H = OD2RGB(H)
@@ -229,8 +231,10 @@ class MacenkoNormalization(object):
             h, w, _ = self.h, self.w, self.c
             concentrations = self.target_concentrations
         if total:
-            E = np.multiply(np.array(concentrations[:, 1], ndmin=2).T,
-                            np.reshape(self.target_stain_matrix[1, :], (1, 3))).reshape(h, w, 3)
+            E = np.multiply(
+                np.array(concentrations[:, 1], ndmin=2).T,
+                np.reshape(self.target_stain_matrix[1, :], (1, 3))).reshape(
+                    h, w, 3)
         else:
             E = concentrations[:, 1].reshape(h, w)
         E = OD2RGB(E)
@@ -254,7 +258,7 @@ class MacenkoNormalization(object):
         if vis:
             fig, ax = plt.subplots(figsize=(8, 8))
             ax.set_axis_off()
-            ax.plot([0, 1], [1, 1], c=H/255, linewidth=40)
+            ax.plot([0, 1], [1, 1], c=H / 255, linewidth=40)
         return H
 
     def get_eosin_stain(self, vis=True):
@@ -275,5 +279,5 @@ class MacenkoNormalization(object):
         if vis:
             fig, ax = plt.subplots(figsize=(8, 8))
             ax.set_axis_off()
-            ax.plot([0, 1], [1, 1], c=E/255, linewidth=40)
+            ax.plot([0, 1], [1, 1], c=E / 255, linewidth=40)
         return E

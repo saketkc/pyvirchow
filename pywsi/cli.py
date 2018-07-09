@@ -12,7 +12,7 @@ import numpy as np
 import click
 from click_help_colors import HelpColorsGroup
 import glob
-from pywsi.io.operations import WSIReader
+from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_annotation_polygons
 from pywsi.morphology.patch_extractor import TissuePatch
 
 from PIL import Image
@@ -174,7 +174,6 @@ def extract_tumor_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
         last_used_y = None
         wsi = WSIReader(tumor_wsi, 40)
         uid = wsi.uid.replace('.tif', '')
-        scale_factor = wsi.level0_mag / wsi.magnifications[level]
         filepath = os.path.join(annmaskdir, 'level_{}'.format(level),
                                 uid + '_AnnotationColored.npy')
         if not os.path.exists(filepath):
@@ -300,7 +299,6 @@ def extract_normal_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
         last_used_y = None
         wsi = WSIReader(wsi, 40)
         uid = wsi.uid.replace('.tif', '')
-        scale_factor = wsi.level0_mag / wsi.magnifications[level]
         tissue_mask = np.load(
             os.path.join(tismaskdir, 'level_{}'.format(level),
                          uid + '_TissuePatch.npy'))
@@ -403,3 +401,150 @@ def extract_patches_from_coords_cmd(indir, csv, level, patchsize, savedir):
             os.makedirs(os.path.dirname(out_file), exist_ok=True)
             img = Image.fromarray(patch)
             img.save(out_file)
+
+
+@cli.command(
+    'extract-test-patches',
+    context_settings=CONTEXT_SETTINGS,
+    help='Extract patches from  testing dataset')
+@click.option('--indir', help='Root directory with all WSIs', required=True)
+@click.option(
+    '--tismaskdir',
+    help='Root directory with all annotation mask WSIs',
+    required=True)
+@click.option(
+    '--level',
+    type=int,
+    help='Level at which to extract patches',
+    required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--stride',
+    default=128,
+    help='Slide windows by this much to get the next [atj]',
+    required=True)
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def extract_test_patches_cmd(indir, tismaskdir, level, patchsize, stride,
+                             savedir):
+    wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
+    for wsi in tqdm(wsis):
+        last_used_y = None
+        last_used_x = None
+        wsi = WSIReader(wsi, 40)
+        uid = wsi.uid.replace('.tif', '')
+        tissue_mask = np.load(
+            os.path.join(tismaskdir, 'level_{}'.format(level),
+                         uid + '_TissuePatch.npy'))
+
+        x_ids, y_ids = np.where(tissue_mask)
+        for x_center, y_center in zip(x_ids, y_ids):
+            out_file = '{}/level_{}/{}_{}_{}_{}.png'.format(
+                savedir, level, uid, x_center, y_center, patchsize)
+            x_topleft = int(x_center - patchsize / 2)
+            y_topleft = int(y_center - patchsize / 2)
+            x_topright = x_topleft + patchsize
+            y_bottomright = y_topleft + patchsize
+            mask = tissue_mask[x_topleft:x_topright, y_topleft:y_bottomright]
+            if np.sum(mask) > 0.5 * (patchsize * patchsize):
+                if last_used_x is None:
+                    last_used_x = x_center
+                    last_used_y = y_center
+                    diff_x = stride
+                    diff_y = stride
+                else:
+                    diff_x = np.abs(x_center - last_used_x)
+                    diff_y = np.abs(y_center - last_used_y)
+                if diff_x >= stride or diff_y >= stride:
+                    colored_patch = wsi.get_patch_by_level(0, 0, level)
+                    patch = colored_patch[x_topleft:x_topright, y_topleft:
+                                          y_bottomright, :]
+                    os.makedirs(os.path.dirname(out_file), exist_ok=True)
+                    img = Image.fromarray(patch)
+                    img.save(out_file)
+                    last_used_x = x_center
+                    last_used_y = y_center
+
+
+@cli.command(
+    'estimate-tumor-patches',
+    context_settings=CONTEXT_SETTINGS,
+    help='Estimate number of extractable tumor patches from tumor WSIs')
+@click.option(
+    '--indir', help='Root directory with all tumor WSIs', required=True)
+@click.option('--jsondir', help='Root directory with all jsons', required=True)
+@click.option(
+    '--level',
+    type=int,
+    help='Level at which to extract patches',
+    required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--stride', type=int, default=128, help='Stride to generate next patch')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def estimate_tumor_patches_cmd(
+        indir,
+        jsondir,
+        level,
+        patchsize,
+        stride,
+        savedir,
+):
+    tumor_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
+
+    for tumor_wsi in tqdm(tumor_wsis):
+        wsi = WSIReader(tumor_wsi, 40)
+        uid = wsi.uid.replace('.tif', '')
+        json_filepath = os.path.join(jsondir, uid + '.json')
+        if not os.path.exists(json_filepath):
+            print('Skipping {} as annotation json not found'.format(uid))
+            continue
+        out_dir = os.path.join(savedir, 'level_{}'.format(level))
+        bounding_boxes, (
+            extreme_top_left_x,
+            extreme_top_left_y) = get_annotation_bounding_boxes(json_filepath)
+        polygons = get_annotation_polygons(json_filepath)
+        tumor_bb = bounding_boxes['tumor']
+        normal_bb = bounding_boxes['normal']
+
+        normal_polygons = polygons['normal']
+        tumor_polygons = polygons['tumor']
+        to_write = ''
+        for index, rectangle, polygon in enumerate(
+                zip(tumor_bb, tumor_polygons)):
+            """
+            Sample points from rectangle. We will assume we are sampling the
+            centers of our patch. So if we sample x_center, y_center
+            from this rectangle, we need to ensure (x_center +/- patchsize/2, y_center +- patchsize/2)
+            lie inside the polygon
+            """
+            xmin, ymax = rectangle['top_left']
+            xmax, ymin = rectangle['bottom_right']
+            path = polygon.get_path()
+            for x_center in np.arange(xmin, xmax, 1):
+                for y_center in np.arange(ymin, ymax, 1):
+                    x_topleft = int(x_center - patchsize / 2)
+                    y_topleft = int(y_center - patchsize / 2)
+                    x_bottomright = x_topleft + patchsize
+                    y_bottomright = y_topleft + patchsize
+
+                    if path.contains_points([(x_topleft, y_topleft),
+                                             (x_bottomright,
+                                              y_bottomright)]).all():
+                        to_write += '{}_{}_{}_{}\n'.format(
+                            uid, x_center, y_center, patchsize)
+        with open(os.path.join(out_dir, 'tumor_coords.txt'), 'w') as fh:
+            fh.write(to_write)

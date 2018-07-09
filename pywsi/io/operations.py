@@ -21,8 +21,40 @@ from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
 
 import json
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Rectangle
 from PIL import Image, ImageDraw
+
+
+def rectangle_dict_to_mpl(rectangle_dict, x0, y0, scale_factor, edgecolor):
+    """Convert rectangle dict to matplotlib patch Rectangle
+
+    Parameters
+    ----------
+    rectangle_dict: dict
+                    dict with keys as defined in get_annotation_bounding_boxes
+    """
+    if edgecolor == 'normal':
+        edgecolor = '#00441b'
+    elif edgecolor == 'tumor':
+        edgecolor = '#ca0020'  #'#f03b20'
+    xmin, ymax = rectangle_dict['top_left']
+    xmax, ymin = rectangle_dict['bottom_right']
+
+    xleft = int((xmin - x0) * scale_factor)
+    yleft = int((ymin - y0) * scale_factor)
+
+    width = int((xmax - xmin) * scale_factor)
+    height = int((ymax - ymin) * scale_factor)
+    assert width > 0, 'width should be > 0'
+    assert height > 0, 'height should be > 0'
+    return Rectangle(
+        (xleft, yleft),
+        width,
+        height,
+        edgecolor=edgecolor,
+        facecolor=None,
+        fill=False,
+        linewidth=4)
 
 
 def poly2mask(polygons, shape):
@@ -51,6 +83,27 @@ def poly2mask(polygons, shape):
         draw.polygon(coordinates_int, outline=1, fill=1)
     mask = np.array(img)
     return mask
+
+
+def translate_and_scale_object(array, x0, y0, scale_factor):
+    """Translate and scale any object
+
+    Parameters
+    ----------
+    arrayn: array_like
+            Nx2 array of polygon coordinates
+
+    x0, y0: int
+            Top left start coordinates of patch
+
+    scale_factor: float
+                  Ratio of current level magnification to magnification at level0.
+
+    """
+    array = array - np.array([x0, y0])
+    array = array * scale_factor
+    array = np.round(array).astype(int)
+    return array
 
 
 def translate_and_scale_polygon(polygon,
@@ -90,13 +143,89 @@ def translate_and_scale_polygon(polygon,
         edgecolor = '#00441b'
     elif edgecolor == 'tumor':
         edgecolor = '#ca0020'  #'#f03b20'
-
-    polygon = polygon - np.array([x0, y0])
-    polygon = polygon * scale_factor
-    polygon = np.round(polygon).astype(int)
+    polygon = translate_and_scale_object(polygon, x0, y0, scale_factor)
     polygon = Polygon(
         polygon, edgecolor=edgecolor, facecolor=None, fill=False, linewidth=4)
     return polygon
+
+
+def get_annotation_bounding_boxes(json_filepath):
+    """Get bounding boxes for manually annotated regions.
+
+    Parameters
+    ----------
+    annotation_json: string
+                        Path to annotation json
+
+    Returns
+    -------
+    coordinates: array
+                    coordinates in top-left -> top-right -> bottom-right -> bottom-left
+
+    extreme_top_left_x, extreme_top_left_y: int, int
+                                            Coordinates of the top left box.
+                                            These coordinates can be used to
+                                            get autofocused annotation patches.
+                                            At least in principle.e
+    """
+    json_parsed = json.load(open(json_filepath))
+    tumor_patches = json_parsed['tumor']
+    normal_patches = json_parsed['normal']
+    rectangles = OrderedDict()
+    rectangles['tumor'] = []
+    rectangles['normal'] = []
+    for tumor_patch in tumor_patches:
+        polygon = np.array(tumor_patch['vertices'])
+        xmin, ymin = polygon.min(axis=0)
+        xmax, ymax = polygon.max(axis=0)
+        rectangle = OrderedDict()
+        rectangle['top_left'] = (xmin, ymax)
+        rectangle['top_right'] = (xmax, ymax)
+        rectangle['bottom_right'] = (xmax, ymin)
+        rectangle['bottom_left'] = (xmin, ymin)
+        rectangles['tumor'].append(rectangle)
+    for normal_patch in normal_patches:
+        polygon = np.array(normal_patch['vertices'])
+        xmin, ymin = polygon.min(axis=0)
+        xmax, ymax = polygon.max(axis=0)
+        rectangle = OrderedDict()
+        rectangle['top_left'] = (xmin, ymax)
+        rectangle['top_right'] = (xmax, ymax)
+        rectangle['bottom_right'] = (xmax, ymin)
+        rectangle['bottom_left'] = (xmin, ymin)
+        rectangles['normal'].append(rectangle)
+    return rectangles
+
+
+def get_annotation_polygons(json_filepath):
+    """Get annotation jsons polygons
+
+    Assumed to be at level 0
+
+    Parameters
+    ----------
+    json_filepath: string
+                    Path to json file
+
+    Returns
+    -------
+    polygons: dict(Polygons)
+                dict of matplotlib.Polygons with keys are normal/tumor
+
+    """
+    json_parsed = json.load(open(json_filepath))
+    tumor_patches = json_parsed['tumor']
+    normal_patches = json_parsed['normal']
+    polygons = OrderedDict()
+    polygons['tumor'] = []
+    polygons['normal'] = []
+    for tumor_patch in tumor_patches:
+        polygon = Polygon(np.array(tumor_patch['vertices']))
+        polygons['tumor'].append(polygon)
+    for normal_patch in normal_patches:
+        polygon = Polygon(np.array(normal_patch['vertices']))
+        polygons['normal'].append(polygon)
+    return polygons
 
 
 def draw_annotation(json_filepath, x0, y0, scale_factor, ax=None):
@@ -155,6 +284,62 @@ def draw_annotation(json_filepath, x0, y0, scale_factor, ax=None):
             bbox_to_anchor=(0.5, -0.1),
             ncol=2)
     return polygons
+
+
+def draw_annotation_boxes(json_filepath, x0, y0, scale_factor, ax=None):
+    """Draw manual annotations as in json file.
+
+    Parameters
+    ----------
+    json_filepath: string
+                   Path to json file containing polygon coordinates
+    x0: int
+        x coordinate of top left of patch
+    y0: int
+        y coordinate of top left of patch
+    scale_factor: float
+                  Scale coordinates by this (magnification/level0_magnification)
+    ax: matploltib.axes
+        If not None, add patches to this axis
+
+    Returns
+    -------
+    rectangles: array_lik
+                An array of mpathces.Polygon object containing apprpriately colored rectangles
+
+    Assumptions: x0, y0 are being provided at the level0 coordinates
+    """
+    bounding_boxes = get_annotation_bounding_boxes(json_filepath)
+    tumor_boxes = bounding_boxes['tumor']
+    normal_boxes = bounding_boxes['normal']
+    rectangles = []
+    labelelled_rectangles = []
+    for index, tumor_box in enumerate(tumor_boxes):
+        rectangle = rectangle_dict_to_mpl(tumor_box, x0, y0, scale_factor,
+                                          'tumor')
+        if index == 0:
+            rectangle.set_label('tumor')
+            labelelled_rectangles.append(rectangle)
+        # For legend
+        rectangles.append(rectangle)
+    for index, normal_box in enumerate(normal_boxes):
+        rectangle = rectangle_dict_to_mpl(normal_box, x0, y0, scale_factor,
+                                          'normal')
+        if index == 0:
+            rectangle.set_label('normal')
+            labelelled_rectangles.append(rectangle)
+        # For legend
+        rectangles.append(rectangle)
+    if ax:
+        for rectangle in rectangles:
+            ax.add_patch(rectangle)
+
+        ax.legend(
+            handles=labelelled_rectangles,
+            loc=9,
+            bbox_to_anchor=(0.5, -0.1),
+            ncol=2)
+    return rectangles
 
 
 def path_leaf(path):
@@ -304,7 +489,7 @@ class WSIReader(OpenSlide):
         else:
             self.level0_mag = level0_mag
 
-        self.uid = path_leaf(image_path)
+        self.uid = os.path.splitext(path_leaf(image_path))[0]
         self.filepath = image_path
         width, height = self.dimensions
         self.width = width
@@ -464,6 +649,8 @@ class WSIReader(OpenSlide):
                                   magnification=None,
                                   level=None,
                                   patch_size=None,
+                                  show_boundary=True,
+                                  show_box=False,
                                   figsize=(10, 10)):
         """Visualize patch with manually annotated regions marked in red/green.
 
@@ -479,8 +666,10 @@ class WSIReader(OpenSlide):
                0-9 level with 0 being the highest zoom level
         patch_size: int
                     Patch size to extract (the final size might not necessarily be this)
-
-
+        show_boundary: bool
+                       Should draw the annotation boundaries
+        show_box: bool
+                  Should draw a box around the annotation
         """
         if not magnification and not level:
             raise ValueError(
@@ -494,62 +683,12 @@ class WSIReader(OpenSlide):
             scale_factor = self.get_level_scale_factor(level)
 
         ax = imshow(patch, figsize=figsize)
-        annotation_polygons = draw_annotation(annotation_json, x0, y0,
-                                              scale_factor, ax)
-        self.annotation_polygons = annotation_polygons
-
-    def get_annotation_bounding_boxes(self, json_filepath):
-        """Get bounding boxes for manually annotated regions.
-
-        Parameters
-        ----------
-        annotation_json: string
-                         Path to annotation json
-
-        Returns
-        -------
-        coordinates: array
-                     coordinates in top-left -> top-right -> bottom-right -> bottom-left
-
-        extreme_top_left_x, extreme_top_left_y: int, int
-                                                Coordinates of the top left box.
-                                                These coordinates can be used to
-                                                get autofocused annotation patches.
-                                                At least in principle.e
-        """
-        json_parsed = json.load(open(json_filepath))
-        tumor_patches = json_parsed['tumor']
-        normal_patches = json_parsed['normal']
-        rectangles = OrderedDict()
-        rectangles['tumor'] = []
-        rectangles['normal'] = []
-        extreme_top_left_x = self.dimensions[0]
-        extreme_top_left_y = self.dimensions[1]
-        for tumor_patch in tumor_patches:
-            polygon = np.array(tumor_patch['vertices'])
-            xmin, ymin = polygon.min(axis=0)
-            xmax, ymax = polygon.max(axis=0)
-            if xmin < extreme_top_left_x:
-                extreme_top_left_x = xmin
-            if ymin < extreme_top_left_y:
-                extreme_top_left_y = ymin
-            rectangle = OrderedDict()
-            rectangle['top_left'] = (xmin, ymax)
-            rectangle['top_right'] = (xmax, ymax)
-            rectangle['bottom_right'] = (xmax, ymin)
-            rectangle['bottom_left'] = (xmin, ymin)
-            rectangles['tumor'].append(rectangle)
-        for normal_patch in normal_patches:
-            polygon = np.array(normal_patch['vertices'])
-            xmin, ymin = polygon.min(axis=0)
-            xmax, ymax = polygon.max(axis=0)
-            rectangle = OrderedDict()
-            rectangle['top_left'] = (xmin, ymax)
-            rectangle['top_right'] = (xmax, ymax)
-            rectangle['bottom_right'] = (xmax, ymin)
-            rectangle['bottom_left'] = (xmin, ymin)
-            rectangles['normal'].append(rectangle)
-        return rectangles, (extreme_top_left_x, extreme_top_left_y)
+        if show_boundary:
+            annotation_polygons = draw_annotation(annotation_json, x0, y0,
+                                                  scale_factor, ax)
+            self.annotation_polygons = annotation_polygons
+        if show_box:
+            draw_annotation_boxes(annotation_json, x0, y0, scale_factor, ax)
 
     def autofocus_annotation(self,
                              json_filepath,
@@ -561,7 +700,19 @@ class WSIReader(OpenSlide):
         of bounding box of the annotation
 
         """
-        _, (x0, y0) = self.get_annotation_bounding_boxes(json_filepath)
+        bounding_boxes = get_annotation_bounding_boxes(json_filepath)
+        extreme_top_left_x = self.dimensions[0]
+        extreme_top_left_y = self.dimensions[1]
+        for xbox in bounding_boxes.values():
+            for box in xbox:
+                xmin, ymax = box['top_left']
+                xmax, ymin = box['bottom_right']
+                if xmin < extreme_top_left_x:
+                    extreme_top_left_x = xmin
+                if ymin < extreme_top_left_y:
+                    extreme_top_left_y = ymin
+
+        x0, y0 = extreme_top_left_x, extreme_top_left_y
         if not magnification and not level:
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
