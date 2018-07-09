@@ -307,7 +307,11 @@ def extract_normal_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
             x_ids, y_ids = np.where(tissue_mask)
             subtracted_mask = tissue_mask
             colored_patch = wsi.get_patch_by_level(0, 0, level)
-        elif 'tumor' in uid:
+        elif 'tumor' in uid or 'test' in uid:
+            if not os.path.isfile(os.path.join(annmaskdir, 'level_{}'.format(level),
+                                               uid + '_AnnotationNormalMask.npy')):
+                print('Skipping {}'.format(uid))
+                continue
             normal_mask = np.load(
                 os.path.join(annmaskdir, 'level_{}'.format(level),
                              uid + '_AnnotationNormalMask.npy'))
@@ -495,14 +499,12 @@ def extract_test_patches_cmd(indir, tismaskdir, level, patchsize, stride,
     '--savedir',
     help='Root directory to save extract images to',
     required=True)
-def estimate_tumor_patches_cmd(
-        indir,
-        jsondir,
-        level,
-        patchsize,
-        stride,
-        savedir,
-):
+def estimate_tumor_patches_cmd(indir,
+                               jsondir,
+                               level,
+                               patchsize,
+                               stride,
+                               savedir):
     tumor_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
 
     for tumor_wsi in tqdm(tumor_wsis):
@@ -513,9 +515,7 @@ def estimate_tumor_patches_cmd(
             print('Skipping {} as annotation json not found'.format(uid))
             continue
         out_dir = os.path.join(savedir, 'level_{}'.format(level))
-        bounding_boxes, (
-            extreme_top_left_x,
-            extreme_top_left_y) = get_annotation_bounding_boxes(json_filepath)
+        bounding_boxes = get_annotation_bounding_boxes(json_filepath)
         polygons = get_annotation_polygons(json_filepath)
         tumor_bb = bounding_boxes['tumor']
         normal_bb = bounding_boxes['normal']
@@ -523,8 +523,7 @@ def estimate_tumor_patches_cmd(
         normal_polygons = polygons['normal']
         tumor_polygons = polygons['tumor']
         to_write = ''
-        for index, rectangle, polygon in enumerate(
-                zip(tumor_bb, tumor_polygons)):
+        for rectangle, polygon in zip(tumor_bb, tumor_polygons):
             """
             Sample points from rectangle. We will assume we are sampling the
             centers of our patch. So if we sample x_center, y_center
