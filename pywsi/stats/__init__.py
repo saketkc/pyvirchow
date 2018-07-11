@@ -37,6 +37,7 @@ def welford_update_M2(prev_M2, new_value, prev_avg, new_avg):
 
     S_n = S_{n-1} + (x_n-mu_{n-1})(x_n-mu_n)
 
+
     Parameters
     ----------
     prev_M2: array_like
@@ -46,7 +47,7 @@ def welford_update_M2(prev_M2, new_value, prev_avg, new_avg):
     prev_avg: array_like
               Vector of (count-1)th step averages
     count: int
-            Current count (count starts from 1)
+           Current count (count starts from 1)
 
     Returns
     -------
@@ -66,6 +67,7 @@ def welford_simulatenous_update(prev_avg, prev_M2, new_value, count):
     """Perform Welford's simulatenous update on mean and variance
 
     M2 = n*sigma_n^2
+
     Parameters
     ----------
     prev_avg: array_like
@@ -75,11 +77,10 @@ def welford_simulatenous_update(prev_avg, prev_M2, new_value, count):
     new_value: array_like
                New incoming values vector
     count: int
-            Current count (count starts from 1)
+           Current count (count starts from 1)
 
     Returns
     -------
-
     new_avg: array_like
              Updated average
     new_M2: array_like
@@ -90,7 +91,8 @@ def welford_simulatenous_update(prev_avg, prev_M2, new_value, count):
                    Sample Variance
 
 
-    Example:
+    Example
+    -------
     vector_matrix = [[1,2,3], [3,2,1], [5,1,3]]# [3,4,1]]
 
     for idx, vector in enumerate(vector_matrix):
