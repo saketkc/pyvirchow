@@ -8,26 +8,16 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from ..io.operations import read_as_rgb
+from .color_conversion import RGB2OD, OD2RGB, get_nonwhite_mask, normalize_rows
 import numpy as np
 from numpy import linalg as LA
 import six
 import spams
 
 
-def RGB2OD(image):
-    """Convert Intensities to Optical Density"""
-    assert np.issubdtype(image.dtype, np.uint8)
-    image[np.where(image == 0)] = 1
-    return (-np.log(image / 255.0))
-
-
-def OD2RGB(OD):
-    """Convert optical density back to RGB"""
-    return 255 * np.exp(-OD)
-
-
 class MacenkoNormalization(object):
-    def __init__(self, beta=0.15, alpha=1, lambda1=0.01):
+    def __init__(self, beta=0.15, alpha=1, lambda1=0.01, lambda2=0.01, gamma1=0.01,
+                 maskout_white=True, nonwhite_threshold=0.8):
         """Implementation of Macenko's method.
         See: http://wwwx.cs.unc.edu/~mn/sites/default/files/macenko2009.pdf
 
@@ -57,7 +47,11 @@ class MacenkoNormalization(object):
         self.beta = beta
         self.alpha = alpha
         self.lambda1 = lambda1
+        self.lambda2 = lambda2
+        self.gamma1 = gamma1
         self.OD = None
+        self.maskout_white = maskout_white
+        self.nonwhite_threshold = nonwhite_threshold
 
     def fit(self, target_image):
         """Fit attributes to target image.
@@ -91,6 +85,10 @@ class MacenkoNormalization(object):
         """
         OD = RGB2OD(source_image)
         OD = OD.reshape((-1, 3))
+        if self.maskout_white:
+            nonwhite_mask = get_nonwhite_mask(source_image,
+                                              self.nonwhite_threshold).reshape((-1,))
+            OD = OD[nonwhite_mask]
         OD = (OD[(OD > self.beta).any(axis=1), :])
         self.OD = OD
         # do-PCA
@@ -117,6 +115,11 @@ class MacenkoNormalization(object):
         # Hematoxylin vector. The motivation for this is our visual understanding
         # that the purple Hematoxylin generally appears to be dominant over
         # the pink Eosin.
+        if Vmax[0]<0:
+            Vmax[0]*=-1
+        if Vmin[0]<0:
+            Vmin[0]*=-1
+
         if Vmax[0] > Vmin[0]:
             HE = np.array([Vmax, Vmin])
         else:
@@ -139,6 +142,9 @@ class MacenkoNormalization(object):
                        N x 2 matrix for an N x M case.
         """
         OD = RGB2OD(image).reshape((-1, 3))
+        if self.maskout_white:
+            nonwhite_mask = get_nonwhite_mask(image, self.nonwhite_threshold).reshape((-1,))
+            OD = OD[nonwhite_mask]
         coefs = spams.lasso(
             OD.T, D=stain_matrix.T, mode=2, lambda1=self.lambda1,
             pos=True).toarray().T
@@ -259,6 +265,8 @@ class MacenkoNormalization(object):
             fig, ax = plt.subplots(figsize=(8, 8))
             ax.set_axis_off()
             ax.plot([0, 1], [1, 1], c=H / 255, linewidth=40)
+            ax.set_aspect('equal')
+            fig.tight_layout()
         return H
 
     def get_eosin_stain(self, vis=True):
@@ -279,5 +287,32 @@ class MacenkoNormalization(object):
         if vis:
             fig, ax = plt.subplots(figsize=(8, 8))
             ax.set_axis_off()
+            ax.set_aspect('equal')
             ax.plot([0, 1], [1, 1], c=E / 255, linewidth=40)
+            fig.tight_layout()
         return E
+
+    def get_both_stains(self, vis=True):
+        """ Get the 3 channel values belonging to both stainsn
+
+        Parameters
+        ----------
+        vis: bool
+             Should visualize?
+
+        """
+        H = self.target_stain_matrix[0, :]
+        H = OD2RGB(H)
+        E = self.target_stain_matrix[1, :]
+        E = OD2RGB(E)
+        if vis:
+            fig = plt.figure(figsize=(8, 4))
+            ax = plt.subplot(121)
+            ax.set_axis_off()
+            ax.set_aspect('equal')
+            ax.plot([0, 1], [1, 1], c=H / 255, linewidth=40)
+            ax = plt.subplot(122)
+            ax.set_axis_off()
+            ax.set_aspect('equal')
+            ax.plot([0, 1], [1, 1], c=E / 255, linewidth=40)
+            fig.tight_layout()

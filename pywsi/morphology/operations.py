@@ -9,6 +9,8 @@ import matplotlib.patches as mpatches
 
 from skimage.color import label2rgb
 from skimage.color import rgb2hsv
+from skimage.color import rgb2lab
+from skimage.color import lab2rgb
 
 from skimage.filters import threshold_otsu
 

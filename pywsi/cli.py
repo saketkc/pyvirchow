@@ -308,8 +308,9 @@ def extract_normal_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
             subtracted_mask = tissue_mask
             colored_patch = wsi.get_patch_by_level(0, 0, level)
         elif 'tumor' in uid or 'test' in uid:
-            if not os.path.isfile(os.path.join(annmaskdir, 'level_{}'.format(level),
-                                               uid + '_AnnotationNormalMask.npy')):
+            if not os.path.isfile(
+                    os.path.join(annmaskdir, 'level_{}'.format(level),
+                                 uid + '_AnnotationNormalMask.npy')):
                 print('Skipping {}'.format(uid))
                 continue
             normal_mask = np.load(
@@ -496,54 +497,49 @@ def extract_test_patches_cmd(indir, tismaskdir, level, patchsize, stride,
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
 @click.option(
-    '--savedir',
-    help='Root directory to save extract images to',
-    required=True)
-def estimate_tumor_patches_cmd(indir,
-                               jsondir,
-                               level,
-                               patchsize,
-                               stride,
-                               savedir):
+    '--saveto', help='Root directory to save extract images to', required=True)
+def estimate_tumor_patches_cmd(indir, jsondir, level, patchsize, stride,
+                               saveto):
     tumor_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
+    savedir = os.path.dirname(saveto)
+    out_dir = os.path.join(savedir, 'level_{}'.format(level))
+    os.makedirs(out_dir, exist_ok=True)
+    with open(saveto, 'w') as fh:
+        for tumor_wsi in tqdm(tumor_wsis):
+            wsi = WSIReader(tumor_wsi, 40)
+            uid = wsi.uid.replace('.tif', '')
+            json_filepath = os.path.join(jsondir, uid + '.json')
+            if not os.path.exists(json_filepath):
+                print('Skipping {} as annotation json not found'.format(uid))
+                continue
+            bounding_boxes = get_annotation_bounding_boxes(json_filepath)
+            polygons = get_annotation_polygons(json_filepath)
+            tumor_bb = bounding_boxes['tumor']
+            normal_bb = bounding_boxes['normal']
 
-    for tumor_wsi in tqdm(tumor_wsis):
-        wsi = WSIReader(tumor_wsi, 40)
-        uid = wsi.uid.replace('.tif', '')
-        json_filepath = os.path.join(jsondir, uid + '.json')
-        if not os.path.exists(json_filepath):
-            print('Skipping {} as annotation json not found'.format(uid))
-            continue
-        out_dir = os.path.join(savedir, 'level_{}'.format(level))
-        bounding_boxes = get_annotation_bounding_boxes(json_filepath)
-        polygons = get_annotation_polygons(json_filepath)
-        tumor_bb = bounding_boxes['tumor']
-        normal_bb = bounding_boxes['normal']
+            normal_polygons = polygons['normal']
+            tumor_polygons = polygons['tumor']
+            to_write = ''
+            for rectangle, polygon in zip(tumor_bb, tumor_polygons):
+                """
+                Sample points from rectangle. We will assume we are sampling the
+                centers of our patch. So if we sample x_center, y_center
+                from this rectangle, we need to ensure (x_center +/- patchsize/2, y_center +- patchsize/2)
+                lie inside the polygon
+                """
+                xmin, ymax = rectangle['top_left']
+                xmax, ymin = rectangle['bottom_right']
+                path = polygon.get_path()
+                for x_center in np.arange(xmin, xmax, patchsize):
+                    for y_center in np.arange(ymin, ymax, patchsize):
+                        x_topleft = int(x_center - patchsize / 2)
+                        y_topleft = int(y_center - patchsize / 2)
+                        x_bottomright = x_topleft + patchsize
+                        y_bottomright = y_topleft + patchsize
 
-        normal_polygons = polygons['normal']
-        tumor_polygons = polygons['tumor']
-        to_write = ''
-        for rectangle, polygon in zip(tumor_bb, tumor_polygons):
-            """
-            Sample points from rectangle. We will assume we are sampling the
-            centers of our patch. So if we sample x_center, y_center
-            from this rectangle, we need to ensure (x_center +/- patchsize/2, y_center +- patchsize/2)
-            lie inside the polygon
-            """
-            xmin, ymax = rectangle['top_left']
-            xmax, ymin = rectangle['bottom_right']
-            path = polygon.get_path()
-            for x_center in np.arange(xmin, xmax, 1):
-                for y_center in np.arange(ymin, ymax, 1):
-                    x_topleft = int(x_center - patchsize / 2)
-                    y_topleft = int(y_center - patchsize / 2)
-                    x_bottomright = x_topleft + patchsize
-                    y_bottomright = y_topleft + patchsize
-
-                    if path.contains_points([(x_topleft, y_topleft),
-                                             (x_bottomright,
-                                              y_bottomright)]).all():
-                        to_write += '{}_{}_{}_{}\n'.format(
-                            uid, x_center, y_center, patchsize)
-        with open(os.path.join(out_dir, 'tumor_coords.txt'), 'w') as fh:
-            fh.write(to_write)
+                        if path.contains_points([(x_topleft, y_topleft),
+                                                 (x_bottomright,
+                                                  y_bottomright)]).all():
+                            to_write = '{}_{}_{}_{}\n'.format(
+                                uid, x_center, y_center, patchsize)
+                            fh.write(to_write)
