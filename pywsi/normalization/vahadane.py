@@ -8,6 +8,7 @@ import spams
 from .macenko import MacenkoNormalization
 from .color_conversion import RGB2OD, get_nonwhite_mask
 
+
 class VahadaneNormalization(MacenkoNormalization):
     def __init__(self, **kwargs):
         super(VahadaneNormalization, self).__init__(**kwargs)
@@ -30,8 +31,8 @@ class VahadaneNormalization(MacenkoNormalization):
         OD = RGB2OD(source_image)
         OD = OD.reshape((-1, 3))
         if self.maskout_white:
-            nonwhite_mask = get_nonwhite_mask(source_image,
-                                              self.nonwhite_threshold).reshape((-1,))
+            nonwhite_mask = get_nonwhite_mask(
+                source_image, self.nonwhite_threshold).reshape((-1, ))
             OD = OD[nonwhite_mask]
         OD = (OD[(OD > self.beta).any(axis=1), :])
         self.OD = OD

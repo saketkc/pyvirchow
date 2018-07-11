@@ -16,8 +16,14 @@ import spams
 
 
 class MacenkoNormalization(object):
-    def __init__(self, beta=0.15, alpha=1, lambda1=0.01, lambda2=0.01, gamma1=0.01,
-                 maskout_white=True, nonwhite_threshold=0.8):
+    def __init__(self,
+                 beta=0.15,
+                 alpha=1,
+                 lambda1=0.01,
+                 lambda2=0.01,
+                 gamma1=0.01,
+                 maskout_white=True,
+                 nonwhite_threshold=0.8):
         """Implementation of Macenko's method.
         See: http://wwwx.cs.unc.edu/~mn/sites/default/files/macenko2009.pdf
 
@@ -86,8 +92,8 @@ class MacenkoNormalization(object):
         OD = RGB2OD(source_image)
         OD = OD.reshape((-1, 3))
         if self.maskout_white:
-            nonwhite_mask = get_nonwhite_mask(source_image,
-                                              self.nonwhite_threshold).reshape((-1,))
+            nonwhite_mask = get_nonwhite_mask(
+                source_image, self.nonwhite_threshold).reshape((-1, ))
             OD = OD[nonwhite_mask]
         OD = (OD[(OD > self.beta).any(axis=1), :])
         self.OD = OD
@@ -115,10 +121,10 @@ class MacenkoNormalization(object):
         # Hematoxylin vector. The motivation for this is our visual understanding
         # that the purple Hematoxylin generally appears to be dominant over
         # the pink Eosin.
-        if Vmax[0]<0:
-            Vmax[0]*=-1
-        if Vmin[0]<0:
-            Vmin[0]*=-1
+        if Vmax[0] < 0:
+            Vmax[0] *= -1
+        if Vmin[0] < 0:
+            Vmin[0] *= -1
 
         if Vmax[0] > Vmin[0]:
             HE = np.array([Vmax, Vmin])
@@ -143,7 +149,8 @@ class MacenkoNormalization(object):
         """
         OD = RGB2OD(image).reshape((-1, 3))
         if self.maskout_white:
-            nonwhite_mask = get_nonwhite_mask(image, self.nonwhite_threshold).reshape((-1,))
+            nonwhite_mask = get_nonwhite_mask(
+                image, self.nonwhite_threshold).reshape((-1, ))
             OD = OD[nonwhite_mask]
         coefs = spams.lasso(
             OD.T, D=stain_matrix.T, mode=2, lambda1=self.lambda1,
