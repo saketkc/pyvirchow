@@ -672,7 +672,12 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                         patch_polygon = shapelyPolygon(
                             [(x_left, y_top), (x_right, y_top),
                              (x_right, y_bottom), (x_left, y_bottom)])
-                        if not annotated_polygon_scaled.contains(patch_polygon):
+                        try:
+                            if not annotated_polygon_scaled.contains(patch_polygon):
+                                continue
+                        except:
+                            warnings.warn('Skipping: {}_{}_{}_{}.png'.format(
+                                uid, x_left, y_top, patchsize))
                             continue
 
                         out_file = os.path.join(
