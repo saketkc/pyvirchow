@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 
 from collections import defaultdict
 import os
-import json
 import numpy as np
 from six import iteritems
 
@@ -26,6 +25,7 @@ click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 from tqdm import tqdm
 import warnings
+from multiprocessing import Pool
 
 
 @click.group(
@@ -590,17 +590,15 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
     os.makedirs(normal_dir, exist_ok=True)
     os.makedirs(tumor_dir, exist_ok=True)
     dirs = {'normal': normal_dir, 'tumor': tumor_dir}
-    #shape = (patchsize, patchsize)
-    for wsi in wsis:
-        last_used_x = None
-        last_used_y = None
+
+    def process_wsi(wsi):
         wsi = WSIReader(wsi, 40)
         uid = wsi.uid.replace('.tif', '')
         scale_factor = wsi.get_level_scale_factor(level)
 
         json_filepath = os.path.join(jsondir, uid + '.json')
         if not os.path.isfile(json_filepath):
-            continue
+            return
         boxes = get_annotation_bounding_boxes(json_filepath)
         polygons = get_annotation_polygons(json_filepath)
 
@@ -617,6 +615,8 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                 get_common_interior_polygons(polygon, polygons['tumor']))
 
         for polygon_key in polygons.keys():
+            last_used_x = None
+            last_used_y = None
             annotated_polygons = polygons[polygon_key]
             annotated_boxes = boxes[polygon_key]
 
@@ -624,8 +624,8 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
             # tand check if they overlap with any other annoations and
             # if not fetch a patch at that coordinate from the wsi
 
-            for annotated_polygon, annotated_box in tqdm(
-                    zip(annotated_polygons, annotated_boxes)):
+            for annotated_polygon, annotated_box in zip(
+                    annotated_polygons, annotated_boxes):
                 minx, miny = annotated_box['top_left']
                 maxx, miny = annotated_box['top_right']
 
@@ -655,19 +655,42 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                     for y_top in np.arange(miny, maxy, 1):
                         x_right = x_left + patchsize
                         y_bottom = y_top + patchsize
+                        if last_used_x is None:
+                            last_used_x = x_left
+                            last_used_y = y_top
+                            diff_x = stride
+                            diff_y = stride
+                        else:
+                            diff_x = np.abs(x_left - last_used_x)
+                            diff_y = np.abs(y_top - last_used_y)
+                        #print(last_used_x, last_used_y, x_left, y_top, diff_x, diff_y)
+                        if diff_x <= stride and diff_y <= stride:
+                            continue
+                        else:
+                            last_used_x = x_left
+                            last_used_y  = y_top
                         patch_polygon = shapelyPolygon(
                             [(x_left, y_top), (x_right, y_top),
                              (x_right, y_bottom), (x_left, y_bottom)])
-                        if annotated_polygon_scaled.contains(patch_polygon):
-                            patches += 1
-                            out_file = os.path.join(
-                                dirs[polygon_key], '{}_{}_{}_{}.png'.format(
-                                    uid, x_left, y_top, patchsize))
-                            patch = wsi.get_patch_by_level(
-                                x_left, y_top, level, patchsize)
-                            os.makedirs(
-                                os.path.dirname(out_file), exist_ok=True)
-                            img = Image.fromarray(patch)
-                            img.save(out_file)
-                            os.makedirs(
-                                os.path.dirname(out_file), exist_ok=True)
+                        if not annotated_polygon_scaled.contains(patch_polygon):
+                            continue
+
+                        out_file = os.path.join(
+                            dirs[polygon_key], '{}_{}_{}_{}.png'.format(
+                                uid, x_left, y_top, patchsize))
+                        patch = wsi.get_patch_by_level(
+                            x_left, y_top, level, patchsize)
+                        os.makedirs(
+                            os.path.dirname(out_file), exist_ok=True)
+                        img = Image.fromarray(patch)
+                        img.save(out_file)
+                        os.makedirs(
+                            os.path.dirname(out_file), exist_ok=True)
+
+    #with Pool(processes=2) as p:
+    total_wsi = len(wsis)
+    with tqdm(total=total_wsi) as pbar:
+        for i, wsi in tqdm(enumerate(list(wsis))):
+            process_wsi(wsi)
+            pbar.update()
+
