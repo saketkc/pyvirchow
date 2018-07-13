@@ -1,5 +1,8 @@
+from shapely.geometry import Polygon as shapelyPolygon
 from shapely.geometry import Polygon, box
 from shapely.affinity import scale
+
+from matplotlib.patches import Polygon
 
 
 def mpl_polygon_to_shapely_scaled(polygon, x0=0, y0=0, scale_factor=1):
@@ -23,7 +26,7 @@ def mpl_polygon_to_shapely_scaled(polygon, x0=0, y0=0, scale_factor=1):
 
     """
     xy = polygon.get_xy()
-    shapely_polygon = Polygon(xy)
+    shapely_polygon = shapelyPolygon(xy)
     return scale(
         shapely_polygon,
         xfact=scale_factor,
@@ -47,10 +50,12 @@ def mpl_rect_to_shapely_scaled(rectangle, x0=0, y0=0, scale_factor=1):
     -------
     sbox : shapely.box
     """
-    xleft, ybottom = rectangle.get_xy()
+    minx, miny = rectangle.get_xy()
     height = rectangle.get_height()
     width = rectangle.get_width()
-    sbox = box(xleft, ybottom, xleft + width, ybottom + right)
+    maxx = minx + width
+    maxy = miny + height
+    sbox = box(minx, miny, maxx, maxy)
     return scale(sbox, xfact=scale_factor, yfact=scale_factor, origin=(x0, y0))
 
 
@@ -68,8 +73,13 @@ def get_common_interior_polygons(polygon, list_of_polygons):
                              A filtered list of ids
 
     """
+    if isinstance(polygon, Polygon):
+        polygon = shapelyPolygon(polygon.get_xy())
     list_of_common_polygons = []
     for index, outside_polygon in enumerate(list_of_polygons):
+        if isinstance(outside_polygon, Polygon):
+            outside_polygon = shapelyPolygon(outside_polygon.get_xy())
+
         if polygon.within(outside_polygon):
             list_of_common_polygons.append(index)
     return list_of_common_polygons

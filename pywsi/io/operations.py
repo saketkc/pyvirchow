@@ -38,8 +38,8 @@ def rectangle_dict_to_mpl(rectangle_dict, x0, y0, scale_factor, edgecolor):
         edgecolor = '#00441b'
     elif edgecolor == 'tumor':
         edgecolor = '#ca0020'  #'#f03b20'
-    xmin, ymax = rectangle_dict['top_left']
-    xmax, ymin = rectangle_dict['bottom_right']
+    xmin, ymin = rectangle_dict['top_left']
+    xmax, ymax = rectangle_dict['bottom_right']
 
     xleft = int((xmin - x0) * scale_factor)
     yleft = int((ymin - y0) * scale_factor)
@@ -187,20 +187,20 @@ def get_annotation_bounding_boxes(json_filepath):
         xmin, ymin = polygon.min(axis=0)
         xmax, ymax = polygon.max(axis=0)
         rectangle = OrderedDict()
-        rectangle['top_left'] = (xmin, ymax)
-        rectangle['top_right'] = (xmax, ymax)
-        rectangle['bottom_right'] = (xmax, ymin)
-        rectangle['bottom_left'] = (xmin, ymin)
+        rectangle['top_left'] = (xmin, ymin)
+        rectangle['top_right'] = (xmax, ymin)
+        rectangle['bottom_right'] = (xmax, ymax)
+        rectangle['bottom_left'] = (xmin, ymax)
         rectangles['tumor'].append(rectangle)
     for normal_patch in normal_patches:
         polygon = np.array(normal_patch['vertices'])
         xmin, ymin = polygon.min(axis=0)
         xmax, ymax = polygon.max(axis=0)
         rectangle = OrderedDict()
-        rectangle['top_left'] = (xmin, ymax)
-        rectangle['top_right'] = (xmax, ymax)
-        rectangle['bottom_right'] = (xmax, ymin)
-        rectangle['bottom_left'] = (xmin, ymin)
+        rectangle['top_left'] = (xmin, ymin)
+        rectangle['top_right'] = (xmax, ymin)
+        rectangle['bottom_right'] = (xmax, ymax)
+        rectangle['bottom_left'] = (xmin, ymax)
         rectangles['normal'].append(rectangle)
     return rectangles
 
@@ -713,8 +713,8 @@ class WSIReader(OpenSlide):
         extreme_top_left_y = self.dimensions[1]
         for xbox in bounding_boxes.values():
             for box in xbox:
-                xmin, ymax = box['top_left']
-                xmax, ymin = box['bottom_right']
+                xmin, ymin = box['top_left']
+                xmax, ymax = box['bottom_right']
                 if xmin < extreme_top_left_x:
                     extreme_top_left_x = xmin
                 if ymin < extreme_top_left_y:

@@ -12,6 +12,7 @@ import numpy as np
 from six import iteritems
 
 import click
+from shapely.geometry import Polygon as shapelyPolygon
 from click_help_colors import HelpColorsGroup
 import glob
 from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_annotation_polygons,\
@@ -19,7 +20,6 @@ from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_an
 
 from pywsi.morphology.patch_extractor import TissuePatch
 from pywsi.morphology.mask import mpl_polygon_to_shapely_scaled, get_common_interior_polygons
-from shapely.geometry import Polygon
 
 from PIL import Image
 click.disable_unicode_literals_warning = True
@@ -596,42 +596,13 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
         last_used_y = None
         wsi = WSIReader(wsi, 40)
         uid = wsi.uid.replace('.tif', '')
-        json_filepath = os.path.join(jsondir, uid + '.json')
         scale_factor = wsi.get_level_scale_factor(level)
+
+        json_filepath = os.path.join(jsondir, uid + '.json')
         if not os.path.isfile(json_filepath):
-            #warnings.warn('Skipping {} as no json found'.format(uid))
             continue
-        json_parsed = json.load(open(json_filepath))
-        tumor_patches = json_parsed['tumor']
-        normal_patches = json_parsed['normal']
-        polygons = {'tumor': [], 'normal': []}
-        boxes = {'tumor': [], 'normal': []}
-        for index, tumor_patch in enumerate(tumor_patches):
-            polygon = np.array(tumor_patch['vertices'])
-            polygon = translate_and_scale_polygon(
-                polygon,
-                x0=0,
-                y0=0,
-                scale_factor=scale_factor,
-                edgecolor='tumor')
-            polygon_s = mpl_polygon_to_shapely_scaled(
-                polygon, x0=0, y0=0, scale_factor=scale_factor)
-            #polygon_s = Polygon(polygon.get_xy())
-            polygons['tumor'].append(polygon_s)
-            boxes['tumor'].append(polygon_s.bounds)
-        for index, normal_patch in enumerate(normal_patches):
-            polygon = np.array(normal_patch['vertices'])
-            polygon = translate_and_scale_polygon(
-                polygon,
-                x0=0,
-                y0=0,
-                scale_factor=scale_factor,
-                edgecolor='normal')
-            #polygon_s = Polygon(polygon.get_xy())
-            polygon_s = mpl_polygon_to_shapely_scaled(
-                polygon, x0=0, y0=0, scale_factor=scale_factor)
-            polygons['normal'].append(polygon_s)
-            boxes['normal'].append(polygon_s.bounds)
+        boxes = get_annotation_bounding_boxes(json_filepath)
+        polygons = get_annotation_polygons(json_filepath)
 
         polygons_to_exclude = {'tumor': [], 'normal': []}
 
@@ -645,61 +616,58 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
             polygons_to_exclude['normal'].append(
                 get_common_interior_polygons(polygon, polygons['tumor']))
 
-        for polygon_key, polygon_value in iteritems(polygons):
-            for index, polygon in enumerate(polygons[polygon_key]):
-                minx, miny, maxx, maxy = boxes[polygon_key][index]
-                width = int(maxx - minx)
-                height = int(maxy - miny)
-                shape = (width, height)
-                # the polygon is already scaled so keep the scaling factpr 1
-                polygon_translated = translate_and_scale_polygon(
-                    polygon, minx, miny, 1)
-                to_subtract_polygon_idx = polygons_to_exclude[polygon_key][
-                    index]
-                to_subtract_polygons = []
-                for idx in to_subtract_polygon_idx:
-                    to_subtract_polygon = polygons[polygon_key][idx]
-                    to_subtract_polygons.append(
-                        translate_and_scale_polygon(to_subtract_polygon, minx,
-                                                    miny, 1))
-                mask_full = poly2mask([polygon_translated], shape)
-                current_polygon = Polygon(polygon_translated.get_xy())
-                mask_interior = poly2mask(to_subtract_polygons, shape)
-                mask_sub = mask_full - mask_interior
-                mask_sub[np.where(mask_sub < 0)] = 0
-                x_ids, y_ids = np.where(mask_sub)
+        for polygon_key in polygons.keys():
+            annotated_polygons = polygons[polygon_key]
+            annotated_boxes = boxes[polygon_key]
 
-                for x_topleft, y_topleft in zip(x_ids, y_ids):
-                    out_file = os.path.join(
-                        dirs[polygon_key], '{}_{}_{}_{}.png'.format(
-                            uid, x_topleft, y_topleft, patchsize))
-                    x_topright = x_topleft + patchsize
-                    y_bottomright = y_topleft + patchsize
-                    mask = mask_sub[x_topleft:x_topright, y_topleft:
-                                    y_bottomright]
-                    patch_polygon = Polygon(
-                        [(x_topleft, y_topleft), (x_topright, y_topleft),
-                         (x_topright, y_bottomright), (x_topright,
-                                                       y_bottomright)])
-                    if not patch_polygon.within(current_polygon):
-                        #print(patch_polygon)
-                        #print(current_polygon)
-                        #raise RuntimeError
-                        continue
+            # iterate through coordinates in the bounding rectangle
+            # tand check if they overlap with any other annoations and
+            # if not fetch a patch at that coordinate from the wsi
 
-                    if last_used_x is None:
-                        last_used_x = x_topleft
-                        last_used_y = y_topleft
-                        diff_x = stride
-                        diff_y = stride
-                    else:
-                        diff_x = np.abs(x_topleft - last_used_x)
-                        diff_y = np.abs(y_topleft - last_used_y)
-                    if diff_x >= stride and diff_y >= stride:
-                        patch = wsi.get_patch_by_level(x_topleft, y_topleft,
-                                                       level, patchsize)
-                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
-                        img = Image.fromarray(patch)
-                        img.save(out_file)
-                        last_used_x = x_topleft
-                        last_used_y = y_topleft
+            for annotated_polygon, annotated_box in tqdm(
+                    zip(annotated_polygons, annotated_boxes)):
+                minx, miny = annotated_box['top_left']
+                maxx, miny = annotated_box['top_right']
+
+                maxx, maxy = annotated_box['bottom_right']
+                minx, maxy = annotated_box['bottom_left']
+
+                width = int(maxx) - int(minx)
+                height = int(maxy) - int(miny)
+                #(minx, miny), width, height = annotated_box['top_left'], annotated_box['top'].get_xy()
+                # Should scale?
+                minx = int(minx * scale_factor)
+                miny = int(miny * scale_factor)
+                maxx = int(maxx * scale_factor)
+                maxy = int(maxy * scale_factor)
+
+                width = int(width * scale_factor)
+                height = int(height * scale_factor)
+
+                annotated_polygon = np.array(annotated_polygon.get_xy())
+
+                annotated_polygon = annotated_polygon * scale_factor
+                annotated_polygon_scaled = shapelyPolygon(
+                    np.round(annotated_polygon).astype(int))
+
+                patches = 0
+                for x_left in np.arange(minx, maxx, 1):
+                    for y_top in np.arange(miny, maxy, 1):
+                        x_right = x_left + patchsize
+                        y_bottom = y_top + patchsize
+                        patch_polygon = shapelyPolygon(
+                            [(x_left, y_top), (x_right, y_top),
+                             (x_right, y_bottom), (x_left, y_bottom)])
+                        if annotated_polygon_scaled.contains(patch_polygon):
+                            patches += 1
+                            out_file = os.path.join(
+                                dirs[polygon_key], '{}_{}_{}_{}.png'.format(
+                                    uid, x_left, y_top, patchsize))
+                            patch = wsi.get_patch_by_level(
+                                x_left, y_top, level, patchsize)
+                            os.makedirs(
+                                os.path.dirname(out_file), exist_ok=True)
+                            img = Image.fromarray(patch)
+                            img.save(out_file)
+                            os.makedirs(
+                                os.path.dirname(out_file), exist_ok=True)
