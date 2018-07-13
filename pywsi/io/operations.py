@@ -11,7 +11,7 @@ import warnings
 import openslide
 from openslide import OpenSlide
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -21,6 +21,7 @@ from skimage.color import rgb2hsv
 from skimage.color import rgb2lab
 
 import json
+from shapely.geometry import Polygon as shapelyPolygon
 from matplotlib.patches import Polygon, Rectangle
 from PIL import Image, ImageDraw
 
@@ -76,7 +77,10 @@ def poly2mask(polygons, shape):
     img = Image.new('L', shape, 0)
     draw = ImageDraw.Draw(img)
     for polygon in polygons:
-        coordinates = polygon.get_xy()
+        if isinstance(polygon, shapelyPolygon):
+            coordinates = polygon.boundary.coords
+        else:
+            coordinates = polygon.get_xy()
         coordinates_int = []
         for x, y in coordinates:
             coordinates_int.append((int(x), int(y)))
@@ -100,6 +104,10 @@ def translate_and_scale_object(array, x0, y0, scale_factor):
                   Ratio of current level magnification to magnification at level0.
 
     """
+    if isinstance(array, Polygon):
+        array = np.array(array.get_xy())
+    elif isinstance(array, shapelyPolygon):
+        array = np.array(array.exterior.coords)
     array = array - np.array([x0, y0])
     array = array * scale_factor
     array = np.round(array).astype(int)
@@ -730,7 +738,7 @@ class WSIReader(OpenSlide):
         x0 = 0
         y0 = 0
         patch_size = None
-        if not magnification and not level:
+        if magnification is None and level is None:
             raise ValueError(
                 'Atleast one of magnification or level must be selected')
         if magnification:

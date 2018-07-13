@@ -7,18 +7,25 @@ from __future__ import unicode_literals
 
 from collections import defaultdict
 import os
+import json
 import numpy as np
+from six import iteritems
 
 import click
 from click_help_colors import HelpColorsGroup
 import glob
-from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_annotation_polygons
+from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_annotation_polygons,\
+    poly2mask, translate_and_scale_polygon
+
 from pywsi.morphology.patch_extractor import TissuePatch
+from pywsi.morphology.mask import mpl_polygon_to_shapely_scaled, get_common_interior_polygons
+from shapely.geometry import Polygon
 
 from PIL import Image
 click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 from tqdm import tqdm
+import warnings
 
 
 @click.group(
@@ -478,7 +485,7 @@ def extract_test_patches_cmd(indir, tismaskdir, level, patchsize, stride,
 
 
 @cli.command(
-    'estimate-tumor-patches',
+    'estimate-patches',
     context_settings=CONTEXT_SETTINGS,
     help='Estimate number of extractable tumor patches from tumor WSIs')
 @click.option(
@@ -497,49 +504,202 @@ def extract_test_patches_cmd(indir, tismaskdir, level, patchsize, stride,
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
 @click.option(
-    '--saveto', help='Root directory to save extract images to', required=True)
-def estimate_tumor_patches_cmd(indir, jsondir, level, patchsize, stride,
-                               saveto):
-    tumor_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
-    savedir = os.path.dirname(saveto)
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def estimate_patches_cmd(indir, jsondir, level, patchsize, stride, savedir):
+    all_wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
     out_dir = os.path.join(savedir, 'level_{}'.format(level))
     os.makedirs(out_dir, exist_ok=True)
-    with open(saveto, 'w') as fh:
-        for tumor_wsi in tqdm(tumor_wsis):
-            wsi = WSIReader(tumor_wsi, 40)
-            uid = wsi.uid.replace('.tif', '')
-            json_filepath = os.path.join(jsondir, uid + '.json')
-            if not os.path.exists(json_filepath):
-                print('Skipping {} as annotation json not found'.format(uid))
-                continue
-            bounding_boxes = get_annotation_bounding_boxes(json_filepath)
-            polygons = get_annotation_polygons(json_filepath)
-            tumor_bb = bounding_boxes['tumor']
-            normal_bb = bounding_boxes['normal']
+    for wsi in tqdm(all_wsis):
+        wsi = WSIReader(wsi, 40)
+        uid = wsi.uid.replace('.tif', '')
+        json_filepath = os.path.join(jsondir, uid + '.json')
+        if not os.path.exists(json_filepath):
+            print('Skipping {} as annotation json not found'.format(uid))
+            continue
+        bounding_boxes = get_annotation_bounding_boxes(json_filepath)
+        polygons = get_annotation_polygons(json_filepath)
+        tumor_bb = bounding_boxes['tumor']
+        normal_bb = bounding_boxes['normal']
 
-            normal_polygons = polygons['normal']
-            tumor_polygons = polygons['tumor']
+        normal_polygons = polygons['normal']
+        tumor_polygons = polygons['tumor']
+        polygons_dict = {'normal': normal_polygons, 'tumor': tumor_polygons}
+        rectangles_dict = {'normal': normal_bb, 'tumor': tumor_bb}
+        for polygon_key, polygons in iteritems(polygons_dict):
+            bb = rectangles_dict[polygon_key]
             to_write = ''
-            for rectangle, polygon in zip(tumor_bb, tumor_polygons):
-                """
-                Sample points from rectangle. We will assume we are sampling the
-                centers of our patch. So if we sample x_center, y_center
-                from this rectangle, we need to ensure (x_center +/- patchsize/2, y_center +- patchsize/2)
-                lie inside the polygon
-                """
-                xmin, ymax = rectangle['top_left']
-                xmax, ymin = rectangle['bottom_right']
-                path = polygon.get_path()
-                for x_center in np.arange(xmin, xmax, patchsize):
-                    for y_center in np.arange(ymin, ymax, patchsize):
-                        x_topleft = int(x_center - patchsize / 2)
-                        y_topleft = int(y_center - patchsize / 2)
-                        x_bottomright = x_topleft + patchsize
-                        y_bottomright = y_topleft + patchsize
+            with open(os.path.join(savedir, '{}.txt', 'w')) as fh:
+                for rectangle, polygon in zip(bb, polygons):
+                    """
+                    Sample points from rectangle. We will assume we are sampling the
+                    centers of our patch. So if we sample x_center, y_center
+                    from this rectangle, we need to ensure (x_center +/- patchsize/2, y_center +- patchsize/2)
+                    lie inside the polygon
+                    """
+                    xmin, ymax = rectangle['top_left']
+                    xmax, ymin = rectangle['bottom_right']
+                    path = polygon.get_path()
+                    for x_center in np.arange(xmin, xmax, patchsize):
+                        for y_center in np.arange(ymin, ymax, patchsize):
+                            x_topleft = int(x_center - patchsize / 2)
+                            y_topleft = int(y_center - patchsize / 2)
+                            x_bottomright = x_topleft + patchsize
+                            y_bottomright = y_topleft + patchsize
 
-                        if path.contains_points([(x_topleft, y_topleft),
-                                                 (x_bottomright,
-                                                  y_bottomright)]).all():
-                            to_write = '{}_{}_{}_{}\n'.format(
-                                uid, x_center, y_center, patchsize)
-                            fh.write(to_write)
+                            if path.contains_points([(x_topleft, y_topleft),
+                                                     (x_bottomright,
+                                                      y_bottomright)]).all():
+                                to_write = '{}_{}_{}_{}\n'.format(
+                                    uid, x_center, y_center, patchsize)
+                                fh.write(to_write)
+
+
+@cli.command(
+    'extract-test-both-patches',
+    context_settings=CONTEXT_SETTINGS,
+    help='Extract both normal and tumor patches from tissue masks')
+@click.option(
+    '--indir', help='Root directory with all test WSIs', required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--stride', type=int, default=128, help='Stride to generate next patch')
+@click.option('--jsondir', help='Root directory with all jsons', required=True)
+@click.option(
+    '--level',
+    type=int,
+    help='Level at which to extract patches',
+    required=True)
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
+    """Extract tissue only patches from tumor WSIs.
+    """
+    wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
+    out_dir = os.path.join(savedir, 'level_{}'.format(level))
+    normal_dir = os.path.join(out_dir, 'normal')
+    tumor_dir = os.path.join(out_dir, 'tumor')
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(normal_dir, exist_ok=True)
+    os.makedirs(tumor_dir, exist_ok=True)
+    dirs = {'normal': normal_dir, 'tumor': tumor_dir}
+    #shape = (patchsize, patchsize)
+    for wsi in wsis:
+        last_used_x = None
+        last_used_y = None
+        wsi = WSIReader(wsi, 40)
+        uid = wsi.uid.replace('.tif', '')
+        json_filepath = os.path.join(jsondir, uid + '.json')
+        scale_factor = wsi.get_level_scale_factor(level)
+        if not os.path.isfile(json_filepath):
+            #warnings.warn('Skipping {} as no json found'.format(uid))
+            continue
+        json_parsed = json.load(open(json_filepath))
+        tumor_patches = json_parsed['tumor']
+        normal_patches = json_parsed['normal']
+        polygons = {'tumor': [], 'normal': []}
+        boxes = {'tumor': [], 'normal': []}
+        for index, tumor_patch in enumerate(tumor_patches):
+            polygon = np.array(tumor_patch['vertices'])
+            polygon = translate_and_scale_polygon(
+                polygon,
+                x0=0,
+                y0=0,
+                scale_factor=scale_factor,
+                edgecolor='tumor')
+            polygon_s = mpl_polygon_to_shapely_scaled(
+                polygon, x0=0, y0=0, scale_factor=scale_factor)
+            #polygon_s = Polygon(polygon.get_xy())
+            polygons['tumor'].append(polygon_s)
+            boxes['tumor'].append(polygon_s.bounds)
+        for index, normal_patch in enumerate(normal_patches):
+            polygon = np.array(normal_patch['vertices'])
+            polygon = translate_and_scale_polygon(
+                polygon,
+                x0=0,
+                y0=0,
+                scale_factor=scale_factor,
+                edgecolor='normal')
+            #polygon_s = Polygon(polygon.get_xy())
+            polygon_s = mpl_polygon_to_shapely_scaled(
+                polygon, x0=0, y0=0, scale_factor=scale_factor)
+            polygons['normal'].append(polygon_s)
+            boxes['normal'].append(polygon_s.bounds)
+
+        polygons_to_exclude = {'tumor': [], 'normal': []}
+
+        for polygon in polygons['tumor']:
+            # Does this have any of the normal polygons inside it?
+            polygons_to_exclude['tumor'].append(
+                get_common_interior_polygons(polygon, polygons['normal']))
+
+        for polygon in polygons['normal']:
+            # Does this have any of the tumor polygons inside it?
+            polygons_to_exclude['normal'].append(
+                get_common_interior_polygons(polygon, polygons['tumor']))
+
+        for polygon_key, polygon_value in iteritems(polygons):
+            for index, polygon in enumerate(polygons[polygon_key]):
+                minx, miny, maxx, maxy = boxes[polygon_key][index]
+                width = int(maxx - minx)
+                height = int(maxy - miny)
+                shape = (width, height)
+                # the polygon is already scaled so keep the scaling factpr 1
+                polygon_translated = translate_and_scale_polygon(
+                    polygon, minx, miny, 1)
+                to_subtract_polygon_idx = polygons_to_exclude[polygon_key][
+                    index]
+                to_subtract_polygons = []
+                for idx in to_subtract_polygon_idx:
+                    to_subtract_polygon = polygons[polygon_key][idx]
+                    to_subtract_polygons.append(
+                        translate_and_scale_polygon(to_subtract_polygon, minx,
+                                                    miny, 1))
+                mask_full = poly2mask([polygon_translated], shape)
+                current_polygon = Polygon(polygon_translated.get_xy())
+                mask_interior = poly2mask(to_subtract_polygons, shape)
+                mask_sub = mask_full - mask_interior
+                mask_sub[np.where(mask_sub < 0)] = 0
+                x_ids, y_ids = np.where(mask_sub)
+
+                for x_topleft, y_topleft in zip(x_ids, y_ids):
+                    out_file = os.path.join(
+                        dirs[polygon_key], '{}_{}_{}_{}.png'.format(
+                            uid, x_topleft, y_topleft, patchsize))
+                    x_topright = x_topleft + patchsize
+                    y_bottomright = y_topleft + patchsize
+                    mask = mask_sub[x_topleft:x_topright, y_topleft:
+                                    y_bottomright]
+                    patch_polygon = Polygon(
+                        [(x_topleft, y_topleft), (x_topright, y_topleft),
+                         (x_topright, y_bottomright), (x_topright,
+                                                       y_bottomright)])
+                    if not patch_polygon.within(current_polygon):
+                        #print(patch_polygon)
+                        #print(current_polygon)
+                        #raise RuntimeError
+                        continue
+
+                    if last_used_x is None:
+                        last_used_x = x_topleft
+                        last_used_y = y_topleft
+                        diff_x = stride
+                        diff_y = stride
+                    else:
+                        diff_x = np.abs(x_topleft - last_used_x)
+                        diff_y = np.abs(y_topleft - last_used_y)
+                    if diff_x >= stride and diff_y >= stride:
+                        patch = wsi.get_patch_by_level(x_topleft, y_topleft,
+                                                       level, patchsize)
+                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
+                        img = Image.fromarray(patch)
+                        img.save(out_file)
+                        last_used_x = x_topleft
+                        last_used_y = y_topleft

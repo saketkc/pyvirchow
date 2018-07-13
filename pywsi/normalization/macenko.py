@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
 from ..io.operations import read_as_rgb
