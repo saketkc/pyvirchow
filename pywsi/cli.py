@@ -651,6 +651,8 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                     np.round(annotated_polygon).astype(int))
 
                 patches = 0
+                assert annotated_polygon_scaled.is_valid, 'Found invalid annotated polygon: {} {}'.format(
+                    uid, annotated_polygon_scaled)
                 for x_left in np.arange(minx, maxx, 1):
                     for y_top in np.arange(miny, maxy, 1):
                         x_right = x_left + patchsize
@@ -668,29 +670,35 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                             continue
                         else:
                             last_used_x = x_left
-                            last_used_y  = y_top
+                            last_used_y = y_top
                         patch_polygon = shapelyPolygon(
                             [(x_left, y_top), (x_right, y_top),
                              (x_right, y_bottom), (x_left, y_bottom)])
+                        assert patch_polygon.is_valid, 'Found invalid polygon: {}_{}_{}'.format(
+                            uid, x_left, y_top)
                         try:
-                            if not annotated_polygon_scaled.contains(patch_polygon):
-                                continue
+                            is_inside = annotated_polygon_scaled.contains(
+                                patch_polygon)
                         except:
-                            warnings.warn('Skipping: {}_{}_{}_{}.png'.format(
-                                uid, x_left, y_top, patchsize))
+                            # Might raise an exception when the two polygons
+                            # are the same
+                            warnings.warn(
+                                'Skipping: {}_{}_{}_{}.png | Equals: {} | Almost equals: {}'.
+                                format(uid, x_left, y_top, patchsize),
+                                annotated_polygon_scaled.equals(patch_polygon),
+                                annotated_polygon_scaled.almost_equals(
+                                    patch_polygon))
                             continue
 
                         out_file = os.path.join(
                             dirs[polygon_key], '{}_{}_{}_{}.png'.format(
                                 uid, x_left, y_top, patchsize))
-                        patch = wsi.get_patch_by_level(
-                            x_left, y_top, level, patchsize)
-                        os.makedirs(
-                            os.path.dirname(out_file), exist_ok=True)
+                        patch = wsi.get_patch_by_level(x_left, y_top, level,
+                                                       patchsize)
+                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
                         img = Image.fromarray(patch)
                         img.save(out_file)
-                        os.makedirs(
-                            os.path.dirname(out_file), exist_ok=True)
+                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
 
     #with Pool(processes=2) as p:
     total_wsi = len(wsis)
@@ -698,4 +706,3 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
         for i, wsi in tqdm(enumerate(list(wsis))):
             process_wsi(wsi)
             pbar.update()
-

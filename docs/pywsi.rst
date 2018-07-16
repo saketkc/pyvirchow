@@ -10,6 +10,7 @@ Subpackages
     pywsi.misc
     pywsi.morphology
     pywsi.normalization
+    pywsi.segmentation
     pywsi.stats
 
 Submodules
