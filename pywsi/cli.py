@@ -595,7 +595,7 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
         wsi = WSIReader(wsi, 40)
         uid = wsi.uid.replace('.tif', '')
         scale_factor = wsi.get_level_scale_factor(level)
-
+        print('Scale_factor: {}'.format(scale_factor))
         json_filepath = os.path.join(jsondir, uid + '.json')
         if not os.path.isfile(json_filepath):
             return
@@ -636,10 +636,12 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                 height = int(maxy) - int(miny)
                 #(minx, miny), width, height = annotated_box['top_left'], annotated_box['top'].get_xy()
                 # Should scale?
-                minx = int(minx * scale_factor)
-                miny = int(miny * scale_factor)
-                maxx = int(maxx * scale_factor)
-                maxy = int(maxy * scale_factor)
+                # No. Do not scale here as the patch is always
+                # fetched from things at level0
+                minx = int(minx)  # * scale_factor)
+                miny = int(miny)  # * scale_factor)
+                maxx = int(maxx)  # * scale_factor)
+                maxy = int(maxy)  # * scale_factor)
 
                 width = int(width * scale_factor)
                 height = int(height * scale_factor)
@@ -647,12 +649,16 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                 annotated_polygon = np.array(annotated_polygon.get_xy())
 
                 annotated_polygon = annotated_polygon * scale_factor
+
+                # buffer ensures the resulting polygon is clean
+                # http://toblerity.org/shapely/manual.html#object.buffer
                 annotated_polygon_scaled = shapelyPolygon(
-                    np.round(annotated_polygon).astype(int))
+                    np.round(annotated_polygon).astype(int)).buffer(0)
 
                 patches = 0
                 assert annotated_polygon_scaled.is_valid, 'Found invalid annotated polygon: {} {}'.format(
-                    uid, annotated_polygon_scaled)
+                    uid,
+                    shapelyPolygon(annotated_polygon).is_valid)
                 for x_left in np.arange(minx, maxx, 1):
                     for y_top in np.arange(miny, maxy, 1):
                         x_right = x_left + patchsize
@@ -666,14 +672,15 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
                             diff_x = np.abs(x_left - last_used_x)
                             diff_y = np.abs(y_top - last_used_y)
                         #print(last_used_x, last_used_y, x_left, y_top, diff_x, diff_y)
-                        if diff_x <= stride and diff_y <= stride:
+                        if diff_x <= stride or diff_y <= stride:
                             continue
                         else:
                             last_used_x = x_left
                             last_used_y = y_top
                         patch_polygon = shapelyPolygon(
                             [(x_left, y_top), (x_right, y_top),
-                             (x_right, y_bottom), (x_left, y_bottom)])
+                             (x_right, y_bottom), (x_left,
+                                                   y_bottom)]).buffer(0)
                         assert patch_polygon.is_valid, 'Found invalid polygon: {}_{}_{}'.format(
                             uid, x_left, y_top)
                         try:
