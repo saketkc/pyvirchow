@@ -33,10 +33,7 @@ def laplace_of_gaussian(input_image,
 
     sigma_prev = sigma_min
     convolution_prev = gaussian_filter(input_image, sigma_prev)
-
-    n_octave = 0
-
-    sigma_upper_bound_prev = sigma_upper_bound.copy()
+    sigma_upper_bound_cur = sigma_upper_bound.copy()
 
     dog_max = np.zeros_like(input_image)
     dog_max[:, :] = eps
@@ -47,22 +44,19 @@ def laplace_of_gaussian(input_image,
 
     n_level = 0
     n_octave = 0
-    sigma_upper_bound_cur = sigma_upper_bound.copy()
 
     for level_cur in range(n_levels + 1):
-        sigma_cur = sigma_prev * sigma_ratio
-        sigma_cur = sigma_cur / (2.0**n_octave)
+        sigma_cur = sigma_prev * delta_sigma
+        sigma_conv = np.sqrt(sigma_cur**2 - sigma_prev**2)
+        sigma_conv /= 2**n_octave
 
-        convolution_cur = gaussian_filter(input_image, sigma_cur)
-
+        convolution_cur = gaussian_filter(convolution_prev, sigma_conv)
         dog_cur = convolution_cur - convolution_prev
-
-        dog_cur[sigma_upper_bound_cur < sigma_cur] = eps
-
+        dog_cur[sigma_upper_bound_cur < sigma_prev] = eps
         pixels_to_update = np.where(dog_cur > dog_octave_max)
-        if len(pixels_to_update[0]):
+        if len(pixels_to_update[0]) > 0:
             dog_octave_max[pixels_to_update] = dog_cur[pixels_to_update]
-            sigma_octave_max[pixels_to_update] = sigma_cur
+            sigma_octave_max[pixels_to_update] = sigma_prev
 
         sigma_prev = sigma_cur
         convolution_prev = convolution_cur
@@ -81,7 +75,6 @@ def laplace_of_gaussian(input_image,
                 dog_octave_max_resized = dog_octave_max
 
             max_pixels = np.where(dog_octave_max_resized > dog_max)
-
             if len(max_pixels[0]) > 0:
 
                 dog_max[max_pixels] = \

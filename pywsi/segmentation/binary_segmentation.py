@@ -4,6 +4,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from scipy.stats import poisson
+from skimage.color import rgb2gray
+from sklearn import mixture
 import numpy as np
 
 
@@ -68,3 +70,27 @@ def poisson_deconvolve(h_channel_image):
 
     return foreground.reshape(h_channel_image.shape), background.reshape(
         h_channel_image.shape), opts
+
+
+def gmm_thresholding(image_rgb):
+    """Perform thresholding based on Gaussian mixture models.
+
+    The image is assumed to be a mixture of two gaussians.
+    A lower mean sample belongs to the blobs while the higher mean
+    shows the white background.
+
+    Parameters
+    ----------
+    image_rgb: array_like
+               RGB input
+
+    Returns
+    ------
+    gmm_threshold: float
+                   GMM mean (minimum) of the two mixing populations
+    clf: sklearn.GaussianMixture
+         The entire sklearn model
+    """
+    clf = mixture.GaussianMixture(n_components=2, covariance_type='full')
+    clf.fit(rgb2gray(image_rgb).flatten().reshape(-1, 1))
+    return clf.means_.min(), clf

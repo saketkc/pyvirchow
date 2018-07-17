@@ -4,6 +4,14 @@ pywsi.segmentation package
 Submodules
 ----------
 
+pywsi.segmentation.binary\_segmentation module
+----------------------------------------------
+
+.. automodule:: pywsi.segmentation.binary_segmentation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pywsi.segmentation.diff\_gaussian module
 ----------------------------------------
 
@@ -20,10 +28,18 @@ pywsi.segmentation.graph\_cut module
     :undoc-members:
     :show-inheritance:
 
-pywsi.segmentation.poisson\_fit module
---------------------------------------
+pywsi.segmentation.helpers module
+---------------------------------
 
-.. automodule:: pywsi.segmentation.poisson_fit
+.. automodule:: pywsi.segmentation.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pywsi.segmentation.max\_clustering module
+-----------------------------------------
+
+.. automodule:: pywsi.segmentation.max_clustering
     :members:
     :undoc-members:
     :show-inheritance:

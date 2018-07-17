@@ -50,7 +50,7 @@ def collapse_small_area(labelled_image, minimum_area):
     pixel_count, edges = np.histogram(
         collapsed_image, bins=collapsed_image.max() + 1)
     positions = ms.find_objects(collapsed_image)
-    for i in np.arange(1, len(edges)):
+    for i in range(1, pixel_count.size):
         if pixel_count[i] < minimum_area:
             patch = collapsed_image[positions[i - 1]]
             # Blacken out that patch
