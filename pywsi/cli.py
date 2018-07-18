@@ -770,6 +770,7 @@ def segementation_cmd(indir, outdir):
     """
     list_of_pngs = list(glob.glob('{}*.png'.format(indir)))
     data = [(x, x.replace(os.path.dirname(x), outdir).replace('.png', '.tsv')) for x in list_of_pngs]
+    os.makedirs(outdir, exist_ok=True)
     with tqdm(total=len(data)) as pbar:
         with Pool(processes=16) as p:
             for i, _ in enumerate(p.imap_unordered(process_segmentation, data)):
