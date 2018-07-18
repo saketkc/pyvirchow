@@ -36,7 +36,8 @@ def label_nuclei(nuclei_stain_rgb,
                  max_radius=11,
                  local_max_search_radius=3,
                  min_nucleus_area=80,
-                 draw=True):
+                 draw=True,
+                 savetopng=None):
     """Perform segmentation labelling on nuclei.
 
     Parameters
@@ -51,10 +52,14 @@ def label_nuclei(nuclei_stain_rgb,
                              how many neraby regions should be considered for collapsing into one
     min_nucleus_area: float
                       Anything below this is not a viable Nuclei
-
+    draw: bool
+          Should draw the segmentation?
+    savetopng: string
+               Path to png to store labelled image
     """
     assert thresholding in [
-        'gmm', 'poisson', 'custom'
+        'gmm', 'poisson-graph',
+        'poisson-hard', 'custom'
     ], 'Unsupported thresholding method {}'.format(thresholding)
     nuclei_stain_bw = rgb2gray(nuclei_stain_rgb)
     if thresholding == 'custom':
@@ -65,10 +70,15 @@ def label_nuclei(nuclei_stain_rgb,
         foreground_threshold, _ = gmm_thresholding(nuclei_stain_bw)
         foreground_mask = sp.ndimage.morphology.binary_fill_holes(
             nuclei_stain_bw < foreground_threshold)
-    elif thresholding == 'poisson':
+    elif thresholding == 'poisson-graph':
         bg, fg, threshold = poisson_deconvolve(
             nuclei_stain_bw.astype(np.uint8))
         foreground_mask = perform_binary_cut(background=bg, foreground=fg)
+    elif thresholding == 'poisson-hard':
+        bg, fg, threshold = poisson_deconvolve(
+            nuclei_stain_bw.astype(np.uint8))
+        foreground_mask = sp.ndimage.morphology.binary_fill_holes(
+            nuclei_stain_bw < threshold)
 
     log_max, sigma_max = laplace_of_gaussian(
         nuclei_stain_bw,
@@ -132,6 +142,8 @@ def label_nuclei(nuclei_stain_rgb,
         ax.add_patch(mrect)
     fig.tight_layout()
     plt.axis('off')
+    if savetopng:
+        fig.savefig(savetopng)
     return region_properties, foreground_mask
 
 

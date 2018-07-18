@@ -15,7 +15,7 @@ from shapely.geometry import Polygon as shapelyPolygon
 from click_help_colors import HelpColorsGroup
 import glob
 from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_annotation_polygons,\
-    poly2mask, translate_and_scale_polygon
+    poly2mask, translate_and_scale_polygon, read_as_rgb
 
 from pywsi.morphology.patch_extractor import TissuePatch
 from pywsi.morphology.mask import mpl_polygon_to_shapely_scaled, get_common_interior_polygons
@@ -26,6 +26,8 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 from tqdm import tqdm
 import warnings
 from multiprocessing import Pool
+from pywsi.segmentation import label_nuclei, summarize_region_properties
+import pandas as pd
 
 
 @click.group(
@@ -726,10 +728,50 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir,
     total_wsi = len(wsis)
     data = [(wsi, jsondir, patchsize, stride, level, dirs, write_image)
             for wsi in wsis]
-    with Pool(processes=16) as p:
-        for i, _ in enumerate(p.imap_unordered(process_wsi, data)):
-            print(i / total_wsi * 100)
-    #with tqdm(total=total_wsi) as pbar:
-    #    for i, wsi in tqdm(enumerate(list(wsis))):
-    #        process_wsi(wsi)
-    #        pbar.update()
+    with tqdm(total=total_wsi) as pbar:
+        with Pool(processes=16) as p:
+            for i, _ in enumerate(p.imap_unordered(process_wsi, data)):
+                #print(i / total_wsi * 100)
+                pbar.update()
+        #    for i, wsi in tqdm(enumerate(list(wsis))):
+        #        process_wsi(wsi)
+        #        pbar.update()
+
+
+
+def process_segmentation(data):
+    """
+    Parameters
+    ----------
+    data: tuple
+          (png_location, tsv_outpath)
+
+    """
+
+    png, saveto = data
+    patch = read_as_rgb(png)
+    region_properties, _ = label_nuclei(patch, draw=False)
+    summary = summarize_region_properties(region_properties,
+                                          patch)
+    df = pd.DataFrame([summary])
+    df.to_csv(saveto, index=False, header=True, sep='\t')
+
+
+@cli.command(
+    'segment',
+    context_settings=CONTEXT_SETTINGS,
+    help='Performs segmentation and extract-features')
+@click.option(
+    '--indir', help='Root directory with all pngs', required=True)
+@click.option(
+    '--outdir', help='Output directory to out tsv', required=True)
+def segementation_cmd(indir, outdir):
+    """Perform segmentation and store the tsvs
+    """
+    list_of_pngs = list(glob.glob('{}*.png'.format(indir)))
+    data = [(x, x.replace(os.path.dirname(x), outdir).replace('.png', '.tsv')) for x in list_of_pngs]
+    with tqdm(total=len(data)) as pbar:
+        with Pool(processes=16) as p:
+            for i, _ in enumerate(p.imap_unordered(process_segmentation, data)):
+                pbar.update()
+
