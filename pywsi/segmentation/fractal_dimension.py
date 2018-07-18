@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
-# From https://en.wikipedia.org/wiki/Minkowski–Bouligand_dimension:
+# From https://en.wikipedia.org/wiki/Minkowski-Bouligand_dimension:
 #
-# In fractal geometry, the Minkowski–Bouligand dimension, also known as
+# In fractal geometry, the Minkowski-Bouligand dimension, also known as
 # Minkowski dimension or box-counting dimension, is a way of determining the
 # fractal dimension of a set S in a Euclidean space Rn, or more generally in a
 # metric space (X, d).
