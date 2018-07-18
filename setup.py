@@ -3,7 +3,19 @@
 
 """The setup script."""
 
+import sys
 from setuptools import setup, find_packages
+from setuptools.extension import Extension
+from Cython.Build import cythonize
+import numpy
+
+
+#try:
+#    from skbuild import setup
+#except ImportError:
+#    sys.stderr.write('Requires skbuild to install. Run pip install scikit-build')
+#    sys.exit(1)
+
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -48,4 +60,7 @@ setup(
     url='https://github.com/saketkc/pywsi',
     version='0.1.0',
     zip_safe=False,
+    ext_modules = cythonize([Extension('pywsi.segmentation._max_clustering_cython',
+                                       ['pywsi/segmentation/_max_clustering_cython.pyx'],
+                                       include_dirs=[numpy.get_include()])]),
 )

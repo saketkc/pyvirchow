@@ -1,97 +1,80 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+#import pyximport; pyximport.install()
 import numpy as np
-import skimage.measure as skm
+import skimage.measure
 
-UNIQUE_PRIME = 15331
-
-
-def normalize(image):
-    min_pixel = image.min()
-    max_pixel = image.max()
-    range_pixel = max_pixel - min_pixel
-    normalized_image = (image - min_pixel) / range_pixel
-    return normalized_image
+from ._max_clustering_cython import _max_clustering_cython
+"""
+This and _max_clustering_cython.pyx moudles are courtesy of
+https://github.com/DigitalSlideArchive/HistomicsTK/tree/master/histomicstk
+(Apache Licensed, see: https://github.com/DigitalSlideArchive/HistomicsTK/blob/dcd0d53f0cdc1424e1bedc0f0c0871a7a0e9fd70/LICENSE)
+"""
 
 
-def max_clustering(image, foreground_mask, radius):
-    width, height = image.shape
-    px, py = np.nonzero(foreground_mask)
+def max_clustering(im_response, im_fgnd_mask, r=10):
+    """Local max clustering pixel aggregation for nuclear segmentation.
+    Takes as input a constrained log or other filtered nuclear image, a binary
+    nuclear mask, and a clustering radius. For each pixel in the nuclear mask,
+    the local max is identified. A hierarchy of local maxima is defined, and
+    the root nodes used to define the label image.
 
-    local_max_value = np.zeros([width, height], dtype=np.float)
-    local_max_index = np.zeros([width, height], dtype=np.int)
-    peak_found = np.zeros([width, height], dtype=np.int)
-    lowest_pixel = np.nanmin(image)
+    Parameters
+    ----------
+    im_response : array_like
+        A filtered-smoothed image where the maxima correspond to nuclear
+        center. Typically obtained by constrained-LoG filtering on a
+        hematoxylin intensity image obtained from ColorDeconvolution.
+    im_fgnd_mask : array_like
+        A binary mask of type boolean where nuclei pixels have value
+        'True', and non-nuclear pixels have value 'False'.
+    r : float
+        A scalar defining the clustering radius. Default value = 10.
 
-    for x, y in zip(px, py):
-        # Search in a circle of radius r
-        peak_found_nearby = False
-        nearby_max_x = x
-        nearby_max_y = y
-        pixel_value_xy = image[x, y]
-        for xr in np.arange(-radius, radius + 1):
-            nearby_x = x + xr
-            if nearby_x < 0 or nearby_x > width:
-                continue
-            for yr in np.arange(-radius, radius + 1):
-                nearby_y = y + yr
+    Returns
+    -------
+    im_label : array_like
+        im_label image where positive values correspond to foreground pixels that
+        share mutual sinks.
+    seeds : array_like
+        An N x 2 array defining the (x,y) coordinates of nuclei seeds.
+    max_response : array_like
+        An N x 1 array containing the maximum response value corresponding to
+        'seeds'.
 
-                if nearby_y < 0 or nearby_y > height:
-                    continue
+    See Also
+    --------
+    histomicstk.filters.shape.clog
 
-                if (nearby_x**2 + nearby_y**2) > radius**2:
-                    continue
+    References
+    ----------
+    .. [#] XW. Wu et al "The local maximum clustering method and its
+       application in microarray gene expression data analysis,"
+       EURASIP J. Appl. Signal Processing, volume 2004, no.1, pp.53-63,
+       2004.
+    .. [#] Y. Al-Kofahi et al "Improved Automatic Detection and Segmentation
+       of Cell Nuclei in Histopathology Images" in IEEE Transactions on
+       Biomedical Engineering,vol.57,no.4,pp.847-52, 2010.
 
-                nearby_pixel_value_xy = lowest_pixel
+    """
 
-                # Is it part of the foreground?
-                if foreground_mask[nearby_x, nearby_y]:
-                    nearby_pixel_value_xy = image[nearby_x, nearby_y]
+    # find local maxima of all foreground pixels
+    mval, mind = _max_clustering_cython(im_response,
+                                        im_fgnd_mask.astype(np.int32), r)
+    # identify connected regions of local maxima and define their seeds
+    im_label = skimage.measure.label(im_fgnd_mask & (im_response == mval))
 
-                if nearby_pixel_value_xy > pixel_value_xy:
-                    peak_found_nearby = True
-                    pixel_value_xy = nearby_pixel_value_xy
-                    nearby_max_x = x
-                    nearby_max_y = y
+    # compute normalized response
+    min_resp = im_response.min()
+    max_resp = im_response.max()
+    resp_range = max_resp - min_resp
 
-        local_max_index[x, y] = nearby_max_x * UNIQUE_PRIME + nearby_max_y
-        local_max_value[x, y] = pixel_value_xy
+    im_response_nmzd = (im_response - min_resp) / resp_range
 
-        if not peak_found_nearby:
-            # Assign peak at this x,y
-            peak_found[x, y] = 1
-
-    # Reassign points to their local maximums
-    # We reassign each point to their local maxima
-    # Traverse a path till you encounter a real peak
-    # then assign the coordinates of these to all points
-    # that followed
-    maxpath = []
-    for x, y in zip(px, py):
-        end_position = 0
-        end_x = x
-        end_y = y
-        end_index = x * UNIQUE_PRIME + y
-        end_max_index = local_max_index[end_y, end_x]
-
-        maxpath.append((end_x, end_y))
-
-        while not peak_found[end_x, end_y]:
-            end_position += 1
-            end_index = end_max_index
-            end_x = int(end_index // UNIQUE_PRIME)
-            end_y = int(end_index % UNIQUE_PRIME)
-            end_max_index = local_max_index[end_x, end_y]
-            maxpath.append((end_x, end_y))
-        for rx, ry in maxpath:
-            # Assign them the index and value
-            # of the last found peak (above)
-            local_max_index[rx, ry] = end_max_index
-            local_max_value[rx, ry] = local_max_value[end_x, end_y]
-            peak_found[rx, ry] = 1
-    #return local_max_value, local_max_index
-    image_labelled = skm.label(foreground_mask & (image == local_max_value))
-
-    image_normalized = normalize(image)
-    obj_props = skm.regionprops(image_labelled, image_normalized)
+    # compute object properties
+    obj_props = skimage.measure.regionprops(im_label, im_response_nmzd)
 
     obj_props = [
         prop for prop in obj_props
@@ -105,37 +88,36 @@ def max_clustering(image, foreground_mask, radius):
         [obj_props[i].weighted_centroid for i in range(num_labels)])
     seeds = np.round(seeds).astype(np.int)
 
-    # Fix seeds for non-convex objects
+    # fix seeds outside the object region - happens for non-convex objects
     for i in range(num_labels):
 
-        x = seeds[i, 0]
-        y = seeds[i, 1]
+        sy = seeds[i, 0]
+        sx = seeds[i, 1]
 
-        if image_labelled[x, y] == obj_props[i].label:
+        if im_label[sy, sx] == obj_props[i].label:
             continue
 
         # find object point with closest manhattan distance to center of mass
         pts = obj_props[i].coords
 
-        xdist = np.abs(pts[:, 0] - x)
-        ydist = np.abs(pts[:, 1] - y)
+        ydist = np.abs(pts[:, 0] - sy)
+        xdist = np.abs(pts[:, 1] - sx)
 
         seeds[i, :] = pts[np.argmin(xdist + ydist), :]
 
-        assert image_labelled[seeds[i, 0], seeds[i, 1]] == obj_props[i].label
+        assert im_label[seeds[i, 0], seeds[i, 1]] == obj_props[i].label
 
     # get seed responses
-    seed_pixels = image[seeds[:, 0], seeds[:, 1]]
-
-
+    max_response = im_response[seeds[:, 0], seeds[:, 1]]
 
     # set label of each foreground pixel to the label of its nearest peak
-    image_labelled_flat = image_labelled.ravel()
-    print('image_labelled: {}'.format(image_labelled.shape))
-    print('foreground_mask: {}'.format(foreground_mask.shape))
-    print('image_labelled_flat: {}'.format(image_labelled_flat.shape))
-    pind = np.flatnonzero(foreground_mask)
-    index_flat = local_max_index.ravel()
-    print('index_flat: {}'.format(index_flat))
-    image_labelled_flat[pind] = image_labelled_flat[index_flat[pind]]
-    return image_labelled, seeds, seed_pixels
+    im_label_flat = im_label.ravel()
+
+    pind = np.flatnonzero(im_fgnd_mask)
+
+    mind_flat = mind.ravel()
+
+    im_label_flat[pind] = im_label_flat[mind_flat[pind]]
+
+    # return
+    return im_label, seeds, max_response

@@ -66,44 +66,36 @@ def laplace_of_gaussian(input_image,
         if level_cur == n_levels or n_level == n_octave_levels:
             # update maxima
             if n_octave_levels > 0:
-
                 dog_octave_max_resized = resize(
-                    dog_octave_max, dog_max.shape, order=0)
-
+                    dog_octave_max, dog_max.shape, order=0, mode='constant')
             else:
-
                 dog_octave_max_resized = dog_octave_max
 
             max_pixels = np.where(dog_octave_max_resized > dog_max)
             if len(max_pixels[0]) > 0:
-
                 dog_max[max_pixels] = \
                     dog_octave_max_resized[max_pixels]
 
                 if n_octave_levels > 0:
-
                     sigma_octave_max_resized = resize(
-                        sigma_octave_max, dog_max.shape, order=0)
+                        sigma_octave_max,
+                        dog_max.shape,
+                        order=0,
+                        mode='constant')
 
                 else:
-
                     sigma_octave_max_resized = sigma_octave_max
 
                 sigma_max[max_pixels] = \
                     sigma_octave_max_resized[max_pixels]
 
             if n_level == n_octave_levels:
-
                 convolution_prev = downsample(convolution_cur)
                 sigma_upper_bound_cur = downsample(sigma_upper_bound_cur)
-
                 dog_octave_max = downsample(dog_octave_max)
                 sigma_octave_max = downsample(sigma_octave_max)
-
                 n_level = 0
                 n_octave += 1
 
-    # set min vals to min response
     dog_max[dog_max == eps] = 0
-
     return dog_max, sigma_max

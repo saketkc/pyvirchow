@@ -556,6 +556,136 @@ def estimate_patches_cmd(indir, jsondir, level, patchsize, stride, savedir):
                                 fh.write(to_write)
 
 
+def process_wsi(data):
+    wsi, jsondir, patchsize, stride, level, dirs, write_image = data
+    wsi = WSIReader(wsi, 40)
+    uid = wsi.uid.replace('.tif', '')
+    scale_factor = wsi.get_level_scale_factor(level)
+    json_filepath = os.path.join(jsondir, uid + '.json')
+    if not os.path.isfile(json_filepath):
+        return
+    boxes = get_annotation_bounding_boxes(json_filepath)
+    polygons = get_annotation_polygons(json_filepath)
+
+    polygons_to_exclude = {'tumor': [], 'normal': []}
+
+    for polygon in polygons['tumor']:
+        # Does this have any of the normal polygons inside it?
+        polygons_to_exclude['tumor'].append(
+            get_common_interior_polygons(polygon, polygons['normal']))
+
+    for polygon in polygons['normal']:
+        # Does this have any of the tumor polygons inside it?
+        polygons_to_exclude['normal'].append(
+            get_common_interior_polygons(polygon, polygons['tumor']))
+
+    for polygon_key in polygons.keys():
+        last_used_x = None
+        last_used_y = None
+        annotated_polygons = polygons[polygon_key]
+        annotated_boxes = boxes[polygon_key]
+
+        # iterate through coordinates in the bounding rectangle
+        # tand check if they overlap with any other annoations and
+        # if not fetch a patch at that coordinate from the wsi
+        annotation_index = 0
+        for annotated_polygon, annotated_box in zip(annotated_polygons,
+                                                    annotated_boxes):
+            annotation_index += 1
+            minx, miny = annotated_box['top_left']
+            maxx, miny = annotated_box['top_right']
+
+            maxx, maxy = annotated_box['bottom_right']
+            minx, maxy = annotated_box['bottom_left']
+
+            width = int(maxx) - int(minx)
+            height = int(maxy) - int(miny)
+            #(minx, miny), width, height = annotated_box['top_left'], annotated_box['top'].get_xy()
+            # Should scale?
+            # No. Do not scale here as the patch is always
+            # fetched from things at level0
+            minx = int(minx)  # * scale_factor)
+            miny = int(miny)  # * scale_factor)
+            maxx = int(maxx)  # * scale_factor)
+            maxy = int(maxy)  # * scale_factor)
+
+            width = int(width * scale_factor)
+            height = int(height * scale_factor)
+
+            annotated_polygon = np.array(annotated_polygon.get_xy())
+
+            annotated_polygon = annotated_polygon * scale_factor
+
+            # buffer ensures the resulting polygon is clean
+            # http://toblerity.org/shapely/manual.html#object.buffer
+            try:
+                annotated_polygon_scaled = shapelyPolygon(
+                    np.round(annotated_polygon).astype(int)).buffer(0)
+            except:
+                warnings.warn(
+                    'Skipping creating annotation index {} for {}'.format(
+                        annotation_index, uid))
+                continue
+            patches = 0
+            assert annotated_polygon_scaled.is_valid, 'Found invalid annotated polygon: {} {}'.format(
+                uid,
+                shapelyPolygon(annotated_polygon).is_valid)
+            for x_left in np.arange(minx, maxx, 1):
+                for y_top in np.arange(miny, maxy, 1):
+                    x_right = x_left + patchsize
+                    y_bottom = y_top + patchsize
+                    if last_used_x is None:
+                        last_used_x = x_left
+                        last_used_y = y_top
+                        diff_x = stride
+                        diff_y = stride
+                    else:
+                        diff_x = np.abs(x_left - last_used_x)
+                        diff_y = np.abs(y_top - last_used_y)
+                    #print(last_used_x, last_used_y, x_left, y_top, diff_x, diff_y)
+                    if diff_x <= stride or diff_y <= stride:
+                        continue
+                    else:
+                        last_used_x = x_left
+                        last_used_y = y_top
+                    patch_polygon = shapelyPolygon(
+                        [(x_left, y_top), (x_right, y_top),
+                         (x_right, y_bottom), (x_left, y_bottom)]).buffer(0)
+                    assert patch_polygon.is_valid, 'Found invalid polygon: {}_{}_{}'.format(
+                        uid, x_left, y_top)
+                    try:
+                        is_inside = annotated_polygon_scaled.contains(
+                            patch_polygon)
+                    except:
+                        # Might raise an exception when the two polygons
+                        # are the same
+                        warnings.warn(
+                            'Skipping: {}_{}_{}_{}.png | Equals: {} | Almost equals: {}'.
+                            format(uid, x_left, y_top, patchsize),
+                            annotated_polygon_scaled.equals(patch_polygon),
+                            annotated_polygon_scaled.almost_equals(
+                                patch_polygon))
+                        continue
+
+                    if write_image:
+                        out_file = os.path.join(
+                            dirs[polygon_key], '{}_{}_{}_{}.png'.format(
+                                uid, x_left, y_top, patchsize))
+                        patch = wsi.get_patch_by_level(x_left, y_top, level,
+                                                       patchsize)
+                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
+                        img = Image.fromarray(patch)
+                        img.save(out_file)
+                    else:
+                        # Just write the coordinates
+                        to_write = '{}_{}_{}_{}\n'.format(
+                            uid, x_left, y_top, patchsize)
+                        out_file = os.path.join(dirs[polygon_key],
+                                                '{}.txt'.format(polygon_key))
+                        with open(out_file, 'a') as fh:
+                            fh.write(to_write)
+
+
 @cli.command(
     'extract-test-both-patches',
     context_settings=CONTEXT_SETTINGS,
@@ -579,7 +709,9 @@ def estimate_patches_cmd(indir, jsondir, level, patchsize, stride, savedir):
     '--savedir',
     help='Root directory to save extract images to',
     required=True)
-def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
+@click.option('--write_image', help='Should output images', is_flag=True)
+def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir,
+                          write_image):
     """Extract tissue only patches from tumor WSIs.
     """
     wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
@@ -591,125 +723,13 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir):
     os.makedirs(tumor_dir, exist_ok=True)
     dirs = {'normal': normal_dir, 'tumor': tumor_dir}
 
-    def process_wsi(wsi):
-        wsi = WSIReader(wsi, 40)
-        uid = wsi.uid.replace('.tif', '')
-        scale_factor = wsi.get_level_scale_factor(level)
-        print('Scale_factor: {}'.format(scale_factor))
-        json_filepath = os.path.join(jsondir, uid + '.json')
-        if not os.path.isfile(json_filepath):
-            return
-        boxes = get_annotation_bounding_boxes(json_filepath)
-        polygons = get_annotation_polygons(json_filepath)
-
-        polygons_to_exclude = {'tumor': [], 'normal': []}
-
-        for polygon in polygons['tumor']:
-            # Does this have any of the normal polygons inside it?
-            polygons_to_exclude['tumor'].append(
-                get_common_interior_polygons(polygon, polygons['normal']))
-
-        for polygon in polygons['normal']:
-            # Does this have any of the tumor polygons inside it?
-            polygons_to_exclude['normal'].append(
-                get_common_interior_polygons(polygon, polygons['tumor']))
-
-        for polygon_key in polygons.keys():
-            last_used_x = None
-            last_used_y = None
-            annotated_polygons = polygons[polygon_key]
-            annotated_boxes = boxes[polygon_key]
-
-            # iterate through coordinates in the bounding rectangle
-            # tand check if they overlap with any other annoations and
-            # if not fetch a patch at that coordinate from the wsi
-
-            for annotated_polygon, annotated_box in zip(
-                    annotated_polygons, annotated_boxes):
-                minx, miny = annotated_box['top_left']
-                maxx, miny = annotated_box['top_right']
-
-                maxx, maxy = annotated_box['bottom_right']
-                minx, maxy = annotated_box['bottom_left']
-
-                width = int(maxx) - int(minx)
-                height = int(maxy) - int(miny)
-                #(minx, miny), width, height = annotated_box['top_left'], annotated_box['top'].get_xy()
-                # Should scale?
-                # No. Do not scale here as the patch is always
-                # fetched from things at level0
-                minx = int(minx)  # * scale_factor)
-                miny = int(miny)  # * scale_factor)
-                maxx = int(maxx)  # * scale_factor)
-                maxy = int(maxy)  # * scale_factor)
-
-                width = int(width * scale_factor)
-                height = int(height * scale_factor)
-
-                annotated_polygon = np.array(annotated_polygon.get_xy())
-
-                annotated_polygon = annotated_polygon * scale_factor
-
-                # buffer ensures the resulting polygon is clean
-                # http://toblerity.org/shapely/manual.html#object.buffer
-                annotated_polygon_scaled = shapelyPolygon(
-                    np.round(annotated_polygon).astype(int)).buffer(0)
-
-                patches = 0
-                assert annotated_polygon_scaled.is_valid, 'Found invalid annotated polygon: {} {}'.format(
-                    uid,
-                    shapelyPolygon(annotated_polygon).is_valid)
-                for x_left in np.arange(minx, maxx, 1):
-                    for y_top in np.arange(miny, maxy, 1):
-                        x_right = x_left + patchsize
-                        y_bottom = y_top + patchsize
-                        if last_used_x is None:
-                            last_used_x = x_left
-                            last_used_y = y_top
-                            diff_x = stride
-                            diff_y = stride
-                        else:
-                            diff_x = np.abs(x_left - last_used_x)
-                            diff_y = np.abs(y_top - last_used_y)
-                        #print(last_used_x, last_used_y, x_left, y_top, diff_x, diff_y)
-                        if diff_x <= stride or diff_y <= stride:
-                            continue
-                        else:
-                            last_used_x = x_left
-                            last_used_y = y_top
-                        patch_polygon = shapelyPolygon(
-                            [(x_left, y_top), (x_right, y_top),
-                             (x_right, y_bottom), (x_left,
-                                                   y_bottom)]).buffer(0)
-                        assert patch_polygon.is_valid, 'Found invalid polygon: {}_{}_{}'.format(
-                            uid, x_left, y_top)
-                        try:
-                            is_inside = annotated_polygon_scaled.contains(
-                                patch_polygon)
-                        except:
-                            # Might raise an exception when the two polygons
-                            # are the same
-                            warnings.warn(
-                                'Skipping: {}_{}_{}_{}.png | Equals: {} | Almost equals: {}'.
-                                format(uid, x_left, y_top, patchsize),
-                                annotated_polygon_scaled.equals(patch_polygon),
-                                annotated_polygon_scaled.almost_equals(
-                                    patch_polygon))
-                            continue
-
-                        out_file = os.path.join(
-                            dirs[polygon_key], '{}_{}_{}_{}.png'.format(
-                                uid, x_left, y_top, patchsize))
-                        patch = wsi.get_patch_by_level(x_left, y_top, level,
-                                                       patchsize)
-                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
-                        img = Image.fromarray(patch)
-                        img.save(out_file)
-                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
-
-    #with Pool(processes=2) as p:
     total_wsi = len(wsis)
-    with tqdm(total=total_wsi) as pbar:
-        for i, wsi in tqdm(enumerate(list(wsis))):
-            process_wsi(wsi)
-            pbar.update()
+    data = [(wsi, jsondir, patchsize, stride, level, dirs, write_image)
+            for wsi in wsis]
+    with Pool(processes=16) as p:
+        for i, _ in enumerate(p.imap_unordered(process_wsi, data)):
+            print(i / total_wsi * 100)
+    #with tqdm(total=total_wsi) as pbar:
+    #    for i, wsi in tqdm(enumerate(list(wsis))):
+    #        process_wsi(wsi)
+    #        pbar.update()

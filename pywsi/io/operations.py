@@ -788,3 +788,10 @@ class WSIReader(OpenSlide):
             np.save(colored_filepath, patch)
 
         return tumor_mask, normal_mask, combined_mask
+
+    def __getstate__(self):
+
+        return [
+            self.level0_mag, self.uid, self.filepath, self.dimensions,
+            self.width, self.height, self.magnifications
+        ]

@@ -20,6 +20,14 @@ pywsi.segmentation.diff\_gaussian module
     :undoc-members:
     :show-inheritance:
 
+pywsi.segmentation.fractal\_dimension module
+--------------------------------------------
+
+.. automodule:: pywsi.segmentation.fractal_dimension
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pywsi.segmentation.graph\_cut module
 ------------------------------------
 
