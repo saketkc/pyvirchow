@@ -67,8 +67,8 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
     im_label = skimage.measure.label(im_fgnd_mask & (im_response == mval))
 
     # compute normalized response
-    min_resp = im_response.min()
-    max_resp = im_response.max()
+    min_resp = np.nanmin(im_response)
+    max_resp = np.nanmin(im_response)
     resp_range = max_resp - min_resp
 
     im_response_nmzd = (im_response - min_resp) / resp_range
@@ -108,8 +108,14 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
         assert im_label[seeds[i, 0], seeds[i, 1]] == obj_props[i].label
 
     # get seed responses
-    max_response = im_response[seeds[:, 0], seeds[:, 1]]
 
+    assert im_response.shape[1] >= 1, 'im_response.shape: {}'.format(im_response.shape)
+
+    try:
+        max_response = im_response[seeds[:, 0], seeds[:, 1]]
+    except IndexError:
+        # No seeds found!
+        max_response = np.array([])
     # set label of each foreground pixel to the label of its nearest peak
     im_label_flat = im_label.ravel()
 
