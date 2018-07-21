@@ -1,21 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """The setup script."""
 
 import sys
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Build import cythonize
-import numpy
-
-
-#try:
-#    from skbuild import setup
-#except ImportError:
-#    sys.stderr.write('Requires skbuild to install. Run pip install scikit-build')
-#    sys.exit(1)
-
+try:
+    import numpy
+except ImportError:
+    sys.stderr.write('Requires numpy for installation.')
+    sys.exit(1)
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -26,10 +21,11 @@ with open('HISTORY.rst') as history_file:
 with open('requirements.txt') as reqs:
     requirements = reqs.readlines()
 
+setup_requirements = ['numpy']
 
-setup_requirements = ['pytest-runner', ]
-
-test_requirements = ['pytest', ]
+test_requirements = [
+    'pytest',
+]
 
 setup(
     author="Saket Choudhary",
@@ -41,7 +37,8 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    description="Python Boilerplate contains all the boilerplate you need to create a Python package.",
+    description=
+    "Python Boilerplate contains all the boilerplate you need to create a Python package.",
     entry_points={
         'console_scripts': [
             'pywsi=pywsi.cli:cli',
@@ -60,7 +57,10 @@ setup(
     url='https://github.com/saketkc/pywsi',
     version='0.1.0',
     zip_safe=False,
-    ext_modules = cythonize([Extension('pywsi.segmentation._max_clustering_cython',
-                                       ['pywsi/segmentation/_max_clustering_cython.pyx'],
-                                       include_dirs=[numpy.get_include()])]),
+    ext_modules=cythonize([
+        Extension(
+            'pywsi.segmentation._max_clustering_cython',
+            ['pywsi/segmentation/_max_clustering_cython.pyx'],
+            include_dirs=[numpy.get_include()])
+    ]),
 )

@@ -40,6 +40,11 @@ def label_nuclei(nuclei_stain_rgb,
                  savetopng=None):
     """Perform segmentation labelling on nuclei.
 
+    Better defaults seem to be:
+    local_max_search_radius=3,
+    min_radius=3,
+    max_radius=5,
+    min_nucleus_area=80,
     Parameters
     ----------
     nuclei_stain: array_like
@@ -58,8 +63,7 @@ def label_nuclei(nuclei_stain_rgb,
                Path to png to store labelled image
     """
     assert thresholding in [
-        'gmm', 'poisson-graph',
-        'poisson-hard', 'custom'
+        'gmm', 'poisson-graph', 'poisson-hard', 'custom'
     ], 'Unsupported thresholding method {}'.format(thresholding)
     nuclei_stain_bw = rgb2gray(nuclei_stain_rgb)
     if thresholding == 'custom':
@@ -109,14 +113,14 @@ def label_nuclei(nuclei_stain_rgb,
         label2rgb(nuclei_seg_mask, nuclei_stain_bw, bg_label=0),
         origin='lower')
     ax.set_title(
-        'Nuclei segmentation mask overlay \n {}'.format(title), fontsize=16)
+        'Nuclei segmentation mask overlay \n {}'.format(title))
 
     ax = plt.subplot(1, 2, 2)
     ax.imshow(nuclei_stain_rgb)
     ax.set_axis_off()
     ax.set_xlim([0, nuclei_stain_rgb.shape[1]])
     ax.set_ylim([0, nuclei_stain_rgb.shape[0]])
-    ax.set_title('Nuclei bounding boxes', fontsize=16)
+    ax.set_title('Nuclei bounding boxes')
 
     for region_property in region_properties:
 

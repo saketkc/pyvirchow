@@ -109,7 +109,8 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
 
     # get seed responses
 
-    assert im_response.shape[1] >= 1, 'im_response.shape: {}'.format(im_response.shape)
+    assert im_response.shape[1] >= 1, 'im_response.shape: {}'.format(
+        im_response.shape)
 
     try:
         max_response = im_response[seeds[:, 0], seeds[:, 1]]

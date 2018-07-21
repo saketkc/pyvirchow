@@ -5,6 +5,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import warnings
+warnings.filterwarnings("ignore")
+
 from collections import defaultdict
 import os
 import numpy as np
@@ -393,7 +396,20 @@ def extract_patches_from_coords_cmd(indir, csv, level, patchsize, savedir):
     patches_to_extract = defaultdict(list)
     with open(csv) as fh:
         for line in fh:
-            filename, x0, y0 = line.split(',')
+            try:
+                filename, x0, y0 = line.split(',')
+            except:
+                splitted = line.split('_')
+                # test files have name like test_001
+                if len(splitted) == 5:
+                    fileprefix, fileid, x0, y0, _ = splitted
+                    filename = '{}_{}'.format(fileprefix, fileid)
+                elif len(splitted) == 4:
+                    filename, x0, y0, _ = splitted
+                else:
+                    raise RuntimeError('Unable to find parsable format. Mustbe filename,x0,y-')
+                # other files have name like normal001
+
             filename = filename.lower()
             x0 = int(x0)
             y0 = int(y0)
@@ -404,6 +420,8 @@ def extract_patches_from_coords_cmd(indir, csv, level, patchsize, savedir):
             filepath = os.path.join(indir, 'normal', filename + '.tif')
         elif 'tumor' in filename:
             filepath = os.path.join(indir, 'tumor', filename + '.tif')
+        elif 'test' in filename:
+            filepath = os.path.join(indir, filename + '.tif')
         else:
             raise RuntimeError('Malformed filename?: {}'.format(filename))
         wsi = WSIReader(filepath, 40)
@@ -738,7 +756,6 @@ def extract_test_both_cmd(indir, patchsize, stride, jsondir, level, savedir,
         #        pbar.update()
 
 
-
 def process_segmentation(data):
     """
     Parameters
@@ -751,8 +768,7 @@ def process_segmentation(data):
     png, saveto = data
     patch = read_as_rgb(png)
     region_properties, _ = label_nuclei(patch, draw=False)
-    summary = summarize_region_properties(region_properties,
-                                          patch)
+    summary = summarize_region_properties(region_properties, patch)
     df = pd.DataFrame([summary])
     df.to_csv(saveto, index=False, header=True, sep='\t')
 
@@ -761,18 +777,25 @@ def process_segmentation(data):
     'segment',
     context_settings=CONTEXT_SETTINGS,
     help='Performs segmentation and extract-features')
-@click.option(
-    '--indir', help='Root directory with all pngs', required=True)
-@click.option(
-    '--outdir', help='Output directory to out tsv', required=True)
+@click.option('--indir', help='Root directory with all pngs', required=True)
+@click.option('--outdir', help='Output directory to out tsv', required=True)
 def segementation_cmd(indir, outdir):
     """Perform segmentation and store the tsvs
     """
-    list_of_pngs = list(glob.glob('{}*.png'.format(indir)))
-    data = [(x, x.replace(os.path.dirname(x), outdir).replace('.png', '.tsv')) for x in list_of_pngs]
+    print(indir)
+    list_of_pngs = list(glob.glob(indir+ '/*.png'))
+    print(os.path.join(indir, '/{}*.png'))
+    data = []
+    for f in list_of_pngs:
+        tsv = f.replace(os.path.dirname(f), outdir).replace('.png', '.tsv')
+        if not os.path.isfile(tsv):
+            data.append((f,tsv))
+        elif os.stat(tsv).st_size == 0:
+            data.appen((f, tsv))
+
     os.makedirs(outdir, exist_ok=True)
     with tqdm(total=len(data)) as pbar:
         with Pool(processes=16) as p:
-            for i, _ in enumerate(p.imap_unordered(process_segmentation, data)):
+            for i, _ in enumerate(
+                    p.imap_unordered(process_segmentation, data)):
                 pbar.update()
-

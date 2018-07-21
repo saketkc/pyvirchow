@@ -6,6 +6,9 @@
 # fractal dimension of a set S in a Euclidean space Rn, or more generally in a
 # metric space (X, d).
 # -----------------------------------------------------------------------------
+import warnings
+warnings.filterwarnings("ignore")
+
 import scipy.misc
 import numpy as np
 
