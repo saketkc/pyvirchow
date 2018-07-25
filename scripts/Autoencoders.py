@@ -68,7 +68,7 @@ class VAE(object):
     def __init__(self,
                  input_dim,
                  learning_rate=0.001,
-                 n_latent=8,
+                 n_latent=100,
                  batch_size=50):
         self.learning_rate = learning_rate
         self.n_latent = n_latent
@@ -153,11 +153,13 @@ class VAE(object):
     def save_model(self, checkpoint_path, epoch):
         self.saver.save(self.session, checkpoint_path, global_step=epoch)
 
-    def load_model(self, checkpoint_path):
-        ckpt = tf.train.get_checkpoint_state(checkpoint_path)
+    def load_model(self, checkpoint_dir):
+        #new_saver = tf.train.import_meta_graph(checkpoint_path)
+        #new_saver.restore(sess, tf.train.latest_checkpoint('./'))
+
+        ckpt = tf.train.get_checkpoint_state(checkpoint_dir=checkpoint_dir, latest_filename='checkpoint')
         print('loading model: {}'.format(ckpt.model_checkpoint_path))
-        self.saver.restore(self.session,
-                           checkpoint_path + '/' + ckpt.model_checkpoint_path)
+        self.saver.restore(self.session, ckpt.model_checkpoint_path)
 
 
 # In[ ]:
@@ -168,7 +170,7 @@ def trainer(data,
             learning_rate=1e-3,
             batch_size=100,
             num_epoch=50,
-            n_latent=10,
+            n_latent=100,
             checkpoint_dir='/tmp/vae_checkpoint'):
     os.makedirs(checkpoint_dir, exist_ok=True)
     checkpoint_path = os.path.join(checkpoint_dir, 'model.ckpt')
@@ -177,8 +179,8 @@ def trainer(data,
         learning_rate=learning_rate,
         n_latent=n_latent,
         batch_size=batch_size)
-    if os.path.isfile(checkpoint_path):
-        model.load_model(checkpoint_path)
+    if os.listdir(checkpoint_dir):
+        model.load_model(checkpoint_dir)
     total_losses = []
     reconstruction_losses = []
     latent_losses = []
@@ -216,7 +218,7 @@ model, reconstruction_losses, latent_losses, total_losses = trainer(
     learning_rate=1e-4,
     batch_size=32,
     num_epoch=1000,
-    n_latent=10,
+    n_latent=100,
     checkpoint_dir=
-    '/Z/personal-folders/interns/saket/vae_checkpoint_histoapath_2000')
+    '/Z/personal-folders/interns/saket/vae_checkpoint_histoapath_2000_nlatent100')
 

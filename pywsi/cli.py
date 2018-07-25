@@ -132,7 +132,7 @@ def extract_annotation_masks_cmd(indir, jsondir, level, savedir):
 @click.option(
     '--patchsize',
     type=int,
-    default=256,
+    default=128,
     help='Patch size which to extract patches')
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
@@ -263,7 +263,7 @@ def extract_tumor_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
 @click.option(
     '--patchsize',
     type=int,
-    default=256,
+    default=128,
     help='Patch size which to extract patches')
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
@@ -382,7 +382,7 @@ def extract_normal_patches_cmd(indir, annmaskdir, tismaskdir, level, patchsize,
 @click.option(
     '--patchsize',
     type=int,
-    default=256,
+    default=128,
     help='Patch size which to extract patches')
 @click.option(
     '--savedir',
@@ -452,11 +452,11 @@ def extract_patches_from_coords_cmd(indir, csv, level, patchsize, savedir):
 @click.option(
     '--patchsize',
     type=int,
-    default=256,
+    default=128,
     help='Patch size which to extract patches')
 @click.option(
     '--stride',
-    default=128,
+    default=64,
     help='Slide windows by this much to get the next [atj]',
     required=True)
 @click.option(
@@ -519,7 +519,7 @@ def extract_test_patches_cmd(indir, tismaskdir, level, patchsize, stride,
 @click.option(
     '--patchsize',
     type=int,
-    default=256,
+    default=128,
     help='Patch size which to extract patches')
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
@@ -715,7 +715,7 @@ def process_wsi(data):
 @click.option(
     '--patchsize',
     type=int,
-    default=256,
+    default=128,
     help='Patch size which to extract patches')
 @click.option(
     '--stride', type=int, default=128, help='Stride to generate next patch')
