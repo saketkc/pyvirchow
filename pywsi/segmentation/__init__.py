@@ -112,8 +112,7 @@ def label_nuclei(nuclei_stain_rgb,
     ax.imshow(
         label2rgb(nuclei_seg_mask, nuclei_stain_bw, bg_label=0),
         origin='lower')
-    ax.set_title(
-        'Nuclei segmentation mask overlay \n {}'.format(title))
+    ax.set_title('Nuclei segmentation mask overlay \n {}'.format(title))
 
     ax = plt.subplot(1, 2, 2)
     ax.imshow(nuclei_stain_rgb)

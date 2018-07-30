@@ -78,7 +78,7 @@ def poly2mask(polygons, shape):
     draw = ImageDraw.Draw(img)
     for polygon in polygons:
         if isinstance(polygon, shapelyPolygon):
-            coordinates = polygon.boundary.coords
+            coordinates = list(polygon.boundary.coords)
         else:
             coordinates = polygon.get_xy()
         coordinates_int = []
@@ -205,7 +205,7 @@ def get_annotation_bounding_boxes(json_filepath):
     return rectangles
 
 
-def get_annotation_polygons(json_filepath):
+def get_annotation_polygons(json_filepath, polygon_type='mpl'):
     """Get annotation jsons polygons
 
     Assumed to be at level 0
@@ -214,6 +214,8 @@ def get_annotation_polygons(json_filepath):
     ----------
     json_filepath: string
                     Path to json file
+    polygon_type: string
+                  'matplotlib/shapely'
 
     Returns
     -------
@@ -228,10 +230,16 @@ def get_annotation_polygons(json_filepath):
     polygons['tumor'] = []
     polygons['normal'] = []
     for tumor_patch in tumor_patches:
-        polygon = Polygon(np.array(tumor_patch['vertices']))
+        if polygon_type == 'mpl':
+            polygon = Polygon(np.array(tumor_patch['vertices']))
+        else:
+            polygon = shapelyPolygon(np.array(tumor_patch['vertices']))
         polygons['tumor'].append(polygon)
     for normal_patch in normal_patches:
-        polygon = Polygon(np.array(normal_patch['vertices']))
+        if polygon_type == 'mpl':
+            polygon = Polygon(np.array(tumor_patch['vertices']))
+        else:
+            polygon = shapelyPolygon(np.array(tumor_patch['vertices']))
         polygons['normal'].append(polygon)
     return polygons
 

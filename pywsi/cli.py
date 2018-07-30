@@ -407,7 +407,9 @@ def extract_patches_from_coords_cmd(indir, csv, level, patchsize, savedir):
                 elif len(splitted) == 4:
                     filename, x0, y0, _ = splitted
                 else:
-                    raise RuntimeError('Unable to find parsable format. Mustbe filename,x0,y-')
+                    raise RuntimeError(
+                        'Unable to find parsable format. Mustbe filename,x0,y-'
+                    )
                 # other files have name like normal001
 
             filename = filename.lower()
@@ -783,13 +785,13 @@ def segementation_cmd(indir, outdir):
     """Perform segmentation and store the tsvs
     """
     print(indir)
-    list_of_pngs = list(glob.glob(indir+ '/*.png'))
+    list_of_pngs = list(glob.glob(indir + '/*.png'))
     print(os.path.join(indir, '/{}*.png'))
     data = []
     for f in list_of_pngs:
         tsv = f.replace(os.path.dirname(f), outdir).replace('.png', '.tsv')
         if not os.path.isfile(tsv):
-            data.append((f,tsv))
+            data.append((f, tsv))
         elif os.stat(tsv).st_size == 0:
             data.appen((f, tsv))
 
