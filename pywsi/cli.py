@@ -5,8 +5,19 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from pywsi.io.operations import get_annotation_bounding_boxes
+from pywsi.io.operations import get_annotation_polygons
+from pywsi.io.operations import path_leaf
+from pywsi.io.operations import read_as_rgb
+from pywsi.io.operations import WSIReader
+from pywsi.io.tiling import get_all_patches_from_slide
+
+from pywsi.morphology.patch_extractor import TissuePatch
+from pywsi.morphology.mask import get_common_interior_polygons
+from tqdm import tqdm
 import warnings
-warnings.filterwarnings("ignore")
+from multiprocessing import Pool
+from pywsi.segmentation import label_nuclei, summarize_region_properties
 
 from collections import defaultdict
 import os
@@ -17,20 +28,11 @@ import click
 from shapely.geometry import Polygon as shapelyPolygon
 from click_help_colors import HelpColorsGroup
 import glob
-from pywsi.io.operations import WSIReader, get_annotation_bounding_boxes, get_annotation_polygons,\
-    poly2mask, translate_and_scale_polygon, read_as_rgb
-
-from pywsi.morphology.patch_extractor import TissuePatch
-from pywsi.morphology.mask import mpl_polygon_to_shapely_scaled, get_common_interior_polygons
-
 from PIL import Image
 click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-from tqdm import tqdm
-import warnings
-from multiprocessing import Pool
-from pywsi.segmentation import label_nuclei, summarize_region_properties
 import pandas as pd
+warnings.filterwarnings('ignore')
 
 
 @click.group(
@@ -648,7 +650,6 @@ def process_wsi(data):
                     'Skipping creating annotation index {} for {}'.format(
                         annotation_index, uid))
                 continue
-            patches = 0
             assert annotated_polygon_scaled.is_valid, 'Found invalid annotated polygon: {} {}'.format(
                 uid,
                 shapelyPolygon(annotated_polygon).is_valid)
@@ -800,4 +801,50 @@ def segementation_cmd(indir, outdir):
         with Pool(processes=16) as p:
             for i, _ in enumerate(
                     p.imap_unordered(process_segmentation, data)):
+                pbar.update()
+
+
+def _process_patches_df(data):
+    slide_path, json_filepath, patch_size, saveto = data
+    get_all_patches_from_slide(
+        slide_path,
+        json_filepath=json_filepath,
+        filter_non_tissue=True,
+        patch_size=patch_size,
+        saveto=saveto)
+
+
+@cli.command(
+    'patches-df',
+    context_settings=CONTEXT_SETTINGS,
+    help='Extract all patches summarized as dataframes')
+@click.option(
+    '--indir', help='Root directory with all tumor WSIs', required=True)
+@click.option('--jsondir', help='Root directory with all jsons')
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
+    """Extract tissue only patches from tumor WSIs.
+    """
+    wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
+    data = []
+    for wsi in wsis:
+        basename = path_leaf(wsi).replace('.tif', '')
+        if jsondir:
+            json_filepath = os.path.join(jsondir, basename + '.json')
+        else:
+            json_filepath = None
+        saveto = os.path.join(savedir, basename + '.tsv')
+        data.append((wsi, json_filepath, patchsize, saveto))
+    os.makedirs(savedir, exist_ok=True)
+    with tqdm(total=len(wsis)) as pbar:
+        with Pool(processes=16) as p:
+            for i, _ in enumerate(p.imap_unordered(_process_patches_df, data)):
                 pbar.update()
