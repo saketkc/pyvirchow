@@ -806,12 +806,13 @@ def segementation_cmd(indir, outdir):
 
 def _process_patches_df(data):
     slide_path, json_filepath, patch_size, saveto = data
-    get_all_patches_from_slide(
+    df = get_all_patches_from_slide(
         slide_path,
         json_filepath=json_filepath,
         filter_non_tissue=True,
         patch_size=patch_size,
         saveto=saveto)
+    return df
 
 
 @cli.command(
@@ -835,16 +836,27 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
     """
     wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
     data = []
+    df = pd.DataFrame()
     for wsi in wsis:
         basename = path_leaf(wsi).replace('.tif', '')
         if jsondir:
             json_filepath = os.path.join(jsondir, basename + '.json')
         else:
             json_filepath = None
+        if not os.path.isfile(json_filepath):
+            json_filepath = None
         saveto = os.path.join(savedir, basename + '.tsv')
         data.append((wsi, json_filepath, patchsize, saveto))
     os.makedirs(savedir, exist_ok=True)
     with tqdm(total=len(wsis)) as pbar:
         with Pool(processes=16) as p:
-            for i, _ in enumerate(p.imap_unordered(_process_patches_df, data)):
+            for i, temp_df in enumerate(p.imap_unordered(_process_patches_df, data)):
+                df = pd.concat([df, temp_df])
                 pbar.update()
+    if 'is_tumor' in df.columns:
+        df = df.sort_values(by=['uid', 'is_tumor'])
+    else:
+        df = df.sort_values(by=['uid'])
+
+    df.to_csv(os.path.join(savedir, 'master_df.tsv'), sep='\t', index=False, header=True)
+
