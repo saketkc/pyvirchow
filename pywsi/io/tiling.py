@@ -133,15 +133,28 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
     for index, sample_intersection in enumerate(is_inside_tumor):
         if sample_intersection.area > 0:
             tumor_poly_index = index
-            if sample_intersection.geom_type != 'MultiPolygon':
+            if sample_intersection.geom_type == 'Polygon':
                 tumor_poly_coords = np.array(
                     sample_intersection.boundary.coords)
-            else:
+            elif sample_intersection.geom_type == 'MultiPolygon':
                 tumor_poly_coords = []
                 for p in sample_intersection:
                     tumor_poly_coords += p.boundary.coords
                 tumor_poly_coords = np.array(tumor_poly_coords)
-
+            elif sample_intersection.geom_type == 'GeometryCollection':
+                tumor_poly_coords = []
+                for p in sample_intersection:
+                    if p.geom_type == 'LineString':
+                        tumor_poly_coords += p.coords
+                    elif p.geom_type == 'Polygon':
+                        tumor_poly_coords += p.boundary.coords
+                    else:
+                        print('Found geom_type:{}'.format(p.geom_type))
+                        raise ValueError('')
+            else:
+                print('Found geom_type:{}'.format(
+                    sample_intersection.geom_type))
+                raise ValueError('')
             break
 
     if tumor_poly_index is None:
@@ -176,7 +189,8 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
             normal_poly_coords = np.array(
                 common_area.boundary.coords) - np.array([tile_x, tile_y])
             overlapping_normal_poly = shapelyPolygon(normal_poly_coords)
-            psuedo_mask = poly2mask([overlapping_normal_poly], (patch_size, patch_size))
+            psuedo_mask = poly2mask([overlapping_normal_poly],
+                                    (patch_size, patch_size))
             # Get coordinates wherever this is non zero
             non_zero_coords = np.where(psuedo_mask > 0)
             # Add set these explicitly to zero

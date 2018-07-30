@@ -850,7 +850,8 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
     os.makedirs(savedir, exist_ok=True)
     with tqdm(total=len(wsis)) as pbar:
         with Pool(processes=16) as p:
-            for i, temp_df in enumerate(p.imap_unordered(_process_patches_df, data)):
+            for i, temp_df in enumerate(
+                    p.imap_unordered(_process_patches_df, data)):
                 df = pd.concat([df, temp_df])
                 pbar.update()
     if 'is_tumor' in df.columns:
@@ -858,5 +859,8 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
     else:
         df = df.sort_values(by=['uid'])
 
-    df.to_csv(os.path.join(savedir, 'master_df.tsv'), sep='\t', index=False, header=True)
-
+    df.to_csv(
+        os.path.join(savedir, 'master_df.tsv'),
+        sep='\t',
+        index=False,
+        header=True)
