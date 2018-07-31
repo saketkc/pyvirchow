@@ -1,0 +1,204 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pywsi.segmentation.diff_gaussian &#8212; pywsi 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pywsi.segmentation.diff_gaussian</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">unicode_literals</span>
+
+<span class="kn">from</span> <span class="nn">scipy.ndimage.morphology</span> <span class="k">import</span> <span class="n">distance_transform_edt</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="k">import</span> <span class="n">gaussian_filter</span>
+<span class="kn">from</span> <span class="nn">skimage.transform</span> <span class="k">import</span> <span class="n">resize</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="downsample"><a class="viewcode-back" href="../../../pywsi.segmentation.html#pywsi.segmentation.diff_gaussian.downsample">[docs]</a><span class="k">def</span> <span class="nf">downsample</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">image</span><span class="p">[::</span><span class="n">factor</span><span class="p">,</span> <span class="p">::</span><span class="n">factor</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="laplace_of_gaussian"><a class="viewcode-back" href="../../../pywsi.segmentation.html#pywsi.segmentation.diff_gaussian.laplace_of_gaussian">[docs]</a><span class="k">def</span> <span class="nf">laplace_of_gaussian</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span>
+                        <span class="n">foreground_mask</span><span class="p">,</span>
+                        <span class="n">sigma_min</span><span class="p">,</span>
+                        <span class="n">sigma_max</span><span class="p">,</span>
+                        <span class="n">n_octave_levels</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+
+    <span class="n">input_image</span> <span class="o">=</span> <span class="n">input_image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+    <span class="n">image_dist_transform</span> <span class="o">=</span> <span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">foreground_mask</span><span class="p">)</span>
+
+    <span class="n">sigma_upper_bound</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">image_dist_transform</span>
+    <span class="n">sigma_upper_bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sigma_upper_bound</span><span class="p">,</span> <span class="n">sigma_min</span><span class="p">,</span> <span class="n">sigma_max</span><span class="p">)</span>
+
+    <span class="n">delta_sigma</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">n_octave_levels</span><span class="p">)</span>
+    <span class="n">sigma_ratio</span> <span class="o">=</span> <span class="n">sigma_max</span> <span class="o">/</span> <span class="n">sigma_min</span>
+    <span class="n">n_levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sigma_ratio</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">delta_sigma</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">sigma_prev</span> <span class="o">=</span> <span class="n">sigma_min</span>
+    <span class="n">convolution_prev</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">sigma_prev</span><span class="p">)</span>
+    <span class="n">sigma_upper_bound_cur</span> <span class="o">=</span> <span class="n">sigma_upper_bound</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">dog_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">input_image</span><span class="p">)</span>
+    <span class="n">dog_max</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">eps</span>
+    <span class="n">dog_octave_max</span> <span class="o">=</span> <span class="n">dog_max</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">sigma_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">input_image</span><span class="p">)</span>
+    <span class="n">sigma_octave_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">input_image</span><span class="p">)</span>
+
+    <span class="n">n_level</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_octave</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">level_cur</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_levels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">sigma_cur</span> <span class="o">=</span> <span class="n">sigma_prev</span> <span class="o">*</span> <span class="n">delta_sigma</span>
+        <span class="n">sigma_conv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sigma_cur</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sigma_prev</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">sigma_conv</span> <span class="o">/=</span> <span class="mi">2</span><span class="o">**</span><span class="n">n_octave</span>
+
+        <span class="n">convolution_cur</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">convolution_prev</span><span class="p">,</span> <span class="n">sigma_conv</span><span class="p">)</span>
+        <span class="n">dog_cur</span> <span class="o">=</span> <span class="n">convolution_cur</span> <span class="o">-</span> <span class="n">convolution_prev</span>
+        <span class="n">dog_cur</span><span class="p">[</span><span class="n">sigma_upper_bound_cur</span> <span class="o">&lt;</span> <span class="n">sigma_prev</span><span class="p">]</span> <span class="o">=</span> <span class="n">eps</span>
+        <span class="n">pixels_to_update</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dog_cur</span> <span class="o">&gt;</span> <span class="n">dog_octave_max</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pixels_to_update</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dog_octave_max</span><span class="p">[</span><span class="n">pixels_to_update</span><span class="p">]</span> <span class="o">=</span> <span class="n">dog_cur</span><span class="p">[</span><span class="n">pixels_to_update</span><span class="p">]</span>
+            <span class="n">sigma_octave_max</span><span class="p">[</span><span class="n">pixels_to_update</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma_prev</span>
+
+        <span class="n">sigma_prev</span> <span class="o">=</span> <span class="n">sigma_cur</span>
+        <span class="n">convolution_prev</span> <span class="o">=</span> <span class="n">convolution_cur</span>
+        <span class="n">n_level</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Do additional processing at the end of each octave</span>
+        <span class="k">if</span> <span class="n">level_cur</span> <span class="o">==</span> <span class="n">n_levels</span> <span class="ow">or</span> <span class="n">n_level</span> <span class="o">==</span> <span class="n">n_octave_levels</span><span class="p">:</span>
+            <span class="c1"># update maxima</span>
+            <span class="k">if</span> <span class="n">n_octave_levels</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dog_octave_max_resized</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span>
+                    <span class="n">dog_octave_max</span><span class="p">,</span> <span class="n">dog_max</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dog_octave_max_resized</span> <span class="o">=</span> <span class="n">dog_octave_max</span>
+
+            <span class="n">max_pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dog_octave_max_resized</span> <span class="o">&gt;</span> <span class="n">dog_max</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">max_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dog_max</span><span class="p">[</span><span class="n">max_pixels</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">dog_octave_max_resized</span><span class="p">[</span><span class="n">max_pixels</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">n_octave_levels</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">sigma_octave_max_resized</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span>
+                        <span class="n">sigma_octave_max</span><span class="p">,</span>
+                        <span class="n">dog_max</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                        <span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sigma_octave_max_resized</span> <span class="o">=</span> <span class="n">sigma_octave_max</span>
+
+                <span class="n">sigma_max</span><span class="p">[</span><span class="n">max_pixels</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">sigma_octave_max_resized</span><span class="p">[</span><span class="n">max_pixels</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">n_level</span> <span class="o">==</span> <span class="n">n_octave_levels</span><span class="p">:</span>
+                <span class="n">convolution_prev</span> <span class="o">=</span> <span class="n">downsample</span><span class="p">(</span><span class="n">convolution_cur</span><span class="p">)</span>
+                <span class="n">sigma_upper_bound_cur</span> <span class="o">=</span> <span class="n">downsample</span><span class="p">(</span><span class="n">sigma_upper_bound_cur</span><span class="p">)</span>
+                <span class="n">dog_octave_max</span> <span class="o">=</span> <span class="n">downsample</span><span class="p">(</span><span class="n">dog_octave_max</span><span class="p">)</span>
+                <span class="n">sigma_octave_max</span> <span class="o">=</span> <span class="n">downsample</span><span class="p">(</span><span class="n">sigma_octave_max</span><span class="p">)</span>
+                <span class="n">n_level</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">n_octave</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">dog_max</span><span class="p">[</span><span class="n">dog_max</span> <span class="o">==</span> <span class="n">eps</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">dog_max</span><span class="p">,</span> <span class="n">sigma_max</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">pywsi</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">pywsi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">pywsi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Saket Choudhary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

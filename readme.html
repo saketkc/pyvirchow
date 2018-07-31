@@ -1,0 +1,174 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pywsi &#8212; pywsi 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Welcome to pywsi’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pywsi">
+<h1>pywsi<a class="headerlink" href="#pywsi" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://travis-ci.com/saketkc/pywsi"><img alt="https://travis-ci.com/saketkc/pywsi.svg?token=GsuWFnsdqcXUSp8vzLip&amp;branch=master" src="https://travis-ci.com/saketkc/pywsi.svg?token=GsuWFnsdqcXUSp8vzLip&amp;branch=master" /></a>
+<ul class="simple">
+<li>Free software: BSD license</li>
+<li>Documentation: <a class="reference external" href="https://www.saket-choudhary.me/pywsi/">https://www.saket-choudhary.me/pywsi/</a></li>
+</ul>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>See the <a class="reference external" href="notebooks/01.pywsi-demo.ipynb">Notebook</a>.</p>
+</div>
+<div class="section" id="training-inceptionv4-on-tumor-normal-patches">
+<h2>Training InceptionV4 on Tumor/Normal patches<a class="headerlink" href="#training-inceptionv4-on-tumor-normal-patches" title="Permalink to this headline">¶</a></h2>
+<p>We currently rely on <a class="reference external" href="https://arxiv.org/abs/1602.07261">InceptionV4</a> model for training. It is one of the
+deepest and most sophesticated models available. Another model we would ideally
+like to explore is Inception-Resnet, but later.</p>
+<div class="section" id="step-1-create-tissue-masks">
+<h3>Step 1. Create tissue masks<a class="headerlink" href="#step-1-create-tissue-masks" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pywsi create-tissue-masks --indir /CAMELYON16/testing/images/ <span class="se">\</span>
+--level <span class="m">5</span> --savedir /CAMELYON16/testing/tissue_masks
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-2-create-annotation-masks">
+<h3>Step 2. Create annotation masks<a class="headerlink" href="#step-2-create-annotation-masks" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pywsi create-annotation-masks --indir /CAMELYON16/testing/images/ <span class="se">\</span>
+--level <span class="m">5</span> --savedir /CAMELYON16/testing/annotation_masks <span class="se">\</span>
+--jsondir /CAMELYON16/testing/lesion_annotations_json
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-3a-extract-tumor-patches">
+<h3>Step 3A. Extract tumor patches<a class="headerlink" href="#step-3a-extract-tumor-patches" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pywsi extract-tumor-patches --indir /CAMELYON16/testing/images/ <span class="se">\</span>
+--annmaskdir /CAMELYON16/testing/annotation_masks <span class="se">\</span>
+--tismaskdir /CAMELYON16/testing/tissue_masks <span class="se">\</span>
+--level <span class="m">5</span> --savedir /CAMELYON16/testing/extracted_tumor_patches
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-3b-extract-normal-patches">
+<h3>Step 3B. Extract normal patches<a class="headerlink" href="#step-3b-extract-normal-patches" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pywsi extract-normal-patches --indir /CAMELYON16/training/normal <span class="se">\</span>
+--tismaskdir /CAMELYON16/training/tissue_masks --level <span class="m">5</span> <span class="se">\</span>
+--savedir /CAMELYON16/training/extracted_normal_patches
+</pre></div>
+</div>
+<div class="section" id="dataset-download">
+<h4>Dataset download<a class="headerlink" href="#dataset-download" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="ftp://parrot.genomics.cn/gigadb/pub/10.5524/100001_101000/100439/CAMELYON16/">Ftp</a></p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pywsi</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pywsi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training-inceptionv4-on-tumor-normal-patches">Training InceptionV4 on Tumor/Normal patches</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-create-tissue-masks">Step 1. Create tissue masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-create-annotation-masks">Step 2. Create annotation masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3a-extract-tumor-patches">Step 3A. Extract tumor patches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3b-extract-normal-patches">Step 3B. Extract normal patches</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dataset-download">Dataset download</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pywsi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to pywsi’s documentation!</a></li>
+      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Saket Choudhary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/readme.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

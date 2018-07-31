@@ -1,0 +1,444 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pywsi.segmentation package &#8212; pywsi 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pywsi.stats package" href="pywsi.stats.html" />
+    <link rel="prev" title="pywsi.normalization package" href="pywsi.normalization.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pywsi-segmentation-package">
+<h1>pywsi.segmentation package<a class="headerlink" href="#pywsi-segmentation-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pywsi.segmentation.binary_segmentation">
+<span id="pywsi-segmentation-binary-segmentation-module"></span><h2>pywsi.segmentation.binary_segmentation module<a class="headerlink" href="#module-pywsi.segmentation.binary_segmentation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pywsi.segmentation.binary_segmentation.gmm_thresholding">
+<code class="descclassname">pywsi.segmentation.binary_segmentation.</code><code class="descname">gmm_thresholding</code><span class="sig-paren">(</span><em>image_rgb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/binary_segmentation.html#gmm_thresholding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.binary_segmentation.gmm_thresholding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform thresholding based on Gaussian mixture models.</p>
+<p>The image is assumed to be a mixture of two gaussians.
+A lower mean sample belongs to the blobs while the higher mean
+shows the white background.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>image_rgb: array_like</strong></dt>
+<dd><p class="first last">RGB input</p>
+</dd>
+<dt><strong>Returns</strong></dt>
+<dd></dd>
+<dt><strong>——</strong></dt>
+<dd></dd>
+<dt><strong>gmm_threshold: float</strong></dt>
+<dd><p class="first last">GMM mean (minimum) of the two mixing populations</p>
+</dd>
+<dt><strong>clf: sklearn.GaussianMixture</strong></dt>
+<dd><p class="first last">The entire sklearn model</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pywsi.segmentation.binary_segmentation.poisson_deconvolve">
+<code class="descclassname">pywsi.segmentation.binary_segmentation.</code><code class="descname">poisson_deconvolve</code><span class="sig-paren">(</span><em>h_channel_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/binary_segmentation.html#poisson_deconvolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.binary_segmentation.poisson_deconvolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separate baclground and foreground intensities
+by doing a poisson partition.</p>
+<p>For the i_th pixel h(i) = P0*P(i|0) + P1*P(i|1)
+where P0,P1 are prior probabilities of background and foreground.</p>
+<p>For a threshold t, the parameters are given by:
+P(t) = sum_{i=0}^t h(i)
+mu_0(t) = 1/P0(t) * sum_{i=0}^t i*h(i)</p>
+<p>P1(t) = sum_{i=t+1}^I_max h(i)
+mu_1(t) = 1/P1(t) * sum_{i=t+1}^I_max i*h(i)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>h_channel_image: array_like</strong></dt>
+<dd><p class="first last">uint8 image (single channel)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pywsi.segmentation.diff_gaussian">
+<span id="pywsi-segmentation-diff-gaussian-module"></span><h2>pywsi.segmentation.diff_gaussian module<a class="headerlink" href="#module-pywsi.segmentation.diff_gaussian" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pywsi.segmentation.diff_gaussian.downsample">
+<code class="descclassname">pywsi.segmentation.diff_gaussian.</code><code class="descname">downsample</code><span class="sig-paren">(</span><em>image</em>, <em>factor=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/diff_gaussian.html#downsample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.diff_gaussian.downsample" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pywsi.segmentation.diff_gaussian.laplace_of_gaussian">
+<code class="descclassname">pywsi.segmentation.diff_gaussian.</code><code class="descname">laplace_of_gaussian</code><span class="sig-paren">(</span><em>input_image</em>, <em>foreground_mask</em>, <em>sigma_min</em>, <em>sigma_max</em>, <em>n_octave_levels=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/diff_gaussian.html#laplace_of_gaussian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.diff_gaussian.laplace_of_gaussian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pywsi.segmentation.fractal_dimension">
+<span id="pywsi-segmentation-fractal-dimension-module"></span><h2>pywsi.segmentation.fractal_dimension module<a class="headerlink" href="#module-pywsi.segmentation.fractal_dimension" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pywsi.segmentation.fractal_dimension.fractal_dimension">
+<code class="descclassname">pywsi.segmentation.fractal_dimension.</code><code class="descname">fractal_dimension</code><span class="sig-paren">(</span><em>Z</em>, <em>threshold=0.9</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/fractal_dimension.html#fractal_dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.fractal_dimension.fractal_dimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pywsi.segmentation.graph_cut">
+<span id="pywsi-segmentation-graph-cut-module"></span><h2>pywsi.segmentation.graph_cut module<a class="headerlink" href="#module-pywsi.segmentation.graph_cut" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pywsi.segmentation.graph_cut.perform_binary_cut">
+<code class="descclassname">pywsi.segmentation.graph_cut.</code><code class="descname">perform_binary_cut</code><span class="sig-paren">(</span><em>foreground</em>, <em>background</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/graph_cut.html#perform_binary_cut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.graph_cut.perform_binary_cut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform graph-cut based segmentation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>foreground, background: float32</strong></dt>
+<dd><p class="first last">Foreground, background probability matrix (w*h*3)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pywsi.segmentation.helpers">
+<span id="pywsi-segmentation-helpers-module"></span><h2>pywsi.segmentation.helpers module<a class="headerlink" href="#module-pywsi.segmentation.helpers" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pywsi.segmentation.helpers.collapse_labels">
+<code class="descclassname">pywsi.segmentation.helpers.</code><code class="descname">collapse_labels</code><span class="sig-paren">(</span><em>labelled_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/helpers.html#collapse_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.helpers.collapse_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collapse labels in a labeleled image
+so that all labels are contigous</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>labelled_image: array_like</strong></dt>
+<dd><p class="first last">An image with labels</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>label_collapsed_image: array_like</strong></dt>
+<dd><p class="first last">Image with contigous labels</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pywsi.segmentation.helpers.collapse_small_area">
+<code class="descclassname">pywsi.segmentation.helpers.</code><code class="descname">collapse_small_area</code><span class="sig-paren">(</span><em>labelled_image</em>, <em>minimum_area</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/helpers.html#collapse_small_area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.helpers.collapse_small_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collapse labelled image removing areas with too low are.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>labelled_image: array_like</strong></dt>
+<dd><p class="first last">An image with labels</p>
+</dd>
+<dt><strong>minimum_area: float</strong></dt>
+<dd><p class="first last">Areas with this and above area are retained</p>
+</dd>
+<dt><strong>Returns</strong></dt>
+<dd></dd>
+<dt><strong>——-</strong></dt>
+<dd></dd>
+<dt><strong>label_collapsed_image: array_like</strong></dt>
+<dd><p class="first last">Image with contigous labels</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="pywsi-segmentation-max-clustering-module">
+<h2>pywsi.segmentation.max_clustering module<a class="headerlink" href="#pywsi-segmentation-max-clustering-module" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<code class="descclassname">pywsi.segmentation.max_clustering.</code><code class="descname">max_clustering</code><span class="sig-paren">(</span><em>im_response</em>, <em>im_fgnd_mask</em>, <em>r=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/max_clustering.html#max_clustering"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Local max clustering pixel aggregation for nuclear segmentation.
+Takes as input a constrained log or other filtered nuclear image, a binary
+nuclear mask, and a clustering radius. For each pixel in the nuclear mask,
+the local max is identified. A hierarchy of local maxima is defined, and
+the root nodes used to define the label image. References <a class="footnote-reference" href="#id3" id="id1">[1]</a> and <a class="footnote-reference" href="#id4" id="id2">[2]</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>im_response</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">A filtered-smoothed image where the maxima correspond to nuclear
+center. Typically obtained by constrained-LoG filtering on a
+hematoxylin intensity image obtained from ColorDeconvolution.</p>
+</dd>
+<dt><strong>im_fgnd_mask</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">A binary mask of type boolean where nuclei pixels have value
+‘True’, and non-nuclear pixels have value ‘False’.</p>
+</dd>
+<dt><strong>r</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">A scalar defining the clustering radius. Default value = 10.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>im_label</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">im_label image where positive values correspond to foreground pixels that
+share mutual sinks.</p>
+</dd>
+<dt><strong>seeds</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">An N x 2 array defining the (x,y) coordinates of nuclei seeds.</p>
+</dd>
+<dt><strong>max_response</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">An N x 1 array containing the maximum response value corresponding to
+seeds.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>XW. Wu et al “The local maximum clustering method and its
+application in microarray gene expression data analysis,”
+EURASIP J. Appl. Signal Processing, volume 2004, no.1, pp.53-63,
+2004.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Y. Al-Kofahi et al “Improved Automatic Detection and Segmentation
+of Cell Nuclei in Histopathology Images” in IEEE Transactions on
+Biomedical Engineering,vol.57,no.4,pp.847-52, 2010.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pywsi.segmentation">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pywsi.segmentation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pywsi.segmentation.max_clustering">
+<code class="descclassname">pywsi.segmentation.</code><code class="descname">max_clustering</code><span class="sig-paren">(</span><em>im_response</em>, <em>im_fgnd_mask</em>, <em>r=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pywsi/segmentation/max_clustering.html#max_clustering"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pywsi.segmentation.max_clustering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Local max clustering pixel aggregation for nuclear segmentation.
+Takes as input a constrained log or other filtered nuclear image, a binary
+nuclear mask, and a clustering radius. For each pixel in the nuclear mask,
+the local max is identified. A hierarchy of local maxima is defined, and
+the root nodes used to define the label image. References <a class="footnote-reference" href="#id7" id="id5">[3]</a> and <a class="footnote-reference" href="#id8" id="id6">[4]</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>im_response</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">A filtered-smoothed image where the maxima correspond to nuclear
+center. Typically obtained by constrained-LoG filtering on a
+hematoxylin intensity image obtained from ColorDeconvolution.</p>
+</dd>
+<dt><strong>im_fgnd_mask</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">A binary mask of type boolean where nuclei pixels have value
+‘True’, and non-nuclear pixels have value ‘False’.</p>
+</dd>
+<dt><strong>r</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">A scalar defining the clustering radius. Default value = 10.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>im_label</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">im_label image where positive values correspond to foreground pixels that
+share mutual sinks.</p>
+</dd>
+<dt><strong>seeds</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">An N x 2 array defining the (x,y) coordinates of nuclei seeds.</p>
+</dd>
+<dt><strong>max_response</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">An N x 1 array containing the maximum response value corresponding to
+seeds.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>XW. Wu et al “The local maximum clustering method and its
+application in microarray gene expression data analysis,”
+EURASIP J. Appl. Signal Processing, volume 2004, no.1, pp.53-63,
+2004.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[4]</a></td><td>Y. Al-Kofahi et al “Improved Automatic Detection and Segmentation
+of Cell Nuclei in Histopathology Images” in IEEE Transactions on
+Biomedical Engineering,vol.57,no.4,pp.847-52, 2010.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">pywsi</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">pywsi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">pywsi</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pywsi.html">pywsi package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pywsi.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pywsi.io.html">pywsi.io package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pywsi.misc.html">pywsi.misc package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pywsi.morphology.html">pywsi.morphology package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pywsi.normalization.html">pywsi.normalization package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pywsi.segmentation package</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-pywsi.segmentation.binary_segmentation">pywsi.segmentation.binary_segmentation module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-pywsi.segmentation.diff_gaussian">pywsi.segmentation.diff_gaussian module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-pywsi.segmentation.fractal_dimension">pywsi.segmentation.fractal_dimension module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-pywsi.segmentation.graph_cut">pywsi.segmentation.graph_cut module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-pywsi.segmentation.helpers">pywsi.segmentation.helpers module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#pywsi-segmentation-max-clustering-module">pywsi.segmentation.max_clustering module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-pywsi.segmentation">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="pywsi.stats.html">pywsi.stats package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pywsi.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pywsi.html#module-pywsi.cli">pywsi.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pywsi.html#module-pywsi">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">pywsi</a><ul>
+  <li><a href="pywsi.html">pywsi package</a><ul>
+      <li>Previous: <a href="pywsi.normalization.html" title="previous chapter">pywsi.normalization package</a></li>
+      <li>Next: <a href="pywsi.stats.html" title="next chapter">pywsi.stats package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Saket Choudhary.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/pywsi.segmentation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
