@@ -50,6 +50,7 @@ pywsi.segmentation.max\_clustering module
 .. automodule:: pywsi.segmentation.max_clustering
     :members:
     :undoc-members:
+    :noindex:
     :show-inheritance:
 
 

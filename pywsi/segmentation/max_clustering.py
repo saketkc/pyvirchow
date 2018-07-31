@@ -19,7 +19,7 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
     Takes as input a constrained log or other filtered nuclear image, a binary
     nuclear mask, and a clustering radius. For each pixel in the nuclear mask,
     the local max is identified. A hierarchy of local maxima is defined, and
-    the root nodes used to define the label image.
+    the root nodes used to define the label image. References [#]_ and [#]_
 
     Parameters
     ----------
@@ -42,11 +42,8 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
         An N x 2 array defining the (x,y) coordinates of nuclei seeds.
     max_response : array_like
         An N x 1 array containing the maximum response value corresponding to
-        'seeds'.
+        seeds.
 
-    See Also
-    --------
-    histomicstk.filters.shape.clog
 
     References
     ----------
