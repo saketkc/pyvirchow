@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import os
 import numpy as np
 import pandas as pd
+import six
 from ..morphology.mask import get_common_interior_polygons
 from .operations import get_annotation_polygons
 from .operations import poly2mask
@@ -317,12 +318,17 @@ def generate_tiles(samples,
                         tile_size=patch_size,
                         overlap=0,
                         limit_bounds=False)
+                    tile_loc = batch_sample.tile_loc#[::-1]
+                    if isinstance(tile_loc, six.string_types):
+                        tile_row, tile_col = eval(tile_loc)
+                    else:
+                        tile_row, tile_col = tile_loc
                     # the get_tile tuple required is (col, row)
                     img = tiles.get_tile(tiles.level_count - 1,
-                                         batch_sample.tile_loc[::-1])
+                                         (tile_col, tile_row))
                     (tile_x,
                      tile_y), tile_level, _ = tiles.get_tile_coordinates(
-                         tiles.level_count - 1, batch_sample.tile_loc[::-1])
+                         tiles.level_count - 1, (tile_col, tile_row))
 
                 if slide_contains_tumor:
                     json_filepath = batch_sample['json_filepath']
