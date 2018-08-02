@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 import six
+import joblib
 from ..morphology.mask import get_common_interior_polygons
 from .operations import get_annotation_polygons
 from .operations import poly2mask
@@ -136,19 +137,19 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
             tumor_poly_index = index
             if sample_intersection.geom_type == 'Polygon':
                 tumor_poly_coords = np.array(
-                    sample_intersection.boundary.coords)
+                    sample_intersection.exterior.coords)
             elif sample_intersection.geom_type == 'MultiPolygon':
                 tumor_poly_coords = []
                 for p in sample_intersection:
-                    tumor_poly_coords += p.boundary.coords
+                    tumor_poly_coords += p.exterior.coords
                 tumor_poly_coords = np.array(tumor_poly_coords)
             elif sample_intersection.geom_type == 'GeometryCollection':
                 tumor_poly_coords = []
                 for p in sample_intersection:
-                    if p.geom_type == 'LineString':
+                    if p.geom_type == 'LineString' or p.geom_type == 'Point':
                         tumor_poly_coords += p.coords
                     elif p.geom_type == 'Polygon':
-                        tumor_poly_coords += p.boundary.coords
+                        tumor_poly_coords += p.exterior.coords
                     else:
                         print('Found geom_type:{}'.format(p.geom_type))
                         raise ValueError('')
@@ -186,9 +187,17 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
         # What is the intersection portion of this normal polygon
         # with our patch of interest?
         common_area = normal_poly.intersection(patch_polygon)
-        if common_area:
+        if not common_area.is_valid:
+            return mask
+        if common_area.geom_type == 'Polygon':
             normal_poly_coords = np.array(
-                common_area.boundary.coords) - np.array([tile_x, tile_y])
+                common_area.exterior.coords) - np.array([tile_x, tile_y])
+        elif common_area.geom_type == 'MultiPolygon':
+            normal_poly_coords = []
+            for p in common_area:
+                normal_poly_coords += p.exterior.coords
+            normal_poly_coords = np.array(normal_poly_coords) - np.array([tile_x, tile_y])
+        if common_area:
             overlapping_normal_poly = shapelyPolygon(normal_poly_coords)
             psuedo_mask = poly2mask([overlapping_normal_poly],
                                     (patch_size, patch_size))
@@ -347,3 +356,106 @@ def generate_tiles(samples,
             if convert_to_cat:
                 y_train = mask_to_categorical(y_train, num_classes, patch_size)
             yield X_train, y_train
+
+
+def save_images_and_mask(batch_sample):
+    patch_size = batch_sample['patch_size']
+    savedir = batch_sample['savedir']
+    slide_contains_tumor = batch_sample['uid'].startswith('tumor')
+    os.makedirs(savedir, exist_ok=True)
+    with WSIReader(batch_sample['slide_path'], 40) as slide:
+        tiles = DeepZoomGenerator(
+            slide,
+            tile_size=patch_size,
+            overlap=0,
+            limit_bounds=False)
+        tile_loc = batch_sample['tile_loc']#[::-1]
+        if isinstance(tile_loc, six.string_types):
+            tile_row, tile_col = eval(tile_loc)
+        else:
+            tile_row, tile_col = tile_loc
+            # the get_tile tuple required is (col, row)
+        img = tiles.get_tile(tiles.level_count - 1,
+                                (tile_col, tile_row))
+        (tile_x,
+            tile_y), tile_level, _ = tiles.get_tile_coordinates(
+                tiles.level_count - 1, (tile_col, tile_row))
+
+        if slide_contains_tumor:
+            json_filepath = batch_sample['json_filepath']
+            polygons = get_annotation_polygons(json_filepath,
+                                                'shapely')
+            mask = create_tumor_mask_from_tile(tile_x, tile_y,
+                                                polygons, patch_size)
+        else:
+            mask = np.zeros((patch_size, patch_size))
+
+        img = np.array(img)
+        img_path = os.path.join(savedir, batch_sample['uid']+'_{}_{}.img.joblib.pickle'.format(tile_row, tile_col))
+        mask_path = os.path.join(savedir, batch_sample['uid']+'_{}_{}.mask.joblib.pickle'.format(tile_row, tile_col))
+        joblib.dump(img, img_path)
+        joblib.dump(mask, mask_path)
+    return batch_sample['index'], img_path, mask_path
+
+
+def get_tiles(batch_samples,
+              patch_size=256,
+              num_classes=2,
+              convert_to_cat=True):
+    """Generator function to yield image and mask tuples,
+
+    Parameters
+    ----------
+    batch_samples: DataFrame
+                   Subsetted dataframe as obtained from get_all_patches_from_slide
+    patch_size: int
+                Patch size
+    convert_to_cat: bool
+                    Should convert to categorical
+
+    Returns
+    -------
+    X: tensor
+    Y: tensor
+
+    """
+    images = []
+    masks = []
+    for _, batch_sample in batch_samples.iterrows():
+        slide_contains_tumor = batch_sample['uid'].startswith('tumor')
+
+        with WSIReader(batch_sample.slide_path, 40) as slide:
+            tiles = DeepZoomGenerator(
+                slide,
+                tile_size=patch_size,
+                overlap=0,
+                limit_bounds=False)
+            tile_loc = batch_sample.tile_loc#[::-1]
+            if isinstance(tile_loc, six.string_types):
+                tile_row, tile_col = eval(tile_loc)
+            else:
+                tile_row, tile_col = tile_loc
+            # the get_tile tuple required is (col, row)
+            img = tiles.get_tile(tiles.level_count - 1,
+                                    (tile_col, tile_row))
+            (tile_x,
+                tile_y), tile_level, _ = tiles.get_tile_coordinates(
+                    tiles.level_count - 1, (tile_col, tile_row))
+
+        if slide_contains_tumor:
+            json_filepath = batch_sample['json_filepath']
+            polygons = get_annotation_polygons(json_filepath,
+                                                'shapely')
+            mask = create_tumor_mask_from_tile(tile_x, tile_y,
+                                                polygons, patch_size)
+        else:
+            mask = np.zeros((patch_size, patch_size))
+
+        images.append(np.array(img))
+        masks.append(mask)
+
+    X_train = np.array(images)
+    y_train = np.array(masks)
+    if convert_to_cat:
+        y_train = mask_to_categorical(y_train, num_classes, patch_size)
+    return X_train, y_train

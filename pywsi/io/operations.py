@@ -230,10 +230,14 @@ def get_annotation_polygons(json_filepath, polygon_type='mpl'):
     polygons['tumor'] = []
     polygons['normal'] = []
     for tumor_patch in tumor_patches:
+        tumor_patch['vertices'] = np.array(tumor_patch['vertices'])
         if polygon_type == 'mpl':
-            polygon = Polygon(np.array(tumor_patch['vertices']))
+            polygon = Polygon(tumor_patch)
         else:
-            polygon = shapelyPolygon(np.array(tumor_patch['vertices']))
+            if tumor_patch['vertices'].shape[0] >= 3:
+                polygon = shapelyPolygon(tumor_patch['vertices'])
+            else:
+                continue
         polygons['tumor'].append(polygon)
     for normal_patch in normal_patches:
         if polygon_type == 'mpl':

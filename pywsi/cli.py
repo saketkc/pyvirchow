@@ -11,6 +11,7 @@ from pywsi.io.operations import path_leaf
 from pywsi.io.operations import read_as_rgb
 from pywsi.io.operations import WSIReader
 from pywsi.io.tiling import get_all_patches_from_slide
+from pywsi.io.tiling import save_images_and_mask
 
 from pywsi.morphology.patch_extractor import TissuePatch
 from pywsi.morphology.mask import get_common_interior_polygons
@@ -864,3 +865,42 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
         sep='\t',
         index=False,
         header=True)
+
+@cli.command(
+    'patch-and-mask',
+    context_settings=CONTEXT_SETTINGS,
+    help='Extract all patches and their mask from patches dataframes')
+@click.option(
+    '--df', help='Path to dataframe', required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+@click.option(
+    '--savedf',
+    help='Save edited dataframe to',
+    required=True)
+def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
+    """Extract tissue only patches from tumor WSIs.
+    """
+    assert not os.path.isfile(savedf)
+    df = pd.read_table(df)
+    df_copy = df.copy()
+    df_copy['img_path'] = None
+    df_copy['mask_path'] = None
+    df['savedir'] = savedir
+    df['patch_size'] = patchsize
+    records = df.reset_index().to_dict('records')
+
+    with tqdm(total=len(df.index)) as pbar:
+        with Pool(processes=32) as p:
+            for idx, img_path, mask_path in p.imap_unordered(save_images_and_mask, records):
+                df_copy.loc[idx, 'img_path'] = img_path
+                df_copy.loc[idx, 'mask_path'] = mask_path
+                pbar.update()
+    df_copy.to_csv(savedf, sep='\t', index=False, header=True)

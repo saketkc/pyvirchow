@@ -10,7 +10,6 @@ import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-import os
 
 from keras.models import Sequential
 from keras.layers import Lambda, Dropout
@@ -62,6 +61,19 @@ validation_samples = pd.read_table(
 
 # In[4]:
 
+# Sample only half the points
+train_samples_tumor = train_samples[train_samples.is_tumor==True].sample(frac=0.45, random_state=42)
+train_samples_normal = train_samples[train_samples.is_tumor==False].sample(frac=0.45, random_state=43)
+
+validation_samples_tumor = validation_samples[validation_samples.is_tumor==True].sample(frac=0.45, random_state=42)
+validation_samples_normal = validation_samples[validation_samples.is_tumor==False].sample(frac=0.45, random_state=43)
+
+
+#train_samples = train_samples.sample(frac=0.5, random_state=42)
+train_samples = pd.concat([train_samples_tumor, train_samples_normal]).sample(frac=1, random_state=42)
+#
+#validation_samples = validation_samples.sample(frac=0.5, random_state=43)
+validation_samples = pd.concat([validation_samples_tumor, validation_samples_normal]).sample(frac=1, random_state=42)
 
 # Let's try on tumor_076 samples
 def predict_from_model(patch, model):
@@ -101,8 +113,8 @@ callbacks_list = [checkpoint]
 
 model.fit_generator(
     train_generator,
-    np.ceil(len(train_samples) / BATCH_SIZE),
+    len(train_samples)//BATCH_SIZE,
     validation_data=validation_generator,
-    validation_steps=np.ceil(len(validation_samples) / BATCH_SIZE),
+    validation_steps=len(validation_samples)//BATCH_SIZE,
     epochs=N_EPOCHS,
     callbacks=callbacks_list)
