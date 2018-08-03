@@ -2,13 +2,11 @@
 
 # In[1]:
 
-import numpy as np
 import pandas as pd
-import os
 
 # Just use 1 GPU
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+#os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 from keras.models import Sequential
@@ -16,6 +14,7 @@ from keras.layers import Lambda, Dropout
 from keras.layers.convolutional import Convolution2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint
+from keras.utils import multi_gpu_model
 
 from pywsi.io.tiling import generate_tiles
 
@@ -46,9 +45,14 @@ model.add(Convolution2D(
 model.add(
     Conv2DTranspose(
         2, (31, 31), strides=(16, 16), activation='softmax', padding='same'))
+model = multi_gpu_model(model, gpus=2)
 
-model.compile(
-    loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+#model.compile(
+#    loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+model.compile(loss='categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
 
 # In[3]:
 

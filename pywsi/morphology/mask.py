@@ -78,7 +78,8 @@ def get_common_interior_polygons(polygon, list_of_polygons):
     list_of_common_polygons = []
     for index, outside_polygon in enumerate(list_of_polygons):
         if isinstance(outside_polygon, Polygon):
-            outside_polygon = shapelyPolygon(outside_polygon.get_xy()).buffer(0)
+            outside_polygon = shapelyPolygon(
+                outside_polygon.get_xy()).buffer(0)
         if polygon.is_valid and outside_polygon.is_valid:
             if polygon.within(outside_polygon):
                 list_of_common_polygons.append(index)

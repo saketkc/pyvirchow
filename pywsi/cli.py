@@ -866,12 +866,12 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
         index=False,
         header=True)
 
+
 @cli.command(
     'patch-and-mask',
     context_settings=CONTEXT_SETTINGS,
     help='Extract all patches and their mask from patches dataframes')
-@click.option(
-    '--df', help='Path to dataframe', required=True)
+@click.option('--df', help='Path to dataframe', required=True)
 @click.option(
     '--patchsize',
     type=int,
@@ -881,10 +881,7 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
     '--savedir',
     help='Root directory to save extract images to',
     required=True)
-@click.option(
-    '--savedf',
-    help='Save edited dataframe to',
-    required=True)
+@click.option('--savedf', help='Save edited dataframe to', required=True)
 def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
     """Extract tissue only patches from tumor WSIs.
     """
@@ -899,7 +896,8 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
 
     with tqdm(total=len(df.index)) as pbar:
         with Pool(processes=32) as p:
-            for idx, img_path, mask_path in p.imap_unordered(save_images_and_mask, records):
+            for idx, img_path, mask_path in p.imap_unordered(
+                    save_images_and_mask, records):
                 df_copy.loc[idx, 'img_path'] = img_path
                 df_copy.loc[idx, 'mask_path'] = mask_path
                 pbar.update()

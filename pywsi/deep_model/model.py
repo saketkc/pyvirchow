@@ -10,7 +10,7 @@ from keras.layers.convolutional import Convolution2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 import os
-from ..io.tiling import get_tiles, get_all_patches_from_slide
+from ..io.tiling import get_tiles, get_tiles_fast, get_all_patches_from_slide
 from tqdm import tqdm
 from multiprocessing import Pool
 
@@ -169,41 +169,57 @@ def predict_on_batch(patches, model):
     """
     prediction = model.predict(patches)
     prediction = prediction[:, :, :, 1]
+    return prediction
 
 
-def process_batch(model, batch_samples, batch_size=32):
+def process_batch(args):
+    idx, model, batch_samples, batch_size, patch_size, img_mask_dir = args
     output_thumbnail_pred = None
-    X, _ = get_tiles(batch_samples)
     if batch_samples.is_tissue.nunique(
     ) == 1 and batch_samples.iloc[0].is_tissue == False:
         # all patches in this row do not have tissue, skip them all
-        output_thumbnail_pred = np.zeros(batch_size, dtype=np.float32)
+        output_thumbnail_pred = np.zeros((batch_size, patch_size, patch_size),
+                                         dtype=np.float32)
 
     else:
         # make predictions
+        #X, _ = get_tiles(batch_samples)
+        X, _ = get_tiles_fast(batch_samples, img_mask_dir=img_mask_dir)
         preds = predict_on_batch(X, model)
         output_thumbnail_pred = preds.mean(axis=(1, 2))
-    return output_thumbnail_pred
+    return idx, output_thumbnail_pred
 
 
-def slide_level_map(model, slide_path, batch_size=32, json_filepath=None):
+def slide_level_map(model,
+                    slide_path,
+                    batch_size=32,
+                    patch_size=256,
+                    json_filepath=None,
+                    img_mask_dir=None):
     all_samples = get_all_patches_from_slide(slide_path, json_filepath, False,
                                              256)
     n_samples = len(all_samples.index)
     all_batch_samples = []
-    for offset in list(range(0, n_samples, batch_size)):
-        all_batch_samples.append(all_samples.iloc[offset:offset + batch_size])
+    for idx, offset in enumerate(list(range(0, n_samples, batch_size))):
+        all_batch_samples.append(
+            (idx, model, all_samples.iloc[offset:offset + batch_size],
+             batch_size, patch_size, img_mask_dir))
     output_thumbnail_preds = []
     output_thumbnail_idx = []
     total = len(all_batch_samples)
-    with tqdm(total=total) as pbar:
-        with Pool(processes=8) as p:
-            results = p.imap_unordered(process_batch,
-                                       enumerate(all_batch_samples))
-        for idx, result in results:
-            output_thumbnail_preds.append(result)
-            output_thumbnail_idx.append(idx)
-            pbar.update()
+    """
+    with Pool(processes=32) as p:
+        with tqdm(total=total) as pbar:
+            for idx, result in p.imap_unordered(process_batch,
+                                                all_batch_samples):
+                output_thumbnail_preds.append(result)
+                output_thumbnail_idx.append(idx)
+                pbar.update()
+    """
+    for batch in tqdm(all_batch_samples):
+        idx, result = process_batch(batch)
+        output_thumbnail_preds.append(result)
+        output_thumbnail_idx.append(idx)
     output_thumbnail_idx = np.array(output_thumbnail_idx)
     output_thumbnail_preds = np.array(output_thumbnail_preds)
     output_thumbnail_preds = output_thumbnail_preds[output_thumbnail_idx]

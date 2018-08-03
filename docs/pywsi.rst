@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    pywsi.deep_model
     pywsi.io
     pywsi.misc
     pywsi.morphology

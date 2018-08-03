@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import numpy as np
-import matplotlb.pyplot as plt
+import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from skimage.color import rgb2gray
 
@@ -68,11 +68,21 @@ def plot_blend(patch, prediction, ax, alpha=0.75):
     ax.axis('off')
 
 
-def plot_patch_with_pred(patch, truth, prediction, title_str='', alpha=0.6):
+def plot_patch_with_pred(patch,
+                         truth=None,
+                         prediction=None,
+                         title_str='',
+                         alpha=0.6):
     """
-    input: patch: 256x256x3, rgb image
-    input: truth: 256x256x2, onehot output classes (normal, tumor)
-    input: prediction: 256x256x1, per-pixel tumor probability
+
+    Parameters
+    ----------
+    patch: array_like
+           RGB image
+    truth: array_like
+           Binary mask
+    prediction: array_like
+                256x256x1, per-pixel tumor probability
     """
     fig = plt.figure(figsize=(20, 10))
     gs = gridspec.GridSpec(2, 4, width_ratios=[10, 10, 19, 1])
@@ -86,8 +96,9 @@ def plot_patch_with_pred(patch, truth, prediction, title_str='', alpha=0.6):
     ax0.imshow(patch)
     ax0.set_title('Original')
 
-    ax1.imshow(truth.argmax(axis=2), cmap='gray', vmin=0, vmax=1)
-    ax1.set_title('Truth mask (white=tumor, black=normal)')
+    if truth:
+        ax1.imshow(truth.argmax(axis=2), cmap='gray', vmin=0, vmax=1)
+        ax1.set_title('Truth mask (white=tumor, black=normal)')
 
     p = ax2.imshow(prediction, cmap='coolwarm', vmin=0, vmax=1)
     ax2.set_title('Prediction heatmap')

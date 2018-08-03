@@ -196,7 +196,8 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
             normal_poly_coords = []
             for p in common_area:
                 normal_poly_coords += p.exterior.coords
-            normal_poly_coords = np.array(normal_poly_coords) - np.array([tile_x, tile_y])
+            normal_poly_coords = np.array(normal_poly_coords) - np.array(
+                [tile_x, tile_y])
         if common_area:
             overlapping_normal_poly = shapelyPolygon(normal_poly_coords)
             psuedo_mask = poly2mask([overlapping_normal_poly],
@@ -327,7 +328,7 @@ def generate_tiles(samples,
                         tile_size=patch_size,
                         overlap=0,
                         limit_bounds=False)
-                    tile_loc = batch_sample.tile_loc#[::-1]
+                    tile_loc = batch_sample.tile_loc  #[::-1]
                     if isinstance(tile_loc, six.string_types):
                         tile_row, tile_col = eval(tile_loc)
                     else:
@@ -365,34 +366,32 @@ def save_images_and_mask(batch_sample):
     os.makedirs(savedir, exist_ok=True)
     with WSIReader(batch_sample['slide_path'], 40) as slide:
         tiles = DeepZoomGenerator(
-            slide,
-            tile_size=patch_size,
-            overlap=0,
-            limit_bounds=False)
-        tile_loc = batch_sample['tile_loc']#[::-1]
+            slide, tile_size=patch_size, overlap=0, limit_bounds=False)
+        tile_loc = batch_sample['tile_loc']  #[::-1]
         if isinstance(tile_loc, six.string_types):
             tile_row, tile_col = eval(tile_loc)
         else:
             tile_row, tile_col = tile_loc
             # the get_tile tuple required is (col, row)
-        img = tiles.get_tile(tiles.level_count - 1,
-                                (tile_col, tile_row))
-        (tile_x,
-            tile_y), tile_level, _ = tiles.get_tile_coordinates(
-                tiles.level_count - 1, (tile_col, tile_row))
+        img = tiles.get_tile(tiles.level_count - 1, (tile_col, tile_row))
+        (tile_x, tile_y), tile_level, _ = tiles.get_tile_coordinates(
+            tiles.level_count - 1, (tile_col, tile_row))
 
         if slide_contains_tumor:
             json_filepath = batch_sample['json_filepath']
-            polygons = get_annotation_polygons(json_filepath,
-                                                'shapely')
-            mask = create_tumor_mask_from_tile(tile_x, tile_y,
-                                                polygons, patch_size)
+            polygons = get_annotation_polygons(json_filepath, 'shapely')
+            mask = create_tumor_mask_from_tile(tile_x, tile_y, polygons,
+                                               patch_size)
         else:
             mask = np.zeros((patch_size, patch_size))
 
         img = np.array(img)
-        img_path = os.path.join(savedir, batch_sample['uid']+'_{}_{}.img.joblib.pickle'.format(tile_row, tile_col))
-        mask_path = os.path.join(savedir, batch_sample['uid']+'_{}_{}.mask.joblib.pickle'.format(tile_row, tile_col))
+        img_path = os.path.join(
+            savedir, batch_sample['uid'] + '_{}_{}.img.joblib.pickle'.format(
+                tile_row, tile_col))
+        mask_path = os.path.join(
+            savedir, batch_sample['uid'] + '_{}_{}.mask.joblib.pickle'.format(
+                tile_row, tile_col))
         joblib.dump(img, img_path)
         joblib.dump(mask, mask_path)
     return batch_sample['index'], img_path, mask_path
@@ -426,28 +425,22 @@ def get_tiles(batch_samples,
 
         with WSIReader(batch_sample.slide_path, 40) as slide:
             tiles = DeepZoomGenerator(
-                slide,
-                tile_size=patch_size,
-                overlap=0,
-                limit_bounds=False)
-            tile_loc = batch_sample.tile_loc#[::-1]
+                slide, tile_size=patch_size, overlap=0, limit_bounds=False)
+            tile_loc = batch_sample.tile_loc  #[::-1]
             if isinstance(tile_loc, six.string_types):
                 tile_row, tile_col = eval(tile_loc)
             else:
                 tile_row, tile_col = tile_loc
             # the get_tile tuple required is (col, row)
-            img = tiles.get_tile(tiles.level_count - 1,
-                                    (tile_col, tile_row))
-            (tile_x,
-                tile_y), tile_level, _ = tiles.get_tile_coordinates(
-                    tiles.level_count - 1, (tile_col, tile_row))
+            img = tiles.get_tile(tiles.level_count - 1, (tile_col, tile_row))
+            (tile_x, tile_y), tile_level, _ = tiles.get_tile_coordinates(
+                tiles.level_count - 1, (tile_col, tile_row))
 
         if slide_contains_tumor:
             json_filepath = batch_sample['json_filepath']
-            polygons = get_annotation_polygons(json_filepath,
-                                                'shapely')
-            mask = create_tumor_mask_from_tile(tile_x, tile_y,
-                                                polygons, patch_size)
+            polygons = get_annotation_polygons(json_filepath, 'shapely')
+            mask = create_tumor_mask_from_tile(tile_x, tile_y, polygons,
+                                               patch_size)
         else:
             mask = np.zeros((patch_size, patch_size))
 
@@ -458,4 +451,52 @@ def get_tiles(batch_samples,
     y_train = np.array(masks)
     if convert_to_cat:
         y_train = mask_to_categorical(y_train, num_classes, patch_size)
+    return X_train, y_train
+
+
+def get_tiles_fast(batch_samples,
+                   patch_size=256,
+                   num_classes=2,
+                   convert_to_cat=True,
+                   img_mask_dir=None):
+
+    if 'img_path' not in batch_samples.columns:
+        assert img_mask_dir is not None, 'Need to provide directory if img_path column is missing'
+        tile_loc = batch_samples.tile_loc.astype(str)
+        tile_loc = tile_loc.str.replace(' ', '').str.replace(')', '').str.replace('(', '')
+
+        batch_samples[['row', 'col']] = tile_loc.str.split(',', expand=True)
+        batch_samples['img_path'] = img_mask_dir + '/' + batch_samples[['uid',
+                                                                        'row',
+                                                                        'col']].apply(
+                                                                            lambda x: '_'.join(x.values.tolist()),
+                                                                            axis=1) + '.img.joblib.pickle'
+
+        batch_samples['mask_path'] = img_mask_dir + '/' + batch_samples[['uid', 'row', 'col']].apply(
+            lambda x: '_'.join(x.values.tolist()),
+            axis=1) + '.mask.joblib.pickle'
+
+    #if not os.path.isfile('/tmp/white.img.pickle'):
+    white_img = np.ones([patch_size, patch_size, 3], dtype=np.uint8)*255
+    joblib.dump(white_img, '/tmp/white.img.pickle')
+
+    # Definitely not a tumor and hence all black
+    if not os.path.isfile('/tmp/white.mask.pickle'):
+        white_img_mask = np.ones([patch_size, patch_size], dtype=np.uint8)*0
+        joblib.dump(white_img_mask, '/tmp/white.mask.pickle')
+
+    batch_samples.loc[batch_samples.is_tissue==False, 'img_path'] = '/tmp/white.img.pickle'
+    batch_samples.loc[batch_samples.is_tissue==False, 'mask_path'] = '/tmp/white.mask.pickle'
+    batch_samples_copy = batch_samples.copy()
+    for idx, row in batch_samples.iterrows():
+        f = row['img_path']
+        if not os.path.isfile(f):
+            row['savedir'] = img_mask_dir
+            row['patch_size'] = patch_size
+            row['index'] = idx
+            save_images_and_mask(row)
+
+    X_train = batch_samples.img_path.apply(lambda x: joblib.load(x)).tolist()
+    X_train = np.array(X_train)
+    y_train = batch_samples.mask_path.apply(lambda x: joblib.load(x)).tolist()
     return X_train, y_train
