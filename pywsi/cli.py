@@ -22,6 +22,7 @@ from pywsi.segmentation import label_nuclei, summarize_region_properties
 
 from collections import defaultdict
 import os
+import joblib
 import numpy as np
 from six import iteritems
 
@@ -786,9 +787,7 @@ def process_segmentation(data):
 def segementation_cmd(indir, outdir):
     """Perform segmentation and store the tsvs
     """
-    print(indir)
     list_of_pngs = list(glob.glob(indir + '/*.png'))
-    print(os.path.join(indir, '/{}*.png'))
     data = []
     for f in list_of_pngs:
         tsv = f.replace(os.path.dirname(f), outdir).replace('.png', '.tsv')
@@ -902,3 +901,63 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
                 df_copy.loc[idx, 'mask_path'] = mask_path
                 pbar.update()
     df_copy.to_csv(savedf, sep='\t', index=False, header=True)
+
+def process_segmentation_both(data):
+    """
+    Parameters
+    ----------
+    data: tuple
+          (png_location, tsv_outpath)
+
+    """
+
+    is_tumor, pickle_file, savetopng, savetodf = data
+    patch = joblib.load(pickle_file)
+    region_properties, _ = label_nuclei(patch, draw=False)#savetopng=savetopng)
+    summary = summarize_region_properties(region_properties, patch)
+    df = pd.DataFrame([summary])
+    df['is_tumor'] = is_tumor
+    df.to_csv(savetodf, index=False, header=True, sep='\t')
+    return df
+
+@cli.command(
+    'segment-from-df',
+    context_settings=CONTEXT_SETTINGS,
+    help='Segment from df')
+@click.option('--df', help='Path to dataframe', required=True)
+@click.option('--finaldf', help='Path to dataframe', required=True)
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def process_df_cmd(df, finaldf, savedir):
+    df = pd.read_table(df)
+    modified_df = pd.DataFrame()
+    os.makedirs(savedir, exist_ok=True)
+    tile_loc = df.tile_loc.astype(str)
+    tile_loc = tile_loc.str.replace(' ', '').str.replace(')',
+                                                            '').str.replace(
+                                                                '(', '')
+
+    df[['row', 'col']] = tile_loc.str.split(',', expand=True)
+    df['segmented_png'] = savedir + '/' + df[[
+        'uid', 'row', 'col'
+    ]].apply(
+        lambda x: '_'.join(x.values.tolist()),
+        axis=1) + '.segmented.png'
+    df['segmented_tsv'] = savedir + '/' + df[[
+        'uid', 'row', 'col'
+    ]].apply(
+        lambda x: '_'.join(x.values.tolist()),
+        axis=1) + '.segmented.tsv'
+
+
+
+    with tqdm(total=len(df.index)) as pbar:
+        with Pool(processes=32) as p:
+            for i, temp_df in enumerate(
+                    p.imap_unordered(process_segmentation_both,
+                                     df[['is_tumor', 'img_path', 'segmented_png', 'segmented_tsv']].values.tolist())):
+                modified_df = pd.concat([modified_df, temp_df])
+                pbar.update()
+    modified_df.to_csv(finaldf, sep='\t', index=False, header=True)

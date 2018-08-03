@@ -359,6 +359,60 @@ def generate_tiles(samples,
             yield X_train, y_train
 
 
+def generate_tiles_fast(samples,
+                        batch_size=32,
+                        patch_size=256,
+                        num_classes=2,
+                        convert_to_cat=True,
+                        shuffle=True):
+    """Generator function to yield image and mask tuples,
+
+    Parameters
+    ----------
+    samples: DataFrame
+             dataframe as obtained from get_all_patches_from_slide
+    batch_size: int
+                Batch size
+    patch_size: int
+                Patch size
+    convert_to_cat: bool
+                    Should convert to categorical
+    shuffle: bool
+             Should shuffle samples before yielding
+
+    Returns
+    -------
+    Generator:
+    X: tensor(float)
+       Tensor of shape [batch_size, patch_size, patch_size, 3]
+    Y: tensor(float)
+       Tensor of shape [batch_size, patch_size, patch_size, NUM_CLASSES]
+
+
+    """
+    num_samples = len(samples)
+    while True:  # Loop forever so the generator never terminates
+        if shuffle:
+            samples = samples.sample(frac=1)  # shuffle samples
+
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples.iloc[offset:offset + batch_size]
+
+            images = []
+            masks = []
+            for _, batch_sample in batch_samples.iterrows():
+                img = joblib.load(batch_sample['img_path'])
+                mask = joblib.load(batch_sample['mask_path'])
+                images.append(np.array(img))
+                masks.append(mask)
+
+            X_train = np.array(images)
+            y_train = np.array(masks)
+            if convert_to_cat:
+                y_train = mask_to_categorical(y_train, num_classes, patch_size)
+            yield X_train, y_train
+
+
 def save_images_and_mask(batch_sample):
     patch_size = batch_sample['patch_size']
     savedir = batch_sample['savedir']
@@ -463,30 +517,36 @@ def get_tiles_fast(batch_samples,
     if 'img_path' not in batch_samples.columns:
         assert img_mask_dir is not None, 'Need to provide directory if img_path column is missing'
         tile_loc = batch_samples.tile_loc.astype(str)
-        tile_loc = tile_loc.str.replace(' ', '').str.replace(')', '').str.replace('(', '')
+        tile_loc = tile_loc.str.replace(' ', '').str.replace(')',
+                                                             '').str.replace(
+                                                                 '(', '')
 
         batch_samples[['row', 'col']] = tile_loc.str.split(',', expand=True)
-        batch_samples['img_path'] = img_mask_dir + '/' + batch_samples[['uid',
-                                                                        'row',
-                                                                        'col']].apply(
-                                                                            lambda x: '_'.join(x.values.tolist()),
-                                                                            axis=1) + '.img.joblib.pickle'
+        batch_samples['img_path'] = img_mask_dir + '/' + batch_samples[[
+            'uid', 'row', 'col'
+        ]].apply(
+            lambda x: '_'.join(x.values.tolist()),
+            axis=1) + '.img.joblib.pickle'
 
-        batch_samples['mask_path'] = img_mask_dir + '/' + batch_samples[['uid', 'row', 'col']].apply(
+        batch_samples['mask_path'] = img_mask_dir + '/' + batch_samples[[
+            'uid', 'row', 'col'
+        ]].apply(
             lambda x: '_'.join(x.values.tolist()),
             axis=1) + '.mask.joblib.pickle'
 
-    #if not os.path.isfile('/tmp/white.img.pickle'):
-    white_img = np.ones([patch_size, patch_size, 3], dtype=np.uint8)*255
-    joblib.dump(white_img, '/tmp/white.img.pickle')
+    if not os.path.isfile('/tmp/white.img.pickle'):
+        white_img = np.ones([patch_size, patch_size, 3], dtype=np.uint8) * 255
+        joblib.dump(white_img, '/tmp/white.img.pickle')
 
     # Definitely not a tumor and hence all black
     if not os.path.isfile('/tmp/white.mask.pickle'):
-        white_img_mask = np.ones([patch_size, patch_size], dtype=np.uint8)*0
+        white_img_mask = np.ones([patch_size, patch_size], dtype=np.uint8) * 0
         joblib.dump(white_img_mask, '/tmp/white.mask.pickle')
 
-    batch_samples.loc[batch_samples.is_tissue==False, 'img_path'] = '/tmp/white.img.pickle'
-    batch_samples.loc[batch_samples.is_tissue==False, 'mask_path'] = '/tmp/white.mask.pickle'
+    batch_samples.loc[batch_samples.is_tissue == False,
+                      'img_path'] = '/tmp/white.img.pickle'
+    batch_samples.loc[batch_samples.is_tissue == False,
+                      'mask_path'] = '/tmp/white.mask.pickle'
     batch_samples_copy = batch_samples.copy()
     for idx, row in batch_samples.iterrows():
         f = row['img_path']

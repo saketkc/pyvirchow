@@ -178,8 +178,7 @@ def process_batch(args):
     if batch_samples.is_tissue.nunique(
     ) == 1 and batch_samples.iloc[0].is_tissue == False:
         # all patches in this row do not have tissue, skip them all
-        output_thumbnail_pred = np.zeros((batch_size, patch_size, patch_size),
-                                         dtype=np.float32)
+        output_thumbnail_pred = np.zeros(batch_size, dtype=np.float32)
 
     else:
         # make predictions
@@ -198,6 +197,7 @@ def slide_level_map(model,
                     img_mask_dir=None):
     all_samples = get_all_patches_from_slide(slide_path, json_filepath, False,
                                              256)
+    #all_samples = all_samples.sample(n=100)
     n_samples = len(all_samples.index)
     all_batch_samples = []
     for idx, offset in enumerate(list(range(0, n_samples, batch_size))):
@@ -222,5 +222,5 @@ def slide_level_map(model,
         output_thumbnail_idx.append(idx)
     output_thumbnail_idx = np.array(output_thumbnail_idx)
     output_thumbnail_preds = np.array(output_thumbnail_preds)
-    output_thumbnail_preds = output_thumbnail_preds[output_thumbnail_idx]
+    ##output_thumbnail_preds = output_thumbnail_preds[output_thumbnail_idx,:]
     return output_thumbnail_preds
