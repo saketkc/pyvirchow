@@ -5,17 +5,26 @@
 import pandas as pd
 
 import os
-# Just use 1 GPU
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
+# Just use 1 GPU
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.4
+config.gpu_options.visible_device_list = '1'
+set_session(tf.Session(config=config))
 
 from keras.models import Sequential
+from keras.models import load_model
 from keras.layers import Lambda, Dropout
 from keras.layers.convolutional import Convolution2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 from keras.utils import multi_gpu_model
+from keras.optimizers import Adam, SGD
 
 from pywsi.io.tiling import generate_tiles_fast
 
@@ -48,11 +57,15 @@ model.add(
         2, (31, 31), strides=(16, 16), activation='softmax', padding='same'))
 #model = multi_gpu_model(model, gpus=2)
 
+
+#opt = SGD(lr=1e-4, nesterov=True)
+opt = Adam(lr=1e-4)# nesterov=True)
 model.compile(
-    loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 #model.load_weights('./allsamples-keras-improvement-03-0.62.hdf')
 # In[3]:
+model = load_model('./fast-allsamples-keras-improvement-01-0.37.hdf')
 
 train_samples = pd.read_table(
     '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'

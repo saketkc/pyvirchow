@@ -3,24 +3,33 @@
 # In[1]:
 
 import pandas as pd
+import os
 
 # Just use 1 GPU
-#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-#os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.4
+config.gpu_options.visible_device_list = '0'
+set_session(tf.Session(config=config))
 
 from keras.models import Sequential
+from keras.models import load_model
 from keras.layers import Lambda, Dropout
 from keras.layers.convolutional import Convolution2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint
 from keras.utils import multi_gpu_model
+from keras.optimizers import SGD, RMSprop, Adam
 
-from pywsi.io.tiling import generate_tiles
+from pywsi.io.tiling import generate_tiles, generate_tiles_fast
 
 NUM_CLASSES = 2  # not_tumor, tumor
 BATCH_SIZE = 32
-N_EPOCHS = 20
+N_EPOCHS = 50
 
 # In[2]:
 
@@ -45,23 +54,38 @@ model.add(Convolution2D(
 model.add(
     Conv2DTranspose(
         2, (31, 31), strides=(16, 16), activation='softmax', padding='same'))
-model = multi_gpu_model(model, gpus=2)
+#model = multi_gpu_model(model, gpus=2)
 
 #model.compile(
 #    loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
+opt = Adam(lr=1e-6)
 model.compile(loss='categorical_crossentropy',
-              optimizer='adam',
+              optimizer=opt,
               metrics=['accuracy'])
 
 # In[3]:
 
+#model.load_weights('./rerun-allsamples-keras-improvement-01-0.70.hdf')
+model = load_model('./rerun-allsamples-keras-improvement-09-0.68.hdf')
+
+
+"""
 train_samples = pd.read_table(
     '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df.tsv'
 )
 validation_samples = pd.read_table(
     '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df.tsv'
 )
+"""
+train_samples = pd.read_table(
+    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
+)
+validation_samples = pd.read_table(
+    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+)
+
+
 
 # In[4]:
 
@@ -77,7 +101,7 @@ validation_samples_normal = validation_samples[validation_samples.is_tumor==Fals
 train_samples = pd.concat([train_samples_tumor, train_samples_normal]).sample(frac=1, random_state=42)
 #
 #validation_samples = validation_samples.sample(frac=0.5, random_state=43)
-validation_samples = pd.concat([validation_samples_tumor, validation_samples_normal]).sample(frac=1, random_state=42)
+validation_samples = pd.concat([validation_samples_tumor, validation_samples_normal]).sample(frac=1, random_state=43)
 
 # Let's try on tumor_076 samples
 def predict_from_model(patch, model):
@@ -105,12 +129,12 @@ def predict_batch_from_model(patches, model):
     return predictions
 
 
-train_generator = generate_tiles(
+train_generator = generate_tiles_fast(
     train_samples.sample(32, random_state=42), 32, shuffle=True)
-validation_generator = generate_tiles(
+validation_generator = generate_tiles_fast(
     validation_samples.sample(32, random_state=42), 32, shuffle=True)
 
-filepath = "allsamples-keras-improvement-{epoch:02d}-{val_acc:.2f}.hdf"
+filepath = "rerun-allsamples-keras-improvement-{epoch:02d}-{val_acc:.2f}.hdf"
 checkpoint = ModelCheckpoint(
     filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
 callbacks_list = [checkpoint]
