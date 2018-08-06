@@ -16,7 +16,7 @@ import tensorflow as tf
 import pandas as pd
 import os
 #os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-#os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 IMAGE_WIDTH = 256
@@ -41,12 +41,12 @@ def min_max_scale(X):
 # In[2]:
 
 
-config = tf.ConfigProto(
-    device_count = {'GPU': 0}
-)
-#config = tf.ConfigProto()
-#config.gpu_options.per_process_gpu_memory_fraction = 0.4
-#config.gpu_options.visible_device_list = '1'
+#config = tf.ConfigProto(
+#    device_count = {'GPU': 0}
+#)
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
+config.gpu_options.visible_device_list = '1'
 
 class VAE(object):
     def __init__(self,
@@ -166,6 +166,33 @@ train_df.columns#()
 
 train_df_file = '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
 valid_df_file = '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+train_samples = pd.read_table(
+    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
+)
+validation_samples = pd.read_table(
+    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+)
+
+
+
+# In[4]:
+
+# Sample only half the points
+train_samples_tumor = train_samples[train_samples.is_tumor==True].sample(frac=0.45, random_state=42)
+train_samples_normal = train_samples[train_samples.is_tumor==False].sample(frac=0.45, random_state=43)
+
+validation_samples_tumor = validation_samples[validation_samples.is_tumor==True].sample(frac=0.45, random_state=42)
+validation_samples_normal = validation_samples[validation_samples.is_tumor==False].sample(frac=0.45, random_state=43)
+
+
+#train_samples = train_samples.sample(frac=0.5, random_state=42)
+train_samples = pd.concat([train_samples_tumor, train_samples_normal]).sample(frac=1, random_state=42)
+#
+#validation_samples = validation_samples.sample(frac=0.5, random_state=43)
+validation_samples = pd.concat([validation_samples_tumor, validation_samples_normal]).sample(frac=1, random_state=43)
+
+train_samples.to_csv('./train_samples_subsampled.tsv', sep='\t', index=False, header=True)
+validation_samples.to_csv('./validation_samples_subsampled.tsv', sep='\t', index=False, header=True)
 
 
 def preprocess(image):
@@ -209,8 +236,8 @@ def make_dataset(df):
 # In[5]:
 
 
-training_dataset = make_dataset(train_df_file)
-validation_dataset = make_dataset(valid_df_file)
+training_dataset = make_dataset('./train_samples_subsampled.tsv')
+validation_dataset = make_dataset('./validation_samples_subsampled.tsv')
 training_iterator = training_dataset.make_one_shot_iterator()
 
 iterator = tf.data.Iterator.from_structure(training_dataset.output_types,

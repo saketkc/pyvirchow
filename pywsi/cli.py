@@ -5,6 +5,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
 from pywsi.io.operations import get_annotation_bounding_boxes
 from pywsi.io.operations import get_annotation_polygons
 from pywsi.io.operations import path_leaf
@@ -19,9 +23,9 @@ from tqdm import tqdm
 import warnings
 from multiprocessing import Pool
 from pywsi.segmentation import label_nuclei, summarize_region_properties
+from pywsi.deep_model.model import slide_level_map
 
 from collections import defaultdict
-import os
 import joblib
 import numpy as np
 from six import iteritems
@@ -902,6 +906,7 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
                 pbar.update()
     df_copy.to_csv(savedf, sep='\t', index=False, header=True)
 
+
 def process_segmentation_both(data):
     """
     Parameters
@@ -913,12 +918,14 @@ def process_segmentation_both(data):
 
     is_tumor, pickle_file, savetopng, savetodf = data
     patch = joblib.load(pickle_file)
-    region_properties, _ = label_nuclei(patch, draw=False)#savetopng=savetopng)
+    region_properties, _ = label_nuclei(
+        patch, draw=False)  #savetopng=savetopng)
     summary = summarize_region_properties(region_properties, patch)
     df = pd.DataFrame([summary])
     df['is_tumor'] = is_tumor
     df.to_csv(savetodf, index=False, header=True, sep='\t')
     return df
+
 
 @cli.command(
     'segment-from-df',
@@ -935,29 +942,82 @@ def process_df_cmd(df, finaldf, savedir):
     modified_df = pd.DataFrame()
     os.makedirs(savedir, exist_ok=True)
     tile_loc = df.tile_loc.astype(str)
-    tile_loc = tile_loc.str.replace(' ', '').str.replace(')',
-                                                            '').str.replace(
-                                                                '(', '')
+    tile_loc = tile_loc.str.replace(' ', '').str.replace(')', '').str.replace(
+        '(', '')
 
     df[['row', 'col']] = tile_loc.str.split(',', expand=True)
-    df['segmented_png'] = savedir + '/' + df[[
-        'uid', 'row', 'col'
-    ]].apply(
-        lambda x: '_'.join(x.values.tolist()),
-        axis=1) + '.segmented.png'
-    df['segmented_tsv'] = savedir + '/' + df[[
-        'uid', 'row', 'col'
-    ]].apply(
-        lambda x: '_'.join(x.values.tolist()),
-        axis=1) + '.segmented.tsv'
-
-
+    df['segmented_png'] = savedir + '/' + df[['uid', 'row', 'col']].apply(
+        lambda x: '_'.join(x.values.tolist()), axis=1) + '.segmented.png'
+    df['segmented_tsv'] = savedir + '/' + df[['uid', 'row', 'col']].apply(
+        lambda x: '_'.join(x.values.tolist()), axis=1) + '.segmented.tsv'
 
     with tqdm(total=len(df.index)) as pbar:
         with Pool(processes=32) as p:
             for i, temp_df in enumerate(
-                    p.imap_unordered(process_segmentation_both,
-                                     df[['is_tumor', 'img_path', 'segmented_png', 'segmented_tsv']].values.tolist())):
+                    p.imap_unordered(
+                        process_segmentation_both, df[[
+                            'is_tumor', 'img_path', 'segmented_png',
+                            'segmented_tsv'
+                        ]].values.tolist())):
                 modified_df = pd.concat([modified_df, temp_df])
                 pbar.update()
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
+
+
+@cli.command(
+    'heatmap',
+    context_settings=CONTEXT_SETTINGS,
+    help='Create tumor probability heatmap')
+@click.option('--indir', help='Root directory with all WSIs', required=True)
+@click.option('--jsondir', help='Root directory with all jsons', required=True)
+@click.option(
+    '--imgmaskdir',
+    help='Directory where the patches and mask are stored',
+    default=
+    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/')
+@click.option('--model', help='Root directory with all jsons',
+              default='/Z/personal-folders/interns/saket/github/pywsi/scripts/newdropout-sgd-allsamples-keras-improvement-07-0.76.hdf')
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def create_tumor_map_cmd(indir, jsondir, imgmaskdir, model, patchsize, savedir):
+    """Extract probability maps for a WSI
+    """
+    import tensorflow as tf
+    from keras.backend.tensorflow_backend import set_session
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.4
+    config.gpu_options.visible_device_list = '1'
+    set_session(tf.Session(config=config))
+    from keras.models import load_model
+    wsis = glob.glob(os.path.join(indir, '*.tif'), recursive=False)
+    os.makedirs(savedir, exist_ok=True)
+    model = load_model(model)
+
+    for wsi in tqdm(wsis):
+        basename = path_leaf(wsi).replace('.tif', '')
+        if jsondir:
+            json_filepath = os.path.join(jsondir, basename + '.json')
+        else:
+            json_filepath = None
+        if not os.path.isfile(json_filepath):
+            json_filepath = None
+        saveto = os.path.join(savedir, basename + '.joblib.pickle')
+        predicted_thumbnails = slide_level_map(
+            img_mask_dir=imgmaskdir,
+            slide_path=wsi,
+            batch_size=32,
+            json_filepath=json_filepath,
+            model=model)
+        slide = WSIReader(wsi, 40)
+        n_cols = int(slide.dimensions[0] / patchsize)
+        n_rows = int(slide.dimensions[1] / patchsize)
+        output_thumbnail_preds = predicted_thumbnails.reshape(n_rows, n_cols)
+        joblib.dump(output_thumbnail_preds, saveto)
+        slide.close()

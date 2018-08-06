@@ -59,7 +59,7 @@ model.add(
 
 
 #opt = SGD(lr=1e-4, nesterov=True)
-opt = Adam(lr=1e-4)# nesterov=True)
+opt = Adam(lr=1e-6)# nesterov=True)
 model.compile(
     loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 

@@ -68,6 +68,7 @@ def get_model():
             200, (5, 5), strides=(2, 2), activation='elu', padding='same'))
     model.add(MaxPooling2D())
     model.add(Convolution2D(300, (3, 3), activation='elu', padding='same'))
+    model.add(Dropout(0.1))
     model.add(Convolution2D(400, (3, 3), activation='elu', padding='same'))
     model.add(Dropout(0.1))
     model.add(Convolution2D(400, (3, 3), activation='elu', padding='same'))
