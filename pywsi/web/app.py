@@ -96,6 +96,11 @@ def update_output(slide_path):
         # Load annotation
         json_filepath = os.path.join(TRAIN_ANNOTATION_DIR, uid+'.json')
         draw_annotation(json_filepath, 0, 0, 1/256, ax)
+    elif 'test' in uid:
+        # Load annotation
+        json_filepath = os.path.join(TEST_ANNOTATION_DIR, uid+'.json')
+        if os.path.isfile(json_filepath):
+            draw_annotation(json_filepath, 0, 0, 1/256, ax)
     ax.axis('off')
     out_url = fig_to_uri(fig)
     return out_url
@@ -118,4 +123,5 @@ def update_output2(slide_path):
 
 
 if __name__ == '__main__':
+    app.title = 'Virchow: Classification of Histopathology Images'
     app.run_server(host='192.168.221.21', debug=True)
