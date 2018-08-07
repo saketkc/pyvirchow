@@ -148,12 +148,12 @@ def translate_and_scale_polygon(polygon,
              object with scaled coordinates
     """
     if edgecolor == 'normal':
-        edgecolor = '#00441b'
+        edgecolor = '#2ca25f'# '#00441b'
     elif edgecolor == 'tumor':
         edgecolor = '#ca0020'  #'#f03b20'
     polygon = translate_and_scale_object(polygon, x0, y0, scale_factor)
     polygon = Polygon(
-        polygon, edgecolor=edgecolor, facecolor=None, fill=False, linewidth=4)
+        polygon, edgecolor=edgecolor, facecolor=None, fill=False, linewidth=2)
     return polygon
 
 
