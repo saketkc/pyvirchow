@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import six
 #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 #os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -869,6 +870,40 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
         index=False,
         header=True)
 
+@cli.command(
+    'tif-to-df',
+    context_settings=CONTEXT_SETTINGS,
+    help='Extract all patches summarized as dataframes from one WSI')
+@click.option(
+    '--tif', help='Tif', required=True)
+@click.option('--jsondir', help='Root directory with all jsons')
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def extract_df_from_tif_cmd(tif, jsondir, patchsize, savedir):
+    """Extract tissue only patches from tumor WSIs.
+    """
+    basename = path_leaf(tif).replace('.tif', '')
+    if jsondir:
+        json_filepath = os.path.join(jsondir, basename + '.json')
+    else:
+        json_filepath = None
+    if not os.path.isfile(json_filepath):
+        json_filepath = None
+    saveto = os.path.join(savedir, basename + '.tsv')
+    df = get_all_patches_from_slide(
+        tif,
+        json_filepath=json_filepath,
+        filter_non_tissue=False,
+        patch_size=patchsize,
+        saveto=saveto)
+
 
 @cli.command(
     'patch-and-mask',
@@ -916,7 +951,13 @@ def process_segmentation_both(data):
 
     """
 
-    is_tumor, pickle_file, savetopng, savetodf = data
+    is_tissue, is_tumor, pickle_file, savetopng, savetodf = data
+    if not is_tissue:
+        df = pd.DataFrame()
+        df['is_tumor'] = is_tumor
+        df['is_tissue'] = is_tissue
+        return  df
+
     patch = joblib.load(pickle_file)
     region_properties, _ = label_nuclei(
         patch, draw=False)  #savetopng=savetopng)
@@ -925,6 +966,7 @@ def process_segmentation_both(data):
     df['is_tumor'] = is_tumor
     df.to_csv(savetodf, index=False, header=True, sep='\t')
     return df
+
 
 
 @cli.command(
@@ -939,6 +981,8 @@ def process_segmentation_both(data):
     required=True)
 def process_df_cmd(df, finaldf, savedir):
     df = pd.read_table(df)
+    df['img_path'] = None
+    df['mask_path'] = None
     modified_df = pd.DataFrame()
     os.makedirs(savedir, exist_ok=True)
     tile_loc = df.tile_loc.astype(str)
@@ -950,18 +994,86 @@ def process_df_cmd(df, finaldf, savedir):
         lambda x: '_'.join(x.values.tolist()), axis=1) + '.segmented.png'
     df['segmented_tsv'] = savedir + '/' + df[['uid', 'row', 'col']].apply(
         lambda x: '_'.join(x.values.tolist()), axis=1) + '.segmented.tsv'
-
     with tqdm(total=len(df.index)) as pbar:
         with Pool(processes=32) as p:
             for i, temp_df in enumerate(
                     p.imap_unordered(
                         process_segmentation_both, df[[
-                            'is_tumor', 'img_path', 'segmented_png',
+                            'is_tissue', 'is_tumor', 'img_path', 'segmented_png',
                             'segmented_tsv'
                         ]].values.tolist())):
                 modified_df = pd.concat([modified_df, temp_df])
                 pbar.update()
+
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
+
+def process_segmentation_fixed(batch_sample):
+    patch_size = batch_sample['patch_size']
+    savedir = batch_sample['savedir']
+    tile_loc = batch_sample['tile_loc']  #[::-1]
+    if isinstance(tile_loc, six.string_types):
+        tile_row, tile_col = eval(tile_loc)
+    else:
+        tile_row, tile_col = tile_loc
+        # the get_tile tuple required is (col, row)
+    patch = joblib.load(batch_sample['img_path'])
+    segmented_img_path = os.path.join(
+        savedir, batch_sample['uid'] + '_{}_{}.segmented.png'.format(
+            tile_row, tile_col))
+    region_properties, _ = label_nuclei(
+        patch, draw=True, savetopng=segmented_img_path)
+    summary = summarize_region_properties(region_properties, patch)
+
+    segmented_tsv_path = os.path.join(
+        savedir, batch_sample['uid'] + '_{}_{}.segmented_summary.tsv'.format(
+            tile_row, tile_col))
+    df = pd.DataFrame([summary])
+    df['is_tumor'] = batch_sample['is_tumor']
+    df['is_tissue'] = batch_sample['is_tissue']
+
+    df.to_csv(segmented_tsv_path, index=False, header=True, sep='\t')
+    return batch_sample['index'], segmented_img_path, segmented_tsv_path, df
+
+@cli.command(
+    'segment-from-df-fast',
+    context_settings=CONTEXT_SETTINGS,
+    help='Segment from df')
+@click.option('--df', help='Path to dataframe', required=True)
+@click.option('--finaldf', help='Path to dataframe', required=True)
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+def process_df_cmd_fast(df, finaldf, savedir, patchsize):
+    df_main = pd.read_table(df)
+    df = df_main.copy()
+    df['savedir'] = savedir
+    df['patch_size'] = patchsize
+    df['segmented_png'] = None
+    df['segmented_tsv'] = None
+
+    modified_df = pd.DataFrame()
+    os.makedirs(savedir, exist_ok=True)
+    df_reset_index = df.reset_index()
+    df_subset = df_reset_index[df_reset_index.is_tissue==True]
+    records = df_subset.to_dict('records')
+    with tqdm(total=len(df_subset.index)) as pbar:
+        with Pool(processes=32) as p:
+            for idx, segmented_png, segmented_tsv, summary_df in p.imap_unordered(
+                    process_segmentation_fixed, records):
+                df.loc[idx, 'segmented_png'] = segmented_png
+                df.loc[idx, 'segmented_tsv'] = segmented_tsv
+                modified_df = pd.concat([modified_df, summary_df])
+                modified_df['index'] = idx
+                pbar.update()
+    modified_df = modified_df.set_index('index')
+    modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
+    df.to_csv(finaldf.replace('.tsv', '')+'.segmented.tsv', sep='\t', index=False, header=True)
 
 
 def predict_batch_from_model(patches, model):
@@ -1055,10 +1167,14 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
         saveto = os.path.join(savedir, basename + '.joblib.pickle')
         saveto_original = os.path.join(savedir,
                                        basename + '.original.joblib.pickle')
+        if os.path.isfile(saveto):
+            # all done so continue
+            continue
         all_samples = get_all_patches_from_slide(wsi, json_filepath, False,
                                                  patchsize)
+        print(all_samples.head())
         if 'img_path' not in all_samples.columns:
-            assert img_mask_dir is not None, 'Need to provide directory if img_path column is missing'
+            assert imgmaskdir is not None, 'Need to provide directory if img_path column is missing'
             tile_loc = all_samples.tile_loc.astype(str)
             tile_loc = tile_loc.str.replace(' ', '').str.replace(
                 ')', '').str.replace('(', '')
@@ -1090,14 +1206,14 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
                         'img_path'] = '/tmp/white.img.pickle'
         all_samples.loc[all_samples.is_tissue == False,
                         'mask_path'] = '/tmp/white.mask.pickle'
-        for idx, row in tqdm(all_samples.iterrows()):
+
+        for idx, row in all_samples.iterrows():
             f = row['img_path']
             if not os.path.isfile(f):
                 row['savedir'] = imgmaskdir
                 row['patch_size'] = patchsize
                 row['index'] = idx
                 save_images_and_mask(row)
-
         print(all_samples.head())
         slide = WSIReader(wsi, 40)
         n_cols = int(slide.dimensions[0] / patchsize)
@@ -1106,18 +1222,6 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
         assert n_rows * n_cols == len(
             all_samples.index), 'Some division error;'
         print('Total: {}'.format(len(all_samples.index)))
-        """
-        if os.path.isfile(saveto_original):
-            predicted_thumbnails = joblib.load(saveto_original)
-        else:
-            predicted_thumbnails = np.array(slide_level_map(
-                img_mask_dir=imgmaskdir,
-                slide_path=wsi,
-                batch_size=32,
-                json_filepath=json_filepath,
-                model=model))
-            joblib.dump(predicted_thumbnails, saveto_original)
-        """
         predicted_thumbnails = list()
 
         for offset in tqdm(list(range(0, n_samples, batch_size))):
