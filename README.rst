@@ -6,8 +6,8 @@ pywsi
 .. image:: https://travis-ci.com/saketkc/pywsi.svg?token=GsuWFnsdqcXUSp8vzLip&branch=master
         :target: https://travis-ci.com/saketkc/pywsi
 
-.. image:: ./logo/virchow_256x256.jpg
-        :target: ./logo/virchow_256x256.jpg
+.. image:: ./logo/virchow.png
+        :target: ./logo/virchow.png
 
 * Free software: BSD license
 * Documentation: https://www.saket-choudhary.me/pywsi/
