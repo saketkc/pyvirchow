@@ -870,12 +870,12 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
         index=False,
         header=True)
 
+
 @cli.command(
     'tif-to-df',
     context_settings=CONTEXT_SETTINGS,
     help='Extract all patches summarized as dataframes from one WSI')
-@click.option(
-    '--tif', help='Tif', required=True)
+@click.option('--tif', help='Tif', required=True)
 @click.option('--jsondir', help='Root directory with all jsons')
 @click.option(
     '--patchsize',
@@ -956,7 +956,7 @@ def process_segmentation_both(data):
         df = pd.DataFrame()
         df['is_tumor'] = is_tumor
         df['is_tissue'] = is_tissue
-        return  df
+        return df
 
     patch = joblib.load(pickle_file)
     region_properties, _ = label_nuclei(
@@ -966,7 +966,6 @@ def process_segmentation_both(data):
     df['is_tumor'] = is_tumor
     df.to_csv(savetodf, index=False, header=True, sep='\t')
     return df
-
 
 
 @cli.command(
@@ -999,17 +998,18 @@ def process_df_cmd(df, finaldf, savedir):
             for i, temp_df in enumerate(
                     p.imap_unordered(
                         process_segmentation_both, df[[
-                            'is_tissue', 'is_tumor', 'img_path', 'segmented_png',
-                            'segmented_tsv'
+                            'is_tissue', 'is_tumor', 'img_path',
+                            'segmented_png', 'segmented_tsv'
                         ]].values.tolist())):
                 modified_df = pd.concat([modified_df, temp_df])
                 pbar.update()
 
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
 
+
 def process_segmentation_fixed(batch_sample):
     patch_size = batch_sample['patch_size']
-    savedir = batch_sample['savedir']
+    savedir = os.path.abspath(batch_sample['savedir'])
     tile_loc = batch_sample['tile_loc']  #[::-1]
     if isinstance(tile_loc, six.string_types):
         tile_row, tile_col = eval(tile_loc)
@@ -1034,6 +1034,7 @@ def process_segmentation_fixed(batch_sample):
     df.to_csv(segmented_tsv_path, index=False, header=True, sep='\t')
     return batch_sample['index'], segmented_img_path, segmented_tsv_path, df
 
+
 @cli.command(
     'segment-from-df-fast',
     context_settings=CONTEXT_SETTINGS,
@@ -1050,6 +1051,7 @@ def process_segmentation_fixed(batch_sample):
     default=256,
     help='Patch size which to extract patches')
 def process_df_cmd_fast(df, finaldf, savedir, patchsize):
+    savedir = os.path.abspath(savedir)
     df_main = pd.read_table(df)
     df = df_main.copy()
     df['savedir'] = savedir
@@ -1060,7 +1062,7 @@ def process_df_cmd_fast(df, finaldf, savedir, patchsize):
     modified_df = pd.DataFrame()
     os.makedirs(savedir, exist_ok=True)
     df_reset_index = df.reset_index()
-    df_subset = df_reset_index[df_reset_index.is_tissue==True]
+    df_subset = df_reset_index[df_reset_index.is_tissue == True]
     records = df_subset.to_dict('records')
     with tqdm(total=len(df_subset.index)) as pbar:
         with Pool(processes=32) as p:
@@ -1073,7 +1075,11 @@ def process_df_cmd_fast(df, finaldf, savedir, patchsize):
                 pbar.update()
     modified_df = modified_df.set_index('index')
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
-    df.to_csv(finaldf.replace('.tsv', '')+'.segmented.tsv', sep='\t', index=False, header=True)
+    df.to_csv(
+        finaldf.replace('.tsv', '') + '.segmented.tsv',
+        sep='\t',
+        index=False,
+        header=True)
 
 
 def predict_batch_from_model(patches, model):
@@ -1106,7 +1112,8 @@ def predict_from_model(patch, model):
     context_settings=CONTEXT_SETTINGS,
     help='Create tumor probability heatmap')
 @click.option('--indir', help='Root directory with all WSIs', required=True)
-@click.option('--jsondir', help='Root directory with all jsons', required=False)
+@click.option(
+    '--jsondir', help='Root directory with all jsons', required=False)
 @click.option(
     '--imgmaskdir',
     help='Directory where the patches and mask are stored',
