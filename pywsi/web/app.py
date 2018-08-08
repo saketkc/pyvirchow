@@ -105,6 +105,7 @@ app.layout = html.Div([
         }),
 ])
 
+
 @app.callback(
     Output(component_id='thumbnail_plot0', component_property='src'),
     [Input('wsi-dropdown', 'value')])
@@ -134,23 +135,23 @@ def update_output(slide_path):
     plt.close('all')
     return out_url
 
-@app.callback(
-    Output('embed', 'children'),
-    [Input('wsi-dropdown', 'value')])
+
+@app.callback(Output('embed', 'children'), [Input('wsi-dropdown', 'value')])
 def update_output(slide_path):
     slide = WSIReader(slide_path, 40)
     uid = slide.uid
     if 'tumor' in uid:
         # These servers are being run through deepzoom_multiserver.py script
         # available as part of examples of openslide-python
-        return html.Iframe(src='http://192.168.221.21:5000/{}.tif'.format(uid),
-                           width='100%',
-                           height='480px;')
+        port = 5000
     elif 'normal' in uid:
-        return html.Iframe(src='http://192.168.221.21:6000/{}.tif'.format(uid),
-                           width='100%',
-                           height='480px;')
-
+        port = 5001
+    elif 'test' in uid:
+        port = 5002
+    return html.Iframe(
+        src='http://192.168.221.21:{}/{}.tif'.format(port, uid),
+        width='100%',
+        height='480px;')
 
 
 @app.callback(
@@ -181,6 +182,7 @@ def update_output2(slide_path):
     plt.close('all')
     return out_url
 
+
 @app.callback(
     Output(component_id='thumbnail_plot3', component_property='src'),
     [Input('wsi-dropdown', 'value')])
@@ -190,7 +192,11 @@ def update_output3(slide_path):
     if os.path.isfile(pickle_file):
         thumbnail_predicted = joblib.load(pickle_file)
         fig, ax = plt.subplots()
-        ax.imshow((thumbnail_predicted > 0.75).astype(np.int), cmap='gray', vmin=0, vmax=1)
+        ax.imshow(
+            (thumbnail_predicted > 0.75).astype(np.int),
+            cmap='gray',
+            vmin=0,
+            vmax=1)
         #ax.set_title(' (white=tumor, black=not_tumor)')
         #ax.axis('off')
         fig.tight_layout()
@@ -209,7 +215,6 @@ def update_output3(slide_path):
     out_url = fig_to_uri(fig)
     plt.close('all')
     return out_url
-
 
 
 if __name__ == '__main__':

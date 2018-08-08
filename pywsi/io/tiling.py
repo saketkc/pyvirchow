@@ -558,7 +558,8 @@ def get_tiles_fast(batch_samples,
 
     X_train = batch_samples.img_path.apply(lambda x: joblib.load(x)).tolist()
     X_train = np.array(X_train)
-    y_train = np.array(batch_samples.mask_path.apply(lambda x: joblib.load(x)).tolist())
+    y_train = np.array(
+        batch_samples.mask_path.apply(lambda x: joblib.load(x)).tolist())
     if convert_to_cat:
         y_train = mask_to_categorical(y_train, num_classes, patch_size)
     return X_train, y_train

@@ -975,6 +975,7 @@ def predict_batch_from_model(patches, model):
     predictions = predictions[:, :, :, 1]
     return predictions
 
+
 def predict_from_model(patch, model):
     """Predict which pixels are tumor.
 
@@ -987,12 +988,13 @@ def predict_from_model(patch, model):
     prediction = prediction[:, :, :, 1].reshape(256, 256)
     return prediction
 
+
 @cli.command(
     'heatmap',
     context_settings=CONTEXT_SETTINGS,
     help='Create tumor probability heatmap')
 @click.option('--indir', help='Root directory with all WSIs', required=True)
-@click.option('--jsondir', help='Root directory with all jsons', required=True)
+@click.option('--jsondir', help='Root directory with all jsons', required=False)
 @click.option(
     '--imgmaskdir',
     help='Directory where the patches and mask are stored',
@@ -1002,7 +1004,7 @@ def predict_from_model(patch, model):
     '--modelf',
     help='Root directory with all jsons',
     default=
-    '/Z/personal-folders/interns/saket/github/pywsi/scripts/sgd-allsamples-keras-improvement-16-0.72.hdf'
+    '/Z/personal-folders/interns/saket/github/pywsi/notebooks/weights-improvement-12-0.98.hdf'
 )
 @click.option(
     '--patchsize',
@@ -1013,8 +1015,14 @@ def predict_from_model(patch, model):
     '--savedir',
     help='Root directory to save extract images to',
     required=True)
+@click.option('--gpu', type=str, default='0', help='Which GPU to use?')
+@click.option(
+    '--gpumemfrac',
+    type=float,
+    default=1,
+    help='Fraction of GPU memory to use')
 def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
-                         savedir):
+                         savedir, gpu, gpumemfrac):
     """Extract probability maps for a WSI
     """
     batch_size = 32
@@ -1022,8 +1030,8 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.4
-    config.gpu_options.visible_device_list = '1'
+    config.gpu_options.per_process_gpu_memory_fraction = gpumemfrac
+    config.gpu_options.visible_device_list = gpu
     set_session(tf.Session(config=config))
     from keras.models import load_model
     if not os.path.isfile(indir):
@@ -1040,9 +1048,9 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
         print(basename)
         if jsondir:
             json_filepath = os.path.join(jsondir, basename + '.json')
+            if not os.path.isfile(json_filepath):
+                json_filepath = None
         else:
-            json_filepath = None
-        if not os.path.isfile(json_filepath):
             json_filepath = None
         saveto = os.path.join(savedir, basename + '.joblib.pickle')
         saveto_original = os.path.join(savedir,
@@ -1052,9 +1060,8 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
         if 'img_path' not in all_samples.columns:
             assert img_mask_dir is not None, 'Need to provide directory if img_path column is missing'
             tile_loc = all_samples.tile_loc.astype(str)
-            tile_loc = tile_loc.str.replace(' ', '').str.replace(')',
-                                                                '').str.replace(
-                                                                    '(', '')
+            tile_loc = tile_loc.str.replace(' ', '').str.replace(
+                ')', '').str.replace('(', '')
 
             all_samples[['row', 'col']] = tile_loc.str.split(',', expand=True)
             all_samples['img_path'] = img_mask_dir + '/' + all_samples[[
@@ -1069,18 +1076,27 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
                 lambda x: '_'.join(x.values.tolist()),
                 axis=1) + '.mask.joblib.pickle'
         if not os.path.isfile('/tmp/white.img.pickle'):
-            white_img = np.ones([patchsize, patchsize, 3], dtype=np.uint8) * 255
+            white_img = np.ones(
+                [patchsize, patchsize, 3], dtype=np.uint8) * 255
             joblib.dump(white_img, '/tmp/white.img.pickle')
 
         # Definitely not a tumor and hence all black
         if not os.path.isfile('/tmp/white.mask.pickle'):
-            white_img_mask = np.ones([patchsize, patchsize], dtype=np.uint8) * 0
+            white_img_mask = np.ones(
+                [patchsize, patchsize], dtype=np.uint8) * 0
             joblib.dump(white_img_mask, '/tmp/white.mask.pickle')
 
         all_samples.loc[all_samples.is_tissue == False,
                         'img_path'] = '/tmp/white.img.pickle'
         all_samples.loc[all_samples.is_tissue == False,
                         'mask_path'] = '/tmp/white.mask.pickle'
+        for idx, row in tqdm(all_samples.iterrows()):
+            f = row['img_path']
+            if not os.path.isfile(f):
+                row['savedir'] = imgmaskdir
+                row['patch_size'] = patchsize
+                row['index'] = idx
+                save_images_and_mask(row)
 
         print(all_samples.head())
         slide = WSIReader(wsi, 40)
@@ -1105,35 +1121,30 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
         predicted_thumbnails = list()
 
         for offset in tqdm(list(range(0, n_samples, batch_size))):
-            batch_samples = all_samples.iloc[offset:offset+batch_size]
-            for idx, row in batch_samples.iterrows():
-                f = row['img_path']
-                if not os.path.isfile(f):
-                    row['savedir'] = img_mask_dir
-                    row['patch_size'] = patchsize
-                    row['index'] = idx
-                    save_images_and_mask(row)
-            X, _ = next(generate_tiles_fast(batch_samples, batch_size, shuffle=False))
-            if batch_samples.is_tissue.nunique() == 1 and batch_samples.iloc[0].is_tissue == False:
+            batch_samples = all_samples.iloc[offset:offset + batch_size]
+            X, _ = next(
+                generate_tiles_fast(batch_samples, batch_size, shuffle=False))
+            if batch_samples.is_tissue.nunique(
+            ) == 1 and batch_samples.iloc[0].is_tissue == False:
                 # all patches in this row do not have tissue, skip them all
-                predicted_thumbnails.append(np.zeros(batch_size, dtype=np.float32))
+                predicted_thumbnails.append(
+                    np.zeros(batch_size, dtype=np.float32))
             else:
                 # make predictions
                 preds = predict_batch_from_model(X, model)
-                predicted_thumbnails.append(preds.mean(axis=(1,2)))
+                predicted_thumbnails.append(preds.mean(axis=(1, 2)))
         predicted_thumbnails = np.asarray(predicted_thumbnails)
         try:
-            output_thumbnail_preds = predicted_thumbnails.reshape(n_rows, n_cols)
+            output_thumbnail_preds = predicted_thumbnails.reshape(
+                n_rows, n_cols)
             joblib.dump(output_thumbnail_preds, saveto)
         except:
             # Going to reshape
-            flattened = predicted_thumbnails.ravel()[:n_rows*n_cols]
-            print('n_row = {} | n_col = {} | n_rowxn_col = {} | orig_shape = {} | flattened: {}'.format(n_rows,
-                                                                                                        n_cols,
-                                                                                                        n_rows*n_cols,
-                                                                                                        np.prod(predicted_thumbnails.shape),
-                                                                                                        flattened.shape),
-                  )
+            flattened = predicted_thumbnails.ravel()[:n_rows * n_cols]
+            print(
+                'n_row = {} | n_col = {} | n_rowxn_col = {} | orig_shape = {} | flattened: {}'.
+                format(n_rows, n_cols, n_rows * n_cols,
+                       np.prod(predicted_thumbnails.shape), flattened.shape), )
             output_thumbnail_preds = flattened.reshape(n_rows, n_cols)
             joblib.dump(output_thumbnail_preds, saveto)
             slide.close()
