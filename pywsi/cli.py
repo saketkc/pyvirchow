@@ -25,6 +25,7 @@ import warnings
 from multiprocessing import Pool
 from pywsi.segmentation import label_nuclei, summarize_region_properties
 from pywsi.deep_model.model import slide_level_map
+from pywsi.deep_model.random_forest import random_forest
 
 from collections import defaultdict
 import joblib
@@ -40,7 +41,20 @@ click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 import pandas as pd
 warnings.filterwarnings('ignore')
-
+COLUMNS = ['area', 'bbox_area', 'compactness', 'convex_area',
+           'eccentricity', 'equivalent_diameter', 'extent', 'fractal_dimension',
+           'inertia_tensor_eigvals_1', 'inertia_tensor_eigvals_2',
+           'major_axis_length', 'max_intensity', 'mean_intensity',
+           'mean_intensity_entire_image', 'minor_axis_length', 'moments_central_1',
+           'moments_central_10', 'moments_central_11', 'moments_central_12',
+           'moments_central_13', 'moments_central_14', 'moments_central_15',
+           'moments_central_16', 'moments_central_2', 'moments_central_3',
+           'moments_central_4', 'moments_central_5', 'moments_central_6',
+           'moments_central_7', 'moments_central_8', 'moments_central_9',
+           'moments_hu_1', 'moments_hu_2', 'moments_hu_3', 'moments_hu_4',
+           'moments_hu_5', 'moments_hu_6', 'moments_hu_7', 'nuclei',
+           'nuclei_intensity_over_entire_image', 'orientation', 'perimeter',
+           'solidity', 'texture', 'total_nuclei_area', 'total_nuclei_area_ratio']
 
 @click.group(
     cls=HelpColorsGroup,
@@ -1021,14 +1035,18 @@ def process_segmentation_fixed(batch_sample):
         savedir, batch_sample['uid'] + '_{}_{}.segmented.png'.format(
             tile_row, tile_col))
     region_properties, _ = label_nuclei(
-        patch, draw=True, savetopng=segmented_img_path)
+        patch, draw=False)#, savetopng=segmented_img_path)
     summary = summarize_region_properties(region_properties, patch)
 
     segmented_tsv_path = os.path.join(
         savedir, batch_sample['uid'] + '_{}_{}.segmented_summary.tsv'.format(
             tile_row, tile_col))
     df = pd.DataFrame([summary])
-    df['is_tumor'] = batch_sample['is_tumor']
+    try:
+        df['is_tumor'] = batch_sample['is_tumor']
+    except KeyError:
+        # Must be from a normal sample
+        df['is_tumor'] = False
     df['is_tissue'] = batch_sample['is_tissue']
 
     df.to_csv(segmented_tsv_path, index=False, header=True, sep='\t')
@@ -1261,3 +1279,213 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
             slide.close()
             continue
         slide.close()
+def generate_rows(samples, num_samples, batch_size=1):
+    while True:  # Loop forever so the generator never terminates
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples.iloc[offset:offset + batch_size]
+            #is_tissue = batch_samples.is_tissue.tolist()
+            #is_tumor = batch_samples.is_tumor.astype('int32').tolist()
+            features = []
+            labels = []
+            #batch_samples = batch_samples.copy().drop(columns=['is_tissue', 'is_tumor'])
+            for _, batch_sample in batch_samples.iterrows():
+                row = batch_sample.values
+                try:
+                    label = int(batch_sample.is_tumor)
+                except AttributeError:
+                    # Should be normal
+                    label = 0
+                if batch_sample.is_tissue:
+                    feature = pd.read_table(os.path.join('/Z/personal-folders/interns/saket/github/pywsi', batch_sample.segmented_tsv))
+
+                    #feature = feature.drop(columns=['is_tumor', 'is_tissue'])
+                    try:
+                        feature = feature.loc[:, COLUMNS]
+                        values = feature.loc[0].values
+                        assert len(feature.columns) == 46
+                    except KeyError:
+                        # the segmentation returned empty columns!?
+                        print(batch_sample.segmented_tsv)
+                        #print(feature.columns)
+                        #raise RuntimeError('Cannot parse the columns')
+                        values = [0.0]*46
+                    features.append(values)
+                else:
+                    values = [0.0]*46
+                    features.append(values)
+                labels.append(label)
+            X_train = np.array(features, dtype=np.float32)
+            y_train = np.array(labels)
+            yield X_train,  y_train
+
+@cli.command(
+    'heatmap-rf',
+    context_settings=CONTEXT_SETTINGS,
+    help='Create tumor probability heatmap using random forest model')
+@click.option('--tif', help='Tif', required=True)
+@click.option('--df', help='Root directory with all WSIs', required=True)
+@click.option(
+    '--modelf',
+    help='Root directory with all jsons',
+    default=
+    '/Z/personal-folders/interns/saket/github/pywsi/models/random_forest_all_train.tf.model.meta'
+)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
+    """Extract probability maps for a WSI
+    """
+    batch_size = 1
+    all_samples = pd.read_table(df)
+    import os
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    import tensorflow as tf
+    from tensorflow.contrib.tensor_forest.python import tensor_forest
+    from tensorflow.python.ops import resources
+    os.makedirs(savedir, exist_ok=True)
+    num_classes=2
+    num_features=46
+    num_trees=100
+    max_nodes=10000
+    X = tf.placeholder(tf.float32, shape=[None, num_features])
+    # For random forest, labels must be integers (the class id)
+    Y = tf.placeholder(tf.int32, shape=[None])
+
+    # Random Forest Parameters
+    hparams = tensor_forest.ForestHParams(
+        num_classes=num_classes,
+        num_features=num_features,
+        num_trees=num_trees,
+        max_nodes=max_nodes).fill()
+
+    forest_graph = tensor_forest.RandomForestGraphs(hparams)
+    train_op = forest_graph.training_graph(X, Y)
+    loss_op = forest_graph.training_loss(X, Y)
+
+    # Measure the accuracy
+    infer_op, _, _ = forest_graph.inference_graph(X)
+    correct_prediction = tf.equal(tf.argmax(infer_op, 1), tf.cast(Y, tf.int64))
+    accuracy_op = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    sess = tf.Session()
+    saver = tf.train.import_meta_graph('{}'.format(modelf))
+    saver.restore(sess, tf.train.latest_checkpoint(os.path.dirname(modelf)))
+
+    slide = WSIReader(tif, 40)
+    n_cols = int(slide.dimensions[0] / patchsize)
+    n_rows = int(slide.dimensions[1] / patchsize)
+    n_samples = len(all_samples.index)
+    assert n_rows * n_cols == len(
+        all_samples.index), 'Some division error;'
+    print('Total: {}'.format(len(all_samples.index)))
+
+    true_labels = []
+    predicted_thumbnails = []
+    #infer_op, accuracy_op, train_op, loss_op, X, Y = random_forest()
+    for offset in tqdm(list(range(0, n_samples, batch_size))):
+        batch_samples = all_samples.iloc[offset:offset + batch_size]
+        X_test, true_label = next(
+            generate_rows(batch_samples, batch_size))
+        true_labels.append(true_label)
+        if batch_samples.is_tissue.nunique() == 1 and batch_samples.iloc[0].is_tissue == False:
+            # all patches in this row do not have tissue, skip them all
+            predicted_thumbnails.append(0)
+        else:
+            preds = sess.run(infer_op,
+                            feed_dict={X: X_test})
+            predicted_thumbnails.append(preds[0][1])
+    predicted_thumbnails = np.asarray(predicted_thumbnails)
+
+    basename = path_leaf(tif).replace('.tif', '')
+    saveto = os.path.join(savedir, basename + '.joblib.pickle')
+    saveto_original = os.path.join(savedir,
+                                    basename + '.original.joblib.pickle')
+    try:
+        output_thumbnail_preds = predicted_thumbnails.reshape(
+            n_rows, n_cols)
+        joblib.dump(output_thumbnail_preds, saveto)
+    except:
+        # Going to reshape
+        flattened = predicted_thumbnails.ravel()[:n_rows * n_cols]
+        print(
+            'n_row = {} | n_col = {} | n_rowxn_col = {} | orig_shape = {} | flattened: {}'.
+            format(n_rows, n_cols, n_rows * n_cols,
+                    np.prod(predicted_thumbnails.shape), flattened.shape), )
+        output_thumbnail_preds = flattened.reshape(n_rows, n_cols)
+        slide.close()
+
+
+@cli.command(
+    'add-patch-mask-col',
+    context_settings=CONTEXT_SETTINGS,
+    help='Add patch and mask column to a datamfrme')
+@click.option('--df', help='Path to dataframe', required=True)
+@click.option(
+    '--patchsize',
+    type=int,
+    default=256,
+    help='Patch size which to extract patches')
+@click.option(
+    '--imgmaskdir',
+    help='Directory where the patches and mask are stored',
+    default=
+    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/')
+@click.option('--savedf', help='Save edited dataframe to', required=True)
+@click.option('--fast', help='Do not check of existense of images', is_flag=True)
+def extract_patch_mask_cmd(df, patchsize, imgmaskdir, savedf, fast):
+    """Extract tissue only patches from tumor WSIs.
+    """
+    img_mask_dir = imgmaskdir
+    assert not os.path.isfile(savedf)
+    df = pd.read_table(df)
+    all_samples = df.copy()
+    df['savedir'] = imgmaskdir
+    df['patch_size'] = patchsize
+    tile_loc = all_samples.tile_loc.astype(str)
+    tile_loc = tile_loc.str.replace(' ', '').str.replace(
+        ')', '').str.replace('(', '')
+
+    all_samples[['row', 'col']] = tile_loc.str.split(',', expand=True)
+    all_samples['img_path'] = img_mask_dir + '/' + all_samples[[
+        'uid', 'row', 'col'
+    ]].apply(
+        lambda x: '_'.join(x.values.tolist()),
+        axis=1) + '.img.joblib.pickle'
+
+    all_samples['mask_path'] = img_mask_dir + '/' + all_samples[[
+        'uid', 'row', 'col'
+    ]].apply(
+        lambda x: '_'.join(x.values.tolist()),
+        axis=1) + '.mask.joblib.pickle'
+    if not os.path.isfile('/tmp/white.img.pickle'):
+        white_img = np.ones(
+            [patchsize, patchsize, 3], dtype=np.uint8) * 255
+        joblib.dump(white_img, '/tmp/white.img.pickle')
+
+    # Definitely not a tumor and hence all black
+    if not os.path.isfile('/tmp/white.mask.pickle'):
+        white_img_mask = np.ones(
+            [patchsize, patchsize], dtype=np.uint8) * 0
+        joblib.dump(white_img_mask, '/tmp/white.mask.pickle')
+
+    all_samples.loc[all_samples.is_tissue == False,
+                    'img_path'] = '/tmp/white.img.pickle'
+    all_samples.loc[all_samples.is_tissue == False,
+                    'mask_path'] = '/tmp/white.mask.pickle'
+    if not fast:
+        for idx, row in all_samples.iterrows():
+            f = row['img_path']
+            if not os.path.isfile(f):
+                row['savedir'] = imgmaskdir
+                row['patch_size'] = patchsize
+                row['index'] = idx
+                save_images_and_mask(row)
+
+    all_samples.to_csv(savedf, sep='\t', index=False, header=True)

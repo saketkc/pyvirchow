@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 from tensorflow.contrib.tensor_forest.python import tensor_forest
 from tensorflow.python.ops import resources
 
@@ -61,9 +63,9 @@ def random_forest(num_classes=2,
         tf.global_variables_initializer(),
         resources.initialize_resources(resources.shared_resources()))
 
-    sess = tf.Session()
-    sess.run(init_vars)
-    return sess
+    #sess = tf.Session()
+    #sess.run(init_vars)
+    return infer_op, accuracy_op, train_op, loss_op, X, Y
 
 
 def train_rf(sess, train_df_file, batch_size=1024, num_steps=100):
@@ -127,3 +129,5 @@ def probability_rf(sess, df_file, batch_size=1):
         prob = sess.run(infer_op, feed_dict={X: features_batch})
         probabilities.append(prob[0][1])
     return probabilities
+
+

@@ -29,6 +29,7 @@ TRAIN_ANNOTATION_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYO
 TEST_WSI_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/images'
 TEST_ANNOTATION_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/lesion_annotations_json'
 PREDICTED_HEATMAP_DIR = '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd'
+PREDICTED_HEATMAP_DIR2 = '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_rf/'
 PATCH_SIZE = 256
 
 
@@ -130,6 +131,7 @@ def update_output(slide_path):
         if os.path.isfile(json_filepath):
             draw_annotation(json_filepath, 0, 0, 1 / 256, ax)
     #ax.axis('off')
+    ax.set_title('Ground truth (Manual annotation)')
     fig.tight_layout()
     out_url = fig_to_uri(fig)
     plt.close('all')
@@ -171,12 +173,12 @@ def update_output2(slide_path):
         fig, ax = plt.subplots()
         plot_blend(thumbnail, thumbnail_predicted, ax, alpha=1)
         #ax.axis('off')
-        fig.tight_layout()
     else:
         fig, ax = plt.subplots()
         ax.imshow(thumbnail)
         #ax.axis('off')
-        fig.tight_layout()
+    ax.set_title('Predicted Heatmap')
+    fig.tight_layout()
     slide.close()
     out_url = fig_to_uri(fig)
     plt.close('all')
@@ -199,7 +201,6 @@ def update_output3(slide_path):
             vmax=1)
         #ax.set_title(' (white=tumor, black=not_tumor)')
         #ax.axis('off')
-        fig.tight_layout()
     else:
         slide = WSIReader(slide_path, 40)
         n_cols = int(slide.width / 256)
@@ -210,8 +211,9 @@ def update_output3(slide_path):
         fig, ax = plt.subplots()
         ax.imshow(thumbnail)
         ax.axis('off')
-        fig.tight_layout()
         slide.close()
+    ax.set_title('Predicted Mask \n (white=tumor, black=normal)')
+    fig.tight_layout()
     out_url = fig_to_uri(fig)
     plt.close('all')
     return out_url

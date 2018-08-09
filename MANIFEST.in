@@ -3,7 +3,7 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
-recursive-inclide pywsi *
+recursive-include pywsi *
 
 recursive-include tests *
 recursive-exclude * __pycache__
