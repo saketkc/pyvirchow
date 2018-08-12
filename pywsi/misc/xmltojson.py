@@ -15,6 +15,7 @@ def xmltojson(xml_path, savedir):
              Path to save json file
 
     """
+    savedir = os.path.abspath(savedir)
     with open(xml_path) as fh:
         soup = BeautifulSoup(fh, 'lxml')
     json_dict = {}
@@ -62,6 +63,6 @@ def xmltojson(xml_path, savedir):
             pass
         else:
             raise RuntimeError('Did not find an appropriate group id')
-    with open(os.path.join(savedir, xml_path.replace('.xml', '.json')),
+    with open(os.path.join(savedir, os.path.basename(xml_path).replace('.xml', '.json')),
               'w') as fw:
         json.dump(json_dict, fw, indent=1)

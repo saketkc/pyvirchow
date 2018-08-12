@@ -1,0 +1,24 @@
+include:
+    config['config_path']
+import os
+import glob
+
+workdir: OUT_DIR
+
+SAMPLES = [os.path.basename(x).replace('.xml', '') for x in sorted(glob.glob(os.path.join(ANNOTATION_DIR, '*.xml')))]
+
+rule all:
+    input:
+        expand('lesion_annotations_json/{sample}.json', sample=SAMPLES)
+
+rule convert_to_json:
+    input:  ANNOTATION_DIR + os.path.sep + '{sample}.xml'
+    output: 'lesion_annotations_json/{sample}.json'
+    params:
+        prefix='lesion_annotations_json'
+    shell:
+        r'''
+        pywsi xmltojson --infile {input} --savedir {params.prefix}
+        '''
+
+

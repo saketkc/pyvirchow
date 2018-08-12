@@ -24,8 +24,10 @@ from tqdm import tqdm
 import warnings
 from multiprocessing import Pool
 from pywsi.segmentation import label_nuclei, summarize_region_properties
-from pywsi.deep_model.model import slide_level_map
-from pywsi.deep_model.random_forest import random_forest
+#from pywsi.deep_model.model import slide_level_map
+#from pywsi.deep_model.random_forest import random_forest
+
+from pywsi.misc import xmltojson
 
 from collections import defaultdict
 import joblib
@@ -1489,3 +1491,18 @@ def extract_patch_mask_cmd(df, patchsize, imgmaskdir, savedf, fast):
                 save_images_and_mask(row)
 
     all_samples.to_csv(savedf, sep='\t', index=False, header=True)
+
+@cli.command(
+    'xmltojson',
+    context_settings=CONTEXT_SETTINGS,
+    help='Convert xmli coordinates to json')
+@click.option(
+    '--infile', help='Root directory with all tumor WSIs', required=True)
+@click.option(
+    '--savedir',
+    help='Root directory to save extract images to',
+    required=True)
+def xmltojson_cmd(infile, savedir):
+    """Convert ASAP xml files to json
+    """
+    xmltojson(infile, savedir)
