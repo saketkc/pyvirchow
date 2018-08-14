@@ -878,6 +878,7 @@ def extract_mask_df_cmd(indir, jsondir, patchsize, savedir):
     if 'is_tumor' in df.columns:
         df = df.sort_values(by=['uid', 'is_tumor'])
     else:
+        df['is_tumor'] = False
         df = df.sort_values(by=['uid'])
 
     df.to_csv(
@@ -907,7 +908,7 @@ def extract_df_from_tif_cmd(tif, jsondir, patchsize, savedir):
     """
     basename = path_leaf(tif).replace('.tif', '')
     if jsondir:
-        json_filepath = os.path.join(jsondir, basename + '.json')
+        json_filepath = os.path.abspath(os.path.join(jsondir, basename + '.json'))
     else:
         json_filepath = None
     if not os.path.isfile(json_filepath):

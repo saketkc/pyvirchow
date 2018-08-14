@@ -4,21 +4,52 @@ import os
 import glob
 
 workdir: OUT_DIR
-
-SAMPLES = [os.path.basename(x).replace('.xml', '') for x in sorted(glob.glob(os.path.join(ANNOTATION_DIR, '*.xml')))]
-
+XML_SAMPLES = [os.path.basename(x).replace('.xml', '') for x in sorted(glob.glob(os.path.join(ANNOTATION_DIR, '*.xml')))]
+print(TIFF_DIR)
+TIFF_SAMPLE_TYPE = [x.replace('.tif', '').replace(TIFF_DIR, '').lstrip('/').split('/')[0] for x in sorted(glob.glob(os.path.join(TIFF_DIR, '*','*.tif'), recursive=True))]
+TIFF_SAMPLE_NAME = [x.replace('.tif', '').replace(TIFF_DIR, '').lstrip('/').split('/')[1] for x in sorted(glob.glob(os.path.join(TIFF_DIR, '*','*.tif'), recursive=True))]
 rule all:
     input:
-        expand('lesion_annotations_json/{sample}.json', sample=SAMPLES)
+        expand('lesion_annotation_json/{sample}.json', sample=XML_SAMPLES),
+        expand('patch_dataframe/{sampledir}/{sample}.tsv', zip, sampledir=TIFF_SAMPLE_TYPE, sample=TIFF_SAMPLE_NAME),
+        expand('patch_dataframe_with_mask/{sampledir}/{sample}.tsv', zip, sampledir=TIFF_SAMPLE_TYPE, sample=TIFF_SAMPLE_NAME),
 
 rule convert_to_json:
     input:  ANNOTATION_DIR + os.path.sep + '{sample}.xml'
-    output: 'lesion_annotations_json/{sample}.json'
+    output: 'lesion_annotation_json/{sample}.json'
     params:
-        prefix='lesion_annotations_json'
+        prefix='lesion_annotation_json'
     shell:
         r'''
         pywsi xmltojson --infile {input} --savedir {params.prefix}
         '''
 
-
+rule extract_patch_df:
+    input:  TIFF_DIR + os.path.sep + '{sampledir}' + os.path.sep + '{sample}.tif'
+    output: 'patch_dataframe/{sampledir}/{sample}.tsv'
+    params:
+        jsondir='lesion_annotation_json',
+        savedir='patch_dataframe/{sampledir}',
+        patchsize='256'
+    shell:
+        r'''
+        pywsi tif-to-df --tif {input} \
+        --jsondir {params.jsondir} \
+        --patchsize {params.patchsize} \
+        --savedir {params.savedir}
+        '''
+rule extract_patches:
+    input: 'patch_dataframe/{sampledir}/{sample}.tsv'
+    output:
+        tsv = 'patch_dataframe_with_mask/{sampledir}/{sample}.tsv',
+    params:
+        jsondir='lesion_annotation_json',
+        imgmaskdir='patch_and_mask/{sampledir}/{sample}',
+        patchsize='256'
+    shell:
+        r'''
+        pywsi add-patch-mask-col --df {input} \
+        --imgmaskdir {params.imgmaskdir} \
+        --patchsize {params.patchsize} \
+        --savedf {output.tsv}
+        '''

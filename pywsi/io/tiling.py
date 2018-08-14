@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import six
 import joblib
+from skimage.color import rgb2hsv
 from ..morphology.mask import get_common_interior_polygons
 from .operations import get_annotation_polygons
 from .operations import poly2mask
@@ -199,6 +200,8 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
             normal_poly_coords = np.array(normal_poly_coords) - np.array(
                 [tile_x, tile_y])
         if common_area:
+            normal_poly_coords = np.array(
+                common_area.exterior.coords) - np.array([tile_x, tile_y])
             overlapping_normal_poly = shapelyPolygon(normal_poly_coords)
             psuedo_mask = poly2mask([overlapping_normal_poly],
                                     (patch_size, patch_size))
@@ -245,6 +248,7 @@ def get_all_patches_from_slide(slide_path,
         thumbnail_nrow = int(slide.width / patch_size)
         thumbnail_ncol = int(slide.height / patch_size)
 
+    rgb = thumbnail.convert('RGB')
     thumbnail_grey = np.array(thumbnail.convert('L'))  # convert to grayscale
 
     thresh = threshold_otsu(thumbnail_grey)

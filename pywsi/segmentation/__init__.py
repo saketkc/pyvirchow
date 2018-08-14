@@ -20,6 +20,10 @@ import numpy as np
 import scipy as sp
 from skimage.color import label2rgb, rgb2gray
 from skimage.measure import regionprops
+from ..normalization import MacenkoNormalization
+from ..normalization import ReinhardNormalization
+from ..normalization import VahadaneNormalization
+from ..normalization import XuNormalization
 
 from .max_clustering import max_clustering
 from .fractal_dimension import fractal_dimension
@@ -36,6 +40,7 @@ def label_nuclei(nuclei_stain_rgb,
                  max_radius=5,
                  local_max_search_radius=3,
                  min_nucleus_area=80,
+                 normalization=None,
                  draw=True,
                  savetopng=None):
     """Perform segmentation labelling on nuclei.
@@ -57,6 +62,8 @@ def label_nuclei(nuclei_stain_rgb,
                              how many neraby regions should be considered for collapsing into one
     min_nucleus_area: float
                       Anything below this is not a viable Nuclei
+    normalization: string
+                 None or one of macenko/vahadane/xu
     draw: bool
           Should draw the segmentation?
     savetopng: string
@@ -65,6 +72,23 @@ def label_nuclei(nuclei_stain_rgb,
     assert thresholding in [
         'gmm', 'poisson-graph', 'poisson-hard', 'custom'
     ], 'Unsupported thresholding method {}'.format(thresholding)
+    assert normalization in [None, 'macenko', 'vahadane', 'xu']
+    if normalization == 'macenko':
+        macenko_fit = MacenkoNormalization()
+        macenko_fit.fit(np.asarray(nuclei_stain_rgb).astype(np.uint8))
+        H_channel_v = macenko_fit.get_hematoxylin_channel(nuclei_stain_rgb)
+        nuclei_stain_rgb = H_channel_v/255.0
+    elif normalization == 'vahadane':
+        vahadane_fit = VahadaneNormalization()
+        vahadane_fit.fit(np.asarray(nuclei_stain_rgb).astype(np.uint8))
+        H_channel_v = vahadane_fit.get_hematoxylin_channel(nuclei_stain_rgb)
+        nuclei_stain_rgb = H_channel_v/255.0
+    elif normalization == 'xu':
+        xu_fit = XuNormalization()
+        xu_fit.fit(np.asarray(nuclei_stain_rgb).astype(np.uint8))
+        H_channel_v = xu_fit.get_hematoxylin_channel(nuclei_stain_rgb)
+        nuclei_stain_rgb = H_channel_v/255.0
+
     nuclei_stain_bw = rgb2gray(nuclei_stain_rgb)
     if thresholding == 'custom':
         assert foreground_threshold > 0, 'foreground_threshold should be > 0 for custom thresholding'
