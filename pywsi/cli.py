@@ -950,7 +950,7 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
     records = df.reset_index().to_dict('records')
 
     with tqdm(total=len(df.index)) as pbar:
-        with Pool(processes=32) as p:
+        with Pool(processes=8) as p:
             for idx, img_path, mask_path in p.imap_unordered(
                     save_images_and_mask, records):
                 df_copy.loc[idx, 'img_path'] = img_path
@@ -1011,7 +1011,7 @@ def process_df_cmd(df, finaldf, savedir):
     df['segmented_tsv'] = savedir + '/' + df[['uid', 'row', 'col']].apply(
         lambda x: '_'.join(x.values.tolist()), axis=1) + '.segmented.tsv'
     with tqdm(total=len(df.index)) as pbar:
-        with Pool(processes=32) as p:
+        with Pool(processes=8) as p:
             for i, temp_df in enumerate(
                     p.imap_unordered(
                         process_segmentation_both, df[[
@@ -1023,11 +1023,11 @@ def process_df_cmd(df, finaldf, savedir):
 
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
 
-
 def process_segmentation_fixed(batch_sample):
     patch_size = batch_sample['patch_size']
     savedir = os.path.abspath(batch_sample['savedir'])
     tile_loc = batch_sample['tile_loc']  #[::-1]
+    segmentedmethod = batch_sample['segmented_method']
     if isinstance(tile_loc, six.string_types):
         tile_row, tile_col = eval(tile_loc)
     else:
@@ -1038,7 +1038,7 @@ def process_segmentation_fixed(batch_sample):
         savedir, batch_sample['uid'] + '_{}_{}.segmented.png'.format(
             tile_row, tile_col))
     region_properties, _ = label_nuclei(
-        patch, draw=False)#, savetopng=segmented_img_path)
+        patch, draw=False, normalization=segmentedmethod)#, savetopng=segmented_img_path)
     summary = summarize_region_properties(region_properties, patch)
 
     segmented_tsv_path = os.path.join(
@@ -1062,6 +1062,10 @@ def process_segmentation_fixed(batch_sample):
     help='Segment from df')
 @click.option('--df', help='Path to dataframe', required=True)
 @click.option('--finaldf', help='Path to dataframe', required=True)
+@click.option('--segmethod', help='Path to dataframe', default=None, type=click.Choice(['None',
+                                                                                        'vahadane',
+                                                                                        'macenko',
+                                                                                        'xu']))
 @click.option(
     '--savedir',
     help='Root directory to save extract images to',
@@ -1071,7 +1075,7 @@ def process_segmentation_fixed(batch_sample):
     type=int,
     default=256,
     help='Patch size which to extract patches')
-def process_df_cmd_fast(df, finaldf, savedir, patchsize):
+def process_df_cmd_fast(df, finaldf, segmethod, savedir, patchsize):
     savedir = os.path.abspath(savedir)
     df_main = pd.read_table(df)
     df = df_main.copy()
@@ -1079,6 +1083,7 @@ def process_df_cmd_fast(df, finaldf, savedir, patchsize):
     df['patch_size'] = patchsize
     df['segmented_png'] = None
     df['segmented_tsv'] = None
+    df['segmented_method'] = segmethod
 
     modified_df = pd.DataFrame()
     os.makedirs(savedir, exist_ok=True)
@@ -1086,7 +1091,7 @@ def process_df_cmd_fast(df, finaldf, savedir, patchsize):
     df_subset = df_reset_index[df_reset_index.is_tissue == True]
     records = df_subset.to_dict('records')
     with tqdm(total=len(df_subset.index)) as pbar:
-        with Pool(processes=32) as p:
+        with Pool(processes=8) as p:
             for idx, segmented_png, segmented_tsv, summary_df in p.imap_unordered(
                     process_segmentation_fixed, records):
                 df.loc[idx, 'segmented_png'] = segmented_png

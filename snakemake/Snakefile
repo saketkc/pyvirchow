@@ -10,9 +10,11 @@ TIFF_SAMPLE_TYPE = [x.replace('.tif', '').replace(TIFF_DIR, '').lstrip('/').spli
 TIFF_SAMPLE_NAME = [x.replace('.tif', '').replace(TIFF_DIR, '').lstrip('/').split('/')[1] for x in sorted(glob.glob(os.path.join(TIFF_DIR, '*','*.tif'), recursive=True))]
 rule all:
     input:
-        expand('lesion_annotation_json/{sample}.json', sample=XML_SAMPLES),
-        expand('patch_dataframe/{sampledir}/{sample}.tsv', zip, sampledir=TIFF_SAMPLE_TYPE, sample=TIFF_SAMPLE_NAME),
-        expand('patch_dataframe_with_mask/{sampledir}/{sample}.tsv', zip, sampledir=TIFF_SAMPLE_TYPE, sample=TIFF_SAMPLE_NAME),
+        #expand('lesion_annotation_json/{sample}.json', sample=XML_SAMPLES),
+        #expand('patch_dataframe/{sampledir}/{sample}.tsv', zip, sampledir=TIFF_SAMPLE_TYPE, sample=TIFF_SAMPLE_NAME),
+        #expand('patch_dataframe_with_mask/{sampledir}/{sample}.tsv', zip, sampledir=TIFF_SAMPLE_TYPE, sample=TIFF_SAMPLE_NAME),
+        '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask_segmented.tsv',
+        '/mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask_segmented.tsv'
 
 rule convert_to_json:
     input:  ANNOTATION_DIR + os.path.sep + '{sample}.xml'
@@ -53,3 +55,28 @@ rule extract_patches:
         --patchsize {params.patchsize} \
         --savedf {output.tsv}
         '''
+
+rule patch_and_mask:
+    input: '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df.tsv'
+    output: '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask.tsv'
+    shell:
+        r'''
+        pywsi patch-and-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches/  --savedf {output}
+        '''
+
+rule segment_And_mask:
+    input: '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask.tsv'
+    output: '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask_segmented.tsv'
+    shell:
+        r'''
+        pywsi segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-segmented/  --finaldf {output}
+        '''
+
+rule segment_And_mask_validate:
+    input: '/mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask.tsv'
+    output: '/mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask_segmented.tsv'
+    shell:
+        r'''
+        pywsi segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate-segmented/  --finaldf {output}
+        '''
+

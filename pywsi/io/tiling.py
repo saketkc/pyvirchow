@@ -199,9 +199,13 @@ def create_tumor_mask_from_tile(tile_x, tile_y, polygons, patch_size=256):
                 normal_poly_coords += p.exterior.coords
             normal_poly_coords = np.array(normal_poly_coords) - np.array(
                 [tile_x, tile_y])
+        elif common_area.geom_type == 'LineString':
+            normal_poly_coords = common_area.coords
+        else:
+            raise ValueError('Founr geom {}'.format(common_area.geom_type))
         if common_area:
-            normal_poly_coords = np.array(
-                common_area.exterior.coords) - np.array([tile_x, tile_y])
+            #normal_poly_coords = np.array(
+             #   common_area.exterior.coords) - np.array([tile_x, tile_y])
             overlapping_normal_poly = shapelyPolygon(normal_poly_coords)
             psuedo_mask = poly2mask([overlapping_normal_poly],
                                     (patch_size, patch_size))
