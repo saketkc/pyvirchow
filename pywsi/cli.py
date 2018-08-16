@@ -1032,18 +1032,22 @@ def process_segmentation_fixed(batch_sample):
         tile_row, tile_col = eval(tile_loc)
     else:
         tile_row, tile_col = tile_loc
-        # the get_tile tuple required is (col, row)
-    patch = joblib.load(batch_sample['img_path'])
     segmented_img_path = os.path.join(
         savedir, batch_sample['uid'] + '_{}_{}.segmented.png'.format(
             tile_row, tile_col))
+    segmented_tsv_path = os.path.join(
+        savedir, batch_sample['uid'] + '_{}_{}.segmented_summary.tsv'.format(
+            tile_row, tile_col))
+    if os.path.isfile(segmented_img_path) and os.path.isfile(segmented_tsv_path):
+        df = pd.read_table(segmented_tsv_path)
+        return batch_sample['index'], segmented_img_path, segmented_tsv_path, df
+
+        # the get_tile tuple required is (col, row)
+    patch = joblib.load(batch_sample['img_path'])
     region_properties, _ = label_nuclei(
         patch, draw=False, normalization=segmentedmethod)#, savetopng=segmented_img_path)
     summary = summarize_region_properties(region_properties, patch)
 
-    segmented_tsv_path = os.path.join(
-        savedir, batch_sample['uid'] + '_{}_{}.segmented_summary.tsv'.format(
-            tile_row, tile_col))
     df = pd.DataFrame([summary])
     try:
         df['is_tumor'] = batch_sample['is_tumor']
@@ -1512,3 +1516,5 @@ def xmltojson_cmd(infile, savedir):
     """Convert ASAP xml files to json
     """
     xmltojson(infile, savedir)
+
+
