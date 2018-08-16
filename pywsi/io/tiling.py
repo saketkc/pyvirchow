@@ -456,7 +456,10 @@ def save_images_and_mask(batch_sample):
                 tile_row, tile_col))
         joblib.dump(img, img_path)
         joblib.dump(mask, mask_path)
-    return batch_sample['index'], img_path, mask_path
+    if 'index' in batch_sample.columns:
+        return batch_sample['index'], img_path, mask_path
+    else:
+        return img_path, mask_path
 
 
 def get_tiles(batch_samples,

@@ -1043,6 +1043,8 @@ def process_segmentation_fixed(batch_sample):
         return batch_sample['index'], segmented_img_path, segmented_tsv_path, df
 
         # the get_tile tuple required is (col, row)
+    if not os.path.isfile(batch_sample['img_path']):
+        save_images_and_mask(batch_sample)
     patch = joblib.load(batch_sample['img_path'])
     region_properties, _ = label_nuclei(
         patch, draw=False, normalization=segmentedmethod)#, savetopng=segmented_img_path)
@@ -1075,11 +1077,16 @@ def process_segmentation_fixed(batch_sample):
     help='Root directory to save extract images to',
     required=True)
 @click.option(
+    '--ncpu',
+    type=int,
+    default=1,
+    help='Patch size which to extract patches')
+@click.option(
     '--patchsize',
     type=int,
     default=256,
     help='Patch size which to extract patches')
-def process_df_cmd_fast(df, finaldf, segmethod, savedir, patchsize):
+def process_df_cmd_fast(df, finaldf, segmethod, savedir, ncpu, patchsize):
     savedir = os.path.abspath(savedir)
     df_main = pd.read_table(df)
     df = df_main.copy()
@@ -1095,14 +1102,25 @@ def process_df_cmd_fast(df, finaldf, segmethod, savedir, patchsize):
     df_subset = df_reset_index[df_reset_index.is_tissue == True]
     records = df_subset.to_dict('records')
     with tqdm(total=len(df_subset.index)) as pbar:
-        with Pool(processes=8) as p:
-            for idx, segmented_png, segmented_tsv, summary_df in p.imap_unordered(
-                    process_segmentation_fixed, records):
+        if ncpu> 1:
+            with Pool(processes=ncpu) as p:
+                for idx, segmented_png, segmented_tsv, summary_df in p.imap_unordered(
+                        process_segmentation_fixed, records):
+                    df.loc[idx, 'segmented_png'] = segmented_png
+                    df.loc[idx, 'segmented_tsv'] = segmented_tsv
+                    modified_df = pd.concat([modified_df, summary_df])
+                    modified_df['index'] = idx
+                    pbar.update()
+        else:
+            for idx, row in df.iterrows():
+                row['index'] = idx
+                _, segmented_png, segmented_tsv, summary_df = process_segmentation_fixed(row)
                 df.loc[idx, 'segmented_png'] = segmented_png
                 df.loc[idx, 'segmented_tsv'] = segmented_tsv
                 modified_df = pd.concat([modified_df, summary_df])
                 modified_df['index'] = idx
                 pbar.update()
+
     modified_df = modified_df.set_index('index')
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
     df.to_csv(
@@ -1517,4 +1535,19 @@ def xmltojson_cmd(infile, savedir):
     """
     xmltojson(infile, savedir)
 
-
+@cli.command(
+    'validate-mask-df',
+    context_settings=CONTEXT_SETTINGS,
+    help='Check if all files exist in img_path and mask_path columns')
+@click.option(
+    '--df', help='Path to mask dataframe', required=True)
+def validate_mask_cmd(df):
+    df = pd.read_table(df)
+    total = len(df.index)
+    with tqdm(total=total) as pbar:
+        for idx, row in df.iterrows():
+            if not os.path.isfile(row['img_path']):
+                print('Fixing {}'.format(row['img_path']))
+                save_images_and_mask(row)
+            pbar.update()
+    #df.apply(lambda row: save_images_and_mask(row) if not os.path.isfile(row['img_path']) else 'x')
