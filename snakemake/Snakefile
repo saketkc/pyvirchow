@@ -79,4 +79,4 @@ rule segment_And_mask_validate:
         r'''
         pywsi segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate-segmented/  --finaldf {output}
         '''
-
+# pywsi patches-df --indir /mnt/disks/data/histopath_data/CAMELYON16/testing/images/ --savedir /mnt/disks/data/histopath_data/pyvirchow-out-testing-df  --jsondir /mnt/disks/data/histopath_data/pyvirchow-out/testing/lesion_annotation_json/
