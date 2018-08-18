@@ -66,8 +66,9 @@ def plot_blend(patch, prediction, ax, alpha=0.75):
 
     #plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
     divider = make_axes_locatable(ax)
+    fig = ax.get_figure()
     cax = divider.append_axes('right', size='5%', pad=0.05)
-    cbar = plt.colorbar(im2, cax=cax)
+    cbar = fig.colorbar(im2, cax=cax)
     cbar.set_label(
         'Probability of pixel being a tumor', weight='bold', fontsize=12)
     cbar.ax.tick_params(labelsize=12)

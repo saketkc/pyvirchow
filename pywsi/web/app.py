@@ -22,14 +22,19 @@ from pywsi.io.operations import path_leaf
 from pywsi.io.operations import draw_annotation
 from pywsi.io.operations import WSIReader
 from pywsi.deep_model.plot_utils import plot_blend
+from skimage.io import imread
 
 TRAIN_TUMOR_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/tumor'
 TRAIN_NORMAL_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/normal'
 TRAIN_ANNOTATION_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/lesion_annotations_json'
 TEST_WSI_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/images'
 TEST_ANNOTATION_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/lesion_annotations_json'
-PREDICTED_HEATMAP_DIR = '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd'
-PREDICTED_HEATMAP_DIR2 = '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_rf/'
+NOT_AVAIL_IMG = '/Z/personal-folders/interns/saket/github/pywsi/pywsi/web/assets/No_image_available.png'
+PREDICTED_HEATMAP_DIR = {
+    'cnn':
+    '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd',
+    'rf': '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_rf'
+}
 PATCH_SIZE = 256
 
 
@@ -50,6 +55,29 @@ def fig_to_uri(in_fig, close_all=True, **save_args):
         '\n', '')
     return 'data:image/png;base64,{}'.format(encoded)
 
+TUMOR_VALIDATE_SLIDES = ['tumor_005',
+ 'tumor_011',
+ 'tumor_031',
+ 'tumor_046',
+ 'tumor_065',
+ 'tumor_069',
+ 'tumor_079',
+ 'tumor_085',
+ 'tumor_097']
+
+NORMAL_VALIDATE_SLIDES = ['normal_016',
+ 'normal_020',
+ 'normal_030',
+ 'normal_046',
+ 'normal_057',
+ 'normal_092',
+ 'normal_097',
+ 'normal_098',
+ 'normal_100',
+ 'normal_130',
+ 'normal_136',
+ 'normal_142',
+ 'normal_159']
 
 def get_samples_from_dir(dir):
     # Just assume all files will have tif extension
@@ -57,6 +85,7 @@ def get_samples_from_dir(dir):
     short_names = []
     for wsi in wsis:
         label = path_leaf(wsi).replace('.tif', '')
+        #if label in TUMOR_VALIDATE_SLIDES or label in NORMAL_VALIDATE_SLIDES:
         short_names.append({'label': label, 'value': wsi})
     return short_names
 
@@ -67,14 +96,17 @@ ALL_SAMPLES = get_samples_from_dir(TRAIN_TUMOR_DIR) + get_samples_from_dir(
 app = dash.Dash()
 app.layout = html.Div([
     html.Div(
-        [dcc.Dropdown(id='wsi-dropdown', options=ALL_SAMPLES, value='')],
+        [dcc.Dropdown(id='wsi-dropdown', options=ALL_SAMPLES, value='Select a sample')],
         style={
             'width': '20%',
             'display': 'block'
         }),
     html.Div(
-        [html.Img(id='thumbnail_plot0', src='', width='100%', height='100%')],
-        id='plot_div0',
+        [
+            html.Img(
+                id='thumbnail_plot_truth', src='', width='100%', height='100%')
+        ],
+        id='plot_div_truth',
         style={
             'width': '45%',
             'display': 'inline-block',
@@ -82,25 +114,59 @@ app.layout = html.Div([
         }),
     html.Div(
         [html.Div(id='embed')],
-        id='plot_div1',
+        id='plot_div_iframe',
         style={
             'width': '45%',
             'display': 'inline-block',
             'float': 'left'
         }),
     html.Div(
-        [html.Img(id='thumbnail_plot2', src='', width='100%', height='100%')],
-        id='plot_div2',
+        [
+            html.Img(
+                id='thumbnail_plot_cnn', src='', width='100%', height='100%')
+        ],
+        id='plot_div_cnn',
         style={
             'width': '45%',
             'display': 'inline-block',
             'float': 'left'
         }),
     html.Div(
-        [html.Img(id='thumbnail_plot3', src='', width='100%', height='100%')],
-        id='plot_div3',
+        [
+            html.Img(
+                id='thumbnail_plot_rf', src='', width='100%', height='100%')
+        ],
+        id='plot_div_rf',
         style={
-            'width': '50%',
+            'width': '45%',
+            'display': 'inline-block',
+            'float': 'left'
+        }),
+    html.Div(
+        [
+            html.Img(
+                id='thumbnail_plot_cnn_mask',
+                src='',
+                width='100%',
+                height='100%')
+        ],
+        id='plot_div_cnn_mask',
+        style={
+            'width': '45%',
+            'display': 'inline-block',
+            'float': 'left'
+        }),
+    html.Div(
+        [
+            html.Img(
+                id='thumbnail_plot_rf_mask',
+                src='',
+                width='100%',
+                height='100%')
+        ],
+        id='plot_div_rf_mask',
+        style={
+            'width': '45%',
             'display': 'inline-block',
             'float': 'left'
         }),
@@ -108,9 +174,9 @@ app.layout = html.Div([
 
 
 @app.callback(
-    Output(component_id='thumbnail_plot0', component_property='src'),
+    Output(component_id='thumbnail_plot_truth', component_property='src'),
     [Input('wsi-dropdown', 'value')])
-def update_output(slide_path):
+def update_output_truth(slide_path):
     slide = WSIReader(slide_path, 40)
     uid = slide.uid
 
@@ -139,7 +205,7 @@ def update_output(slide_path):
 
 
 @app.callback(Output('embed', 'children'), [Input('wsi-dropdown', 'value')])
-def update_output(slide_path):
+def update_output_iframe(slide_path):
     slide = WSIReader(slide_path, 40)
     uid = slide.uid
     if 'tumor' in uid:
@@ -157,11 +223,12 @@ def update_output(slide_path):
 
 
 @app.callback(
-    Output(component_id='thumbnail_plot2', component_property='src'),
+    Output(component_id='thumbnail_plot_cnn', component_property='src'),
     [Input('wsi-dropdown', 'value')])
-def update_output2(slide_path):
+def update_output_cnn(slide_path):
     uid = path_leaf(slide_path).replace('.tif', '')
-    pickle_file = os.path.join(PREDICTED_HEATMAP_DIR, uid + '.joblib.pickle')
+    pickle_file = os.path.join(PREDICTED_HEATMAP_DIR['cnn'],
+                               uid + '.joblib.pickle')
     slide = WSIReader(slide_path, 40)
     n_cols = int(slide.width / 256)
     n_rows = int(slide.height / 256)
@@ -173,11 +240,14 @@ def update_output2(slide_path):
         fig, ax = plt.subplots()
         plot_blend(thumbnail, thumbnail_predicted, ax, alpha=1)
         #ax.axis('off')
+        ax.set_title('CNN - Predicted Heatmap')
     else:
         fig, ax = plt.subplots()
+        thumbnail = imread(NOT_AVAIL_IMG)
         ax.imshow(thumbnail)
+        ax.axis('off')
+
         #ax.axis('off')
-    ax.set_title('Predicted Heatmap')
     fig.tight_layout()
     slide.close()
     out_url = fig_to_uri(fig)
@@ -186,11 +256,46 @@ def update_output2(slide_path):
 
 
 @app.callback(
-    Output(component_id='thumbnail_plot3', component_property='src'),
+    Output(component_id='thumbnail_plot_rf', component_property='src'),
     [Input('wsi-dropdown', 'value')])
-def update_output3(slide_path):
+def update_output_rf(slide_path):
     uid = path_leaf(slide_path).replace('.tif', '')
-    pickle_file = os.path.join(PREDICTED_HEATMAP_DIR, uid + '.joblib.pickle')
+    pickle_file = os.path.join(PREDICTED_HEATMAP_DIR['rf'],
+                               uid + '.joblib.pickle')
+    slide = WSIReader(slide_path, 40)
+    n_cols = int(slide.width / 256)
+    n_rows = int(slide.height / 256)
+
+    thumbnail = slide.get_thumbnail((n_cols, n_rows))
+    thumbnail = np.array(thumbnail)
+    if os.path.isfile(pickle_file):
+        thumbnail_predicted = joblib.load(pickle_file)
+        fig, ax = plt.subplots()
+        plot_blend(thumbnail, thumbnail_predicted, ax, alpha=1)
+        #ax.axis('off')
+        ax.set_title('RF - Predicted Heatmap')
+    else:
+        fig, ax = plt.subplots()
+        thumbnail = imread(NOT_AVAIL_IMG)
+        ax.imshow(thumbnail)
+        ax.axis('off')
+
+        #ax.axis('off')
+    fig.tight_layout()
+    slide.close()
+    out_url = fig_to_uri(fig)
+    plt.close('all')
+    return out_url
+
+
+
+@app.callback(
+    Output(component_id='thumbnail_plot_cnn_mask', component_property='src'),
+    [Input('wsi-dropdown', 'value')])
+def update_output_cnn_mask(slide_path):
+    uid = path_leaf(slide_path).replace('.tif', '')
+    pickle_file = os.path.join(PREDICTED_HEATMAP_DIR['cnn'],
+                               uid + '.joblib.pickle')
     if os.path.isfile(pickle_file):
         thumbnail_predicted = joblib.load(pickle_file)
         fig, ax = plt.subplots()
@@ -201,18 +306,41 @@ def update_output3(slide_path):
             vmax=1)
         #ax.set_title(' (white=tumor, black=not_tumor)')
         #ax.axis('off')
+        ax.set_title('CNN - Predicted Mask\n (white=tumor, black=normal)')
     else:
-        slide = WSIReader(slide_path, 40)
-        n_cols = int(slide.width / 256)
-        n_rows = int(slide.height / 256)
-
-        thumbnail = slide.get_thumbnail((n_cols, n_rows))
-        thumbnail = np.array(thumbnail)
         fig, ax = plt.subplots()
+        thumbnail = imread(NOT_AVAIL_IMG)
         ax.imshow(thumbnail)
         ax.axis('off')
-        slide.close()
-    ax.set_title('Predicted Mask \n (white=tumor, black=normal)')
+    fig.tight_layout()
+    out_url = fig_to_uri(fig)
+    plt.close('all')
+    return out_url
+
+
+@app.callback(
+    Output(component_id='thumbnail_plot_rf_mask', component_property='src'),
+    [Input('wsi-dropdown', 'value')])
+def update_output_rf_mask(slide_path):
+    uid = path_leaf(slide_path).replace('.tif', '')
+    pickle_file = os.path.join(PREDICTED_HEATMAP_DIR['rf'],
+                               uid + '.joblib.pickle')
+    if os.path.isfile(pickle_file):
+        thumbnail_predicted = joblib.load(pickle_file)
+        fig, ax = plt.subplots()
+        ax.imshow(
+            (thumbnail_predicted > 0.75).astype(np.int),
+            cmap='gray',
+            vmin=0,
+            vmax=1)
+        #ax.set_title(' (white=tumor, black=not_tumor)')
+        #ax.axis('off')
+        ax.set_title('RF - Predicted Mask \n (white=tumor, black=normal)')
+    else:
+        fig, ax = plt.subplots()
+        thumbnail = imread(NOT_AVAIL_IMG)
+        ax.imshow(thumbnail)
+        ax.axis('off')
     fig.tight_layout()
     out_url = fig_to_uri(fig)
     plt.close('all')

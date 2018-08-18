@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 from tensorflow.contrib.tensor_forest.python import tensor_forest
 from tensorflow.python.ops import resources
 
