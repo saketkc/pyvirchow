@@ -1550,4 +1550,18 @@ def validate_mask_cmd(df):
                 print('Fixing {}'.format(row['img_path']))
                 save_images_and_mask(row)
             pbar.update()
-    #df.apply(lambda row: save_images_and_mask(row) if not os.path.isfile(row['img_path']) else 'x')
+@cli.command(
+    'validate-segmented-df',
+    context_settings=CONTEXT_SETTINGS,
+    help='Check if all files exist segmented_tsv path')
+@click.option(
+    '--df', help='Path to segmented dataframe', required=True)
+def validate_segmented_cmd(df):
+    df = pd.read_table(df)
+    total = len(df.index)
+    with tqdm(total=total) as pbar:
+        for idx, row in df.iterrows():
+            if not os.path.isfile(row['segmented_tsv']):
+                print('Fixing {}'.format(row['segmented_tsv']))
+                process_segmentation_fixed(row)
+            pbar.update()
