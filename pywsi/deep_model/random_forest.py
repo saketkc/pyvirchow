@@ -129,5 +129,3 @@ def probability_rf(sess, df_file, batch_size=1):
         prob = sess.run(infer_op, feed_dict={X: features_batch})
         probabilities.append(prob[0][1])
     return probabilities
-
-

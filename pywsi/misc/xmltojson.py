@@ -63,6 +63,8 @@ def xmltojson(xml_path, savedir):
             pass
         else:
             raise RuntimeError('Did not find an appropriate group id')
-    with open(os.path.join(savedir, os.path.basename(xml_path).replace('.xml', '.json')),
-              'w') as fw:
+    with open(
+            os.path.join(savedir,
+                         os.path.basename(xml_path).replace('.xml', '.json')),
+            'w') as fw:
         json.dump(json_dict, fw, indent=1)

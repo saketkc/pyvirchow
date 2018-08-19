@@ -43,20 +43,23 @@ click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 import pandas as pd
 warnings.filterwarnings('ignore')
-COLUMNS = ['area', 'bbox_area', 'compactness', 'convex_area',
-           'eccentricity', 'equivalent_diameter', 'extent', 'fractal_dimension',
-           'inertia_tensor_eigvals_1', 'inertia_tensor_eigvals_2',
-           'major_axis_length', 'max_intensity', 'mean_intensity',
-           'mean_intensity_entire_image', 'minor_axis_length', 'moments_central_1',
-           'moments_central_10', 'moments_central_11', 'moments_central_12',
-           'moments_central_13', 'moments_central_14', 'moments_central_15',
-           'moments_central_16', 'moments_central_2', 'moments_central_3',
-           'moments_central_4', 'moments_central_5', 'moments_central_6',
-           'moments_central_7', 'moments_central_8', 'moments_central_9',
-           'moments_hu_1', 'moments_hu_2', 'moments_hu_3', 'moments_hu_4',
-           'moments_hu_5', 'moments_hu_6', 'moments_hu_7', 'nuclei',
-           'nuclei_intensity_over_entire_image', 'orientation', 'perimeter',
-           'solidity', 'texture', 'total_nuclei_area', 'total_nuclei_area_ratio']
+COLUMNS = [
+    'area', 'bbox_area', 'compactness', 'convex_area', 'eccentricity',
+    'equivalent_diameter', 'extent', 'fractal_dimension',
+    'inertia_tensor_eigvals_1', 'inertia_tensor_eigvals_2',
+    'major_axis_length', 'max_intensity', 'mean_intensity',
+    'mean_intensity_entire_image', 'minor_axis_length', 'moments_central_1',
+    'moments_central_10', 'moments_central_11', 'moments_central_12',
+    'moments_central_13', 'moments_central_14', 'moments_central_15',
+    'moments_central_16', 'moments_central_2', 'moments_central_3',
+    'moments_central_4', 'moments_central_5', 'moments_central_6',
+    'moments_central_7', 'moments_central_8', 'moments_central_9',
+    'moments_hu_1', 'moments_hu_2', 'moments_hu_3', 'moments_hu_4',
+    'moments_hu_5', 'moments_hu_6', 'moments_hu_7', 'nuclei',
+    'nuclei_intensity_over_entire_image', 'orientation', 'perimeter',
+    'solidity', 'texture', 'total_nuclei_area', 'total_nuclei_area_ratio'
+]
+
 
 @click.group(
     cls=HelpColorsGroup,
@@ -908,7 +911,8 @@ def extract_df_from_tif_cmd(tif, jsondir, patchsize, savedir):
     """
     basename = path_leaf(tif).replace('.tif', '')
     if jsondir:
-        json_filepath = os.path.abspath(os.path.join(jsondir, basename + '.json'))
+        json_filepath = os.path.abspath(
+            os.path.join(jsondir, basename + '.json'))
     else:
         json_filepath = None
     if not os.path.isfile(json_filepath):
@@ -1023,6 +1027,7 @@ def process_df_cmd(df, finaldf, savedir):
 
     modified_df.to_csv(finaldf, sep='\t', index=False, header=True)
 
+
 def process_segmentation_fixed(batch_sample):
     patch_size = batch_sample['patch_size']
     savedir = os.path.abspath(batch_sample['savedir'])
@@ -1038,16 +1043,19 @@ def process_segmentation_fixed(batch_sample):
     segmented_tsv_path = os.path.join(
         savedir, batch_sample['uid'] + '_{}_{}.segmented_summary.tsv'.format(
             tile_row, tile_col))
-    if os.path.isfile(segmented_img_path) and os.path.isfile(segmented_tsv_path):
+    if os.path.isfile(segmented_img_path) and os.path.isfile(
+            segmented_tsv_path):
         df = pd.read_table(segmented_tsv_path)
-        return batch_sample['index'], segmented_img_path, segmented_tsv_path, df
+        return batch_sample[
+            'index'], segmented_img_path, segmented_tsv_path, df
 
         # the get_tile tuple required is (col, row)
     if not os.path.isfile(batch_sample['img_path']):
         save_images_and_mask(batch_sample)
     patch = joblib.load(batch_sample['img_path'])
     region_properties, _ = label_nuclei(
-        patch, draw=False, normalization=segmentedmethod)#, savetopng=segmented_img_path)
+        patch, draw=False,
+        normalization=segmentedmethod)  #, savetopng=segmented_img_path)
     summary = summarize_region_properties(region_properties, patch)
 
     df = pd.DataFrame([summary])
@@ -1068,19 +1076,17 @@ def process_segmentation_fixed(batch_sample):
     help='Segment from df')
 @click.option('--df', help='Path to dataframe', required=True)
 @click.option('--finaldf', help='Path to dataframe', required=True)
-@click.option('--segmethod', help='Path to dataframe', default=None, type=click.Choice(['None',
-                                                                                        'vahadane',
-                                                                                        'macenko',
-                                                                                        'xu']))
+@click.option(
+    '--segmethod',
+    help='Path to dataframe',
+    default=None,
+    type=click.Choice(['None', 'vahadane', 'macenko', 'xu']))
 @click.option(
     '--savedir',
     help='Root directory to save extract images to',
     required=True)
 @click.option(
-    '--ncpu',
-    type=int,
-    default=1,
-    help='Patch size which to extract patches')
+    '--ncpu', type=int, default=1, help='Patch size which to extract patches')
 @click.option(
     '--patchsize',
     type=int,
@@ -1102,7 +1108,7 @@ def process_df_cmd_fast(df, finaldf, segmethod, savedir, ncpu, patchsize):
     df_subset = df_reset_index[df_reset_index.is_tissue == True]
     records = df_subset.to_dict('records')
     with tqdm(total=len(df_subset.index)) as pbar:
-        if ncpu> 1:
+        if ncpu > 1:
             with Pool(processes=ncpu) as p:
                 for idx, segmented_png, segmented_tsv, summary_df in p.imap_unordered(
                         process_segmentation_fixed, records):
@@ -1114,7 +1120,8 @@ def process_df_cmd_fast(df, finaldf, segmethod, savedir, ncpu, patchsize):
         else:
             for idx, row in df.iterrows():
                 row['index'] = idx
-                _, segmented_png, segmented_tsv, summary_df = process_segmentation_fixed(row)
+                _, segmented_png, segmented_tsv, summary_df = process_segmentation_fixed(
+                    row)
                 df.loc[idx, 'segmented_png'] = segmented_png
                 df.loc[idx, 'segmented_tsv'] = segmented_tsv
                 modified_df = pd.concat([modified_df, summary_df])
@@ -1309,6 +1316,8 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
             slide.close()
             continue
         slide.close()
+
+
 def generate_rows(samples, num_samples, batch_size=1):
     while True:  # Loop forever so the generator never terminates
         for offset in range(0, num_samples, batch_size):
@@ -1326,7 +1335,10 @@ def generate_rows(samples, num_samples, batch_size=1):
                     # Should be normal
                     label = 0
                 if batch_sample.is_tissue:
-                    feature = pd.read_table(os.path.join('/Z/personal-folders/interns/saket/github/pywsi', batch_sample.segmented_tsv))
+                    feature = pd.read_table(
+                        os.path.join(
+                            '/Z/personal-folders/interns/saket/github/pywsi',
+                            batch_sample.segmented_tsv))
 
                     #feature = feature.drop(columns=['is_tumor', 'is_tissue'])
                     try:
@@ -1338,15 +1350,16 @@ def generate_rows(samples, num_samples, batch_size=1):
                         print(batch_sample.segmented_tsv)
                         #print(feature.columns)
                         #raise RuntimeError('Cannot parse the columns')
-                        values = [0.0]*46
+                        values = [0.0] * 46
                     features.append(values)
                 else:
-                    values = [0.0]*46
+                    values = [0.0] * 46
                     features.append(values)
                 labels.append(label)
             X_train = np.array(features, dtype=np.float32)
             y_train = np.array(labels)
-            yield X_train,  y_train
+            yield X_train, y_train
+
 
 @cli.command(
     'heatmap-rf',
@@ -1380,10 +1393,10 @@ def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
     from tensorflow.contrib.tensor_forest.python import tensor_forest
     from tensorflow.python.ops import resources
     os.makedirs(savedir, exist_ok=True)
-    num_classes=2
-    num_features=46
-    num_trees=100
-    max_nodes=10000
+    num_classes = 2
+    num_features = 46
+    num_trees = 100
+    max_nodes = 10000
     X = tf.placeholder(tf.float32, shape=[None, num_features])
     # For random forest, labels must be integers (the class id)
     Y = tf.placeholder(tf.int32, shape=[None])
@@ -1412,8 +1425,7 @@ def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
     n_cols = int(slide.dimensions[0] / patchsize)
     n_rows = int(slide.dimensions[1] / patchsize)
     n_samples = len(all_samples.index)
-    assert n_rows * n_cols == len(
-        all_samples.index), 'Some division error;'
+    assert n_rows * n_cols == len(all_samples.index), 'Some division error;'
     print('Total: {}'.format(len(all_samples.index)))
 
     true_labels = []
@@ -1421,25 +1433,23 @@ def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
     #infer_op, accuracy_op, train_op, loss_op, X, Y = random_forest()
     for offset in tqdm(list(range(0, n_samples, batch_size))):
         batch_samples = all_samples.iloc[offset:offset + batch_size]
-        X_test, true_label = next(
-            generate_rows(batch_samples, batch_size))
+        X_test, true_label = next(generate_rows(batch_samples, batch_size))
         true_labels.append(true_label)
-        if batch_samples.is_tissue.nunique() == 1 and batch_samples.iloc[0].is_tissue == False:
+        if batch_samples.is_tissue.nunique(
+        ) == 1 and batch_samples.iloc[0].is_tissue == False:
             # all patches in this row do not have tissue, skip them all
             predicted_thumbnails.append(0)
         else:
-            preds = sess.run(infer_op,
-                            feed_dict={X: X_test})
+            preds = sess.run(infer_op, feed_dict={X: X_test})
             predicted_thumbnails.append(preds[0][1])
     predicted_thumbnails = np.asarray(predicted_thumbnails)
 
     basename = path_leaf(tif).replace('.tif', '')
     saveto = os.path.join(savedir, basename + '.joblib.pickle')
     saveto_original = os.path.join(savedir,
-                                    basename + '.original.joblib.pickle')
+                                   basename + '.original.joblib.pickle')
     try:
-        output_thumbnail_preds = predicted_thumbnails.reshape(
-            n_rows, n_cols)
+        output_thumbnail_preds = predicted_thumbnails.reshape(n_rows, n_cols)
         joblib.dump(output_thumbnail_preds, saveto)
     except:
         # Going to reshape
@@ -1447,7 +1457,7 @@ def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
         print(
             'n_row = {} | n_col = {} | n_rowxn_col = {} | orig_shape = {} | flattened: {}'.
             format(n_rows, n_cols, n_rows * n_cols,
-                    np.prod(predicted_thumbnails.shape), flattened.shape), )
+                   np.prod(predicted_thumbnails.shape), flattened.shape), )
         output_thumbnail_preds = flattened.reshape(n_rows, n_cols)
         slide.close()
 
@@ -1468,7 +1478,8 @@ def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
     default=
     '/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/')
 @click.option('--savedf', help='Save edited dataframe to', required=True)
-@click.option('--fast', help='Do not check of existense of images', is_flag=True)
+@click.option(
+    '--fast', help='Do not check of existense of images', is_flag=True)
 def extract_patch_mask_cmd(df, patchsize, imgmaskdir, savedf, fast):
     """Extract tissue only patches from tumor WSIs.
     """
@@ -1479,30 +1490,26 @@ def extract_patch_mask_cmd(df, patchsize, imgmaskdir, savedf, fast):
     df['savedir'] = imgmaskdir
     df['patch_size'] = patchsize
     tile_loc = all_samples.tile_loc.astype(str)
-    tile_loc = tile_loc.str.replace(' ', '').str.replace(
-        ')', '').str.replace('(', '')
+    tile_loc = tile_loc.str.replace(' ', '').str.replace(')', '').str.replace(
+        '(', '')
 
     all_samples[['row', 'col']] = tile_loc.str.split(',', expand=True)
     all_samples['img_path'] = img_mask_dir + '/' + all_samples[[
         'uid', 'row', 'col'
     ]].apply(
-        lambda x: '_'.join(x.values.tolist()),
-        axis=1) + '.img.joblib.pickle'
+        lambda x: '_'.join(x.values.tolist()), axis=1) + '.img.joblib.pickle'
 
     all_samples['mask_path'] = img_mask_dir + '/' + all_samples[[
         'uid', 'row', 'col'
     ]].apply(
-        lambda x: '_'.join(x.values.tolist()),
-        axis=1) + '.mask.joblib.pickle'
+        lambda x: '_'.join(x.values.tolist()), axis=1) + '.mask.joblib.pickle'
     if not os.path.isfile('/tmp/white.img.pickle'):
-        white_img = np.ones(
-            [patchsize, patchsize, 3], dtype=np.uint8) * 255
+        white_img = np.ones([patchsize, patchsize, 3], dtype=np.uint8) * 255
         joblib.dump(white_img, '/tmp/white.img.pickle')
 
     # Definitely not a tumor and hence all black
     if not os.path.isfile('/tmp/white.mask.pickle'):
-        white_img_mask = np.ones(
-            [patchsize, patchsize], dtype=np.uint8) * 0
+        white_img_mask = np.ones([patchsize, patchsize], dtype=np.uint8) * 0
         joblib.dump(white_img_mask, '/tmp/white.mask.pickle')
 
     all_samples.loc[all_samples.is_tissue == False,
@@ -1520,6 +1527,7 @@ def extract_patch_mask_cmd(df, patchsize, imgmaskdir, savedf, fast):
 
     all_samples.to_csv(savedf, sep='\t', index=False, header=True)
 
+
 @cli.command(
     'xmltojson',
     context_settings=CONTEXT_SETTINGS,
@@ -1535,12 +1543,12 @@ def xmltojson_cmd(infile, savedir):
     """
     xmltojson(infile, savedir)
 
+
 @cli.command(
     'validate-mask-df',
     context_settings=CONTEXT_SETTINGS,
     help='Check if all files exist in img_path and mask_path columns')
-@click.option(
-    '--df', help='Path to mask dataframe', required=True)
+@click.option('--df', help='Path to mask dataframe', required=True)
 def validate_mask_cmd(df):
     df = pd.read_table(df)
     total = len(df.index)
@@ -1550,12 +1558,13 @@ def validate_mask_cmd(df):
                 print('Fixing {}'.format(row['img_path']))
                 save_images_and_mask(row)
             pbar.update()
+
+
 @cli.command(
     'validate-segmented-df',
     context_settings=CONTEXT_SETTINGS,
     help='Check if all files exist segmented_tsv path')
-@click.option(
-    '--df', help='Path to segmented dataframe', required=True)
+@click.option('--df', help='Path to segmented dataframe', required=True)
 def validate_segmented_cmd(df):
     df = pd.read_table(df)
     total = len(df.index)

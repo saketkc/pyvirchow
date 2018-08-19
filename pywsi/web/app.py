@@ -55,29 +55,18 @@ def fig_to_uri(in_fig, close_all=True, **save_args):
         '\n', '')
     return 'data:image/png;base64,{}'.format(encoded)
 
-TUMOR_VALIDATE_SLIDES = ['tumor_005',
- 'tumor_011',
- 'tumor_031',
- 'tumor_046',
- 'tumor_065',
- 'tumor_069',
- 'tumor_079',
- 'tumor_085',
- 'tumor_097']
 
-NORMAL_VALIDATE_SLIDES = ['normal_016',
- 'normal_020',
- 'normal_030',
- 'normal_046',
- 'normal_057',
- 'normal_092',
- 'normal_097',
- 'normal_098',
- 'normal_100',
- 'normal_130',
- 'normal_136',
- 'normal_142',
- 'normal_159']
+TUMOR_VALIDATE_SLIDES = [
+    'tumor_005', 'tumor_011', 'tumor_031', 'tumor_046', 'tumor_065',
+    'tumor_069', 'tumor_079', 'tumor_085', 'tumor_097'
+]
+
+NORMAL_VALIDATE_SLIDES = [
+    'normal_016', 'normal_020', 'normal_030', 'normal_046', 'normal_057',
+    'normal_092', 'normal_097', 'normal_098', 'normal_100', 'normal_130',
+    'normal_136', 'normal_142', 'normal_159'
+]
+
 
 def get_samples_from_dir(dir):
     # Just assume all files will have tif extension
@@ -96,7 +85,12 @@ ALL_SAMPLES = get_samples_from_dir(TRAIN_TUMOR_DIR) + get_samples_from_dir(
 app = dash.Dash()
 app.layout = html.Div([
     html.Div(
-        [dcc.Dropdown(id='wsi-dropdown', options=ALL_SAMPLES, value='Select a sample')],
+        [
+            dcc.Dropdown(
+                id='wsi-dropdown',
+                options=ALL_SAMPLES,
+                value='Select a sample')
+        ],
         style={
             'width': '20%',
             'display': 'block'
@@ -286,7 +280,6 @@ def update_output_rf(slide_path):
     out_url = fig_to_uri(fig)
     plt.close('all')
     return out_url
-
 
 
 @app.callback(

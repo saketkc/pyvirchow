@@ -77,17 +77,17 @@ def label_nuclei(nuclei_stain_rgb,
         macenko_fit = MacenkoNormalization()
         macenko_fit.fit(np.asarray(nuclei_stain_rgb).astype(np.uint8))
         H_channel_v = macenko_fit.get_hematoxylin_channel(nuclei_stain_rgb)
-        nuclei_stain_rgb = H_channel_v/255.0
+        nuclei_stain_rgb = H_channel_v / 255.0
     elif normalization == 'vahadane':
         vahadane_fit = VahadaneNormalization()
         vahadane_fit.fit(np.asarray(nuclei_stain_rgb).astype(np.uint8))
         H_channel_v = vahadane_fit.get_hematoxylin_channel(nuclei_stain_rgb)
-        nuclei_stain_rgb = H_channel_v/255.0
+        nuclei_stain_rgb = H_channel_v / 255.0
     elif normalization == 'xu':
         xu_fit = XuNormalization()
         xu_fit.fit(np.asarray(nuclei_stain_rgb).astype(np.uint8))
         H_channel_v = xu_fit.get_hematoxylin_channel(nuclei_stain_rgb)
-        nuclei_stain_rgb = H_channel_v/255.0
+        nuclei_stain_rgb = H_channel_v / 255.0
 
     nuclei_stain_bw = rgb2gray(nuclei_stain_rgb)
     if thresholding == 'custom':
