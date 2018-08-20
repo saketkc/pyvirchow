@@ -35,6 +35,7 @@ from scipy.misc import imsave
 from collections import defaultdict
 import joblib
 from joblib import delayed
+from joblib import parallel_backend
 import numpy as np
 from six import iteritems
 
@@ -46,7 +47,10 @@ from PIL import Image
 click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 import pandas as pd
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+np.warnings.filterwarnings('ignore')
+
+
 COLUMNS = [
     'area', 'bbox_area', 'compactness', 'convex_area', 'eccentricity',
     'equivalent_diameter', 'extent', 'fractal_dimension',
@@ -1582,7 +1586,11 @@ def validate_segmented_cmd(df):
 
 def save_vahadane(filepaths):
     rgb_filepath, save_filepath = filepaths
-    rgb_patch = read_as_rgb(rgb_filepath)
+    if '.pickle' not in rgb_filepath:
+        rgb_patch = read_as_rgb(rgb_filepath)
+    else:
+        rgb_patch = joblib.load(rgb_filepath)
+
     vahadane_fit = VahadaneNormalization()
     vahadane_fit.fit(np.asarray(rgb_patch).astype(np.uint8))
     H_channel_v = vahadane_fit.get_hematoxylin_channel(rgb_patch)
@@ -1597,7 +1605,7 @@ def save_vahadane(filepaths):
 @click.option(
     '--savedir', help='Location to save segmented jpgs', required=True)
 def convert_to_vahadane_cmd(df, savedir):
-    aprun = ParallelExecutor(n_jobs=8)
+    aprun = ParallelExecutor(n_jobs=16)
     os.makedirs(savedir, exist_ok=True)
     df = pd.read_table(df)
     total = len(df.index)
@@ -1605,8 +1613,9 @@ def convert_to_vahadane_cmd(df, savedir):
     source_filepaths = df.img_path.tolist()
     dest_filepaths = [
         os.path.join(savedir,
-                     os.path.basename(x).replace('.png', '.jpg'))
+                     os.path.basename(x).replace('.png', '.jpg').replace('.pickle', '.jpg'))
         for x in source_filepaths
     ]
     filepaths = list(zip(source_filepaths, dest_filepaths))
-    aprun(total=total)(delayed(save_vahadane)(f) for f in filepaths)
+    with parallel_backend('threading', n_jobs=8):
+        aprun(total=total)(delayed(save_vahadane)(f) for f in filepaths)
