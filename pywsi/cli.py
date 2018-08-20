@@ -17,6 +17,7 @@ from pywsi.io.operations import read_as_rgb
 from pywsi.io.operations import WSIReader
 from pywsi.io.tiling import get_all_patches_from_slide
 from pywsi.io.tiling import save_images_and_mask, generate_tiles, generate_tiles_fast
+from pywsi.normalization import VahadaneNormalization
 
 from pywsi.morphology.patch_extractor import TissuePatch
 from pywsi.morphology.mask import get_common_interior_polygons
@@ -24,13 +25,16 @@ from tqdm import tqdm
 import warnings
 from multiprocessing import Pool
 from pywsi.segmentation import label_nuclei, summarize_region_properties
+from pywsi.misc.parallel import ParallelExecutor
 #from pywsi.deep_model.model import slide_level_map
 #from pywsi.deep_model.random_forest import random_forest
 
 from pywsi.misc import xmltojson
+from scipy.misc import imsave
 
 from collections import defaultdict
 import joblib
+from joblib import delayed
 import numpy as np
 from six import iteritems
 
@@ -1574,3 +1578,35 @@ def validate_segmented_cmd(df):
                 print('Fixing {}'.format(row['segmented_tsv']))
                 process_segmentation_fixed(row)
             pbar.update()
+
+
+def save_vahadane(filepaths):
+    rgb_filepath, save_filepath = filepaths
+    rgb_patch = read_as_rgb(rgb_filepath)
+    vahadane_fit = VahadaneNormalization()
+    vahadane_fit.fit(np.asarray(rgb_patch).astype(np.uint8))
+    H_channel_v = vahadane_fit.get_hematoxylin_channel(rgb_patch)
+    imsave(save_filepath, H_channel_v)
+
+
+@cli.command(
+    'convert-to-vahadane',
+    context_settings=CONTEXT_SETTINGS,
+    help='Check if all files exist segmented_tsv path')
+@click.option('--df', help='Path to dataframe', required=True)
+@click.option(
+    '--savedir', help='Location to save segmented jpgs', required=True)
+def convert_to_vahadane_cmd(df, savedir):
+    aprun = ParallelExecutor(n_jobs=8)
+    os.makedirs(savedir, exist_ok=True)
+    df = pd.read_table(df)
+    total = len(df.index)
+
+    source_filepaths = df.img_path.tolist()
+    dest_filepaths = [
+        os.path.join(savedir,
+                     os.path.basename(x).replace('.png', '.jpg'))
+        for x in source_filepaths
+    ]
+    filepaths = list(zip(source_filepaths, dest_filepaths))
+    aprun(total=total)(delayed(save_vahadane)(f) for f in filepaths)
