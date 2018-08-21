@@ -1592,7 +1592,10 @@ def save_vahadane(filepaths):
         rgb_patch = joblib.load(rgb_filepath)
 
     vahadane_fit = VahadaneNormalization()
-    vahadane_fit.fit(np.asarray(rgb_patch).astype(np.uint8))
+    try:
+        vahadane_fit.fit(np.asarray(rgb_patch).astype(np.uint8))
+    except:
+        pass
     H_channel_v = vahadane_fit.get_hematoxylin_channel(rgb_patch)
     imsave(save_filepath, H_channel_v)
 
