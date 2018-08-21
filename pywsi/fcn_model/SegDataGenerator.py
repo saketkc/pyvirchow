@@ -1,9 +1,21 @@
-from keras.preprocessing.image import *
+import numpy as np
+from image import apply_transform, transform_matrix_offset_center, Iterator
+from image import img_to_array, array_to_img, load_img, flip_axis, random_channel_shift
+
 from keras.applications.imagenet_utils import preprocess_input
 from keras import backend as K
 from PIL import Image
 import numpy as np
 import os
+
+
+def transform_matrix_offset_center(matrix, x, y):
+    o_x = float(x) / 2 + 0.5
+    o_y = float(y) / 2 + 0.5
+    offset_matrix = np.array([[1, 0, o_x], [0, 1, o_y], [0, 0, 1]])
+    reset_matrix = np.array([[1, 0, -o_x], [0, 1, -o_y], [0, 0, 1]])
+    transform_matrix = np.dot(np.dot(offset_matrix, matrix), reset_matrix)
+    return transform_matrix
 
 
 def center_crop(x, center_crop_size, data_format, **kwargs):
@@ -129,6 +141,7 @@ class SegDirectoryIterator(Iterator):
                  loss_shape=None):
         if data_format == 'default':
             data_format = K.image_data_format()
+        print('data_format: {}'.format(data_format))
         self.file_path = file_path
         self.data_dir = data_dir
         self.data_suffix = data_suffix
@@ -149,7 +162,7 @@ class SegDirectoryIterator(Iterator):
         self.nb_label_ch = 1
         self.loss_shape = loss_shape
 
-        if (self.label_suffix == '.npy') or (self.label_suffix == 'npy'):
+        if '.npy' in self.label_suffix:
             self.label_file_format = 'npy'
         else:
             self.label_file_format = 'img'
@@ -200,6 +213,19 @@ class SegDirectoryIterator(Iterator):
             self.label_files.append(line + label_suffix)
         super(SegDirectoryIterator, self).__init__(self.nb_sample, batch_size,
                                                    shuffle, seed)
+
+    def next(self):
+        """For python 2.x.
+        Returns:
+            The next batch.
+        """
+        # Keeps under lock only the mechanism which advances
+        # the indexing of each batch.
+        with self.lock:
+            index_array = next(self.index_generator)
+            # The transformation of images is not under thread lock
+            # so it can be done in parallel
+        return self._get_batches_of_transformed_samples(index_array)
 
     def _get_batches_of_transformed_samples(self, index_array):
         """Gets a batch of transformed samples.
@@ -290,8 +316,9 @@ class SegDirectoryIterator(Iterator):
                                 Image.NEAREST),
                             data_format=self.data_format).astype(int)
                     else:
-                        print(
-                            'ERROR: resize not implemented for label npy file')
+                        pass
+                        #print(
+                        #    'ERROR: resize not implemented for label npy file')
 
             if self.target_size is None:
                 batch_x = np.zeros((current_batch_size, ) + x.shape)
@@ -301,7 +328,7 @@ class SegDirectoryIterator(Iterator):
                 else:
                     batch_y = np.zeros((current_batch_size, ) + y.shape)
 
-            x, y = self.seg_data_generator.random_transform(x, y)
+            #x, y = self.seg_data_generator.random_transform(x, y)
             x = self.seg_data_generator.standardize(x)
 
             if self.ignore_label:
@@ -309,6 +336,8 @@ class SegDirectoryIterator(Iterator):
 
             if self.loss_shape is not None:
                 y = np.reshape(y, self.loss_shape)
+            else:
+                y = np.reshape(y, (y.shape[0], y.shape[1], 1))
 
             batch_x[i] = x
             batch_y[i] = y
@@ -366,6 +395,7 @@ class SegDataGenerator(object):
                  data_format='default'):
         if data_format == 'default':
             data_format = K.image_data_format()
+        print('data_format: {}'.format(data_format))
         self.__dict__.update(locals())
         self.mean = None
         self.ch_mean = None

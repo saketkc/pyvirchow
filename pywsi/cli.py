@@ -50,7 +50,6 @@ import pandas as pd
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 np.warnings.filterwarnings('ignore')
 
-
 COLUMNS = [
     'area', 'bbox_area', 'compactness', 'convex_area', 'eccentricity',
     'equivalent_diameter', 'extent', 'fractal_dimension',
@@ -1615,9 +1614,10 @@ def convert_to_vahadane_cmd(df, savedir):
 
     source_filepaths = df.img_path.tolist()
     dest_filepaths = [
-        os.path.join(savedir,
-                     os.path.basename(x).replace('.png', '.jpg').replace('.pickle', '.jpg'))
-        for x in source_filepaths
+        os.path.join(
+            savedir,
+            os.path.basename(x).replace('.png', '.jpg').replace(
+                '.pickle', '.jpg')) for x in source_filepaths
     ]
     filepaths = list(zip(source_filepaths, dest_filepaths))
     with parallel_backend('threading', n_jobs=8):

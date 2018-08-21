@@ -10,14 +10,14 @@ from keras.layers import *
 from keras.engine import Layer
 from keras.applications.vgg16 import *
 from keras.models import *
-from keras.applications.imagenet_utils import _obtain_input_shape
+from keras_applications.imagenet_utils import _obtain_input_shape
 import keras.backend as K
 import tensorflow as tf
 
-#from utils.get_weights_path import *
-#from utils.basics import *
-#from utils.resnet_helpers import *
-from .BilinearUpSampling import *
+from get_weights_path import *
+from basics import *
+from resnet_helpers import *
+from BilinearUpSampling import *
 
 
 def top(x, input_shape, classes, activation, weight_decay):
@@ -530,7 +530,7 @@ def AtrousFCN_Resnet50_16s(input_shape=None,
             '~',
             '.keras/models/fcn_resnet50_weights_tf_dim_ordering_tf_kernels.h5')
     )
-    model.load_weights(weights_path, by_name=True)
+    #model.load_weights(weights_path, by_name=True)
     return model
 
 
