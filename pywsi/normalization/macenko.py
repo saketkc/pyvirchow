@@ -98,7 +98,7 @@ class MacenkoNormalization(object):
         OD = (OD[(OD > self.beta).any(axis=1), :])
         self.OD = OD
         # do-PCA
-        OD_cov = np.cov(OD, rowvar=False)
+        OD_cov = np.cov(OD, rowvar=False) + 1e-6
         w, v = LA.eigh(OD_cov)
         # Project OD into first two directions
         v_first_two = v[:, [1, 2]]

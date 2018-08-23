@@ -7,7 +7,7 @@ from numpy import linalg as LA
 def RGB2OD(image):
     """Convert Intensities to Optical Density"""
     assert np.issubdtype(image.dtype, np.uint8)
-    image[np.where(image == 0)] = 1
+    image[np.where(image <= 0)] = 1
     return (-np.log(image / 255.0))
 
 

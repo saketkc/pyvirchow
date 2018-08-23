@@ -31,6 +31,7 @@ from pywsi.misc.parallel import ParallelExecutor
 
 from pywsi.misc import xmltojson
 from scipy.misc import imsave
+from skimage.color import rgb2hsv
 
 from collections import defaultdict
 import joblib
@@ -959,7 +960,11 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
     df['savedir'] = savedir
     df['patch_size'] = patchsize
     records = df.reset_index().to_dict('records')
+    aprun = ParallelExecutor(n_jobs=32)
+    total = len(records)
+    returned_data = aprun(total=total)(delayed(save_images_and_mask)(f) for f in records)
 
+    """
     with tqdm(total=len(df.index)) as pbar:
         with Pool(processes=8) as p:
             for idx, img_path, mask_path in p.imap_unordered(
@@ -967,7 +972,8 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
                 df_copy.loc[idx, 'img_path'] = img_path
                 df_copy.loc[idx, 'mask_path'] = mask_path
                 pbar.update()
-    df_copy.to_csv(savedf, sep='\t', index=False, header=True)
+    """
+    #df_copy.to_csv(savedf, sep='\t', index=False, header=True)
 
 
 def process_segmentation_both(data):
@@ -1585,11 +1591,16 @@ def validate_segmented_cmd(df):
 
 def save_vahadane(filepaths):
     rgb_filepath, save_filepath = filepaths
+    print('Using: {}'.format(rgb_filepath))
     if '.pickle' not in rgb_filepath:
         rgb_patch = read_as_rgb(rgb_filepath)
     else:
         rgb_patch = joblib.load(rgb_filepath)
-
+    hsv_patch = rgb2hsv(rgb_patch)
+    low_red = np.array([20, 20, 20])
+    higher_red = np.array([200, 200, 200])
+    hsv_patch_avg = np.mean(hsv_patch, axis=0)
+    print(hsv_patch_avg)
     vahadane_fit = VahadaneNormalization()
     try:
         vahadane_fit.fit(np.asarray(rgb_patch).astype(np.uint8))
@@ -1620,5 +1631,5 @@ def convert_to_vahadane_cmd(df, savedir):
                 '.pickle', '.jpg')) for x in source_filepaths
     ]
     filepaths = list(zip(source_filepaths, dest_filepaths))
-    with parallel_backend('threading', n_jobs=8):
+    with parallel_backend('threading', n_jobs=20):
         aprun(total=total)(delayed(save_vahadane)(f) for f in filepaths)
