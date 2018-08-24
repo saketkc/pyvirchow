@@ -960,7 +960,7 @@ def extract_patch_mask_cmd(df, patchsize, savedir, savedf):
     df['savedir'] = savedir
     df['patch_size'] = patchsize
     records = df.reset_index().to_dict('records')
-    aprun = ParallelExecutor(n_jobs=32)
+    aprun = ParallelExecutor(n_jobs=100)
     total = len(records)
     returned_data = aprun(total=total)(delayed(save_images_and_mask)(f) for f in records)
 
@@ -1597,10 +1597,14 @@ def save_vahadane(filepaths):
     else:
         rgb_patch = joblib.load(rgb_filepath)
     hsv_patch = rgb2hsv(rgb_patch)
-    low_red = np.array([20, 20, 20])
-    higher_red = np.array([200, 200, 200])
-    hsv_patch_avg = np.mean(hsv_patch, axis=0)
-    print(hsv_patch_avg)
+    low_red = np.array([20/180, 20/255, 20/255])
+    higher_red = np.array([200/255, 200/255, 200/255])
+    hsv_patch_avg = np.mean(hsv_patch, axis=(0,1))
+    low_diff = hsv_patch_avg - low_red
+    high_diff = higher_red - hsv_patch_avg
+
+    if (rgb_patch > 200).all():
+        return
     vahadane_fit = VahadaneNormalization()
     try:
         vahadane_fit.fit(np.asarray(rgb_patch).astype(np.uint8))

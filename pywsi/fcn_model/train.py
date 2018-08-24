@@ -227,7 +227,8 @@ if __name__ == '__main__':
     label_cval = 255
 
     class_weight = None
-    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+    #config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+    config = tf.ConfigProto(device_count={'GPU': 2})
     session = tf.Session(config=config)
     K.set_session(session)
     train(
