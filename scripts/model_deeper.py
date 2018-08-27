@@ -22,6 +22,21 @@ from keras.layers import *
 
 from pywsi.io.tiling import generate_tiles, generate_tiles_fast
 
+def softmax_sparse_crossentropy_ignoring_last_label(y_true, y_pred):
+    y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))
+    log_softmax = tf.nn.log_softmax(y_pred)
+
+    y_true = K.one_hot(
+        tf.to_int32(K.flatten(y_true)),
+        K.int_shape(y_pred)[-1] + 1)
+    unpacked = tf.unstack(y_true, axis=-1)
+    y_true = tf.stack(unpacked[:-1], axis=-1)
+
+    cross_entropy = -K.sum(y_true * log_softmax, axis=1)
+    cross_entropy_mean = K.mean(cross_entropy)
+
+    return cross_entropy_mean
+
 
 def resize_images_bilinear(X,
                            height_factor=1,
@@ -145,18 +160,18 @@ model = Sequential()
 
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(256, 256, 3)))
 model.add(
-    Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1'))
+    Conv2D(64, (3, 3), activation='elu', padding='same', name='block1_conv1'))
 model.add(
-    Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2'))
+    Conv2D(64, (3, 3), activation='elu', padding='same', name='block1_conv2'))
 model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool'))
 
 # Block 2
 model.add(
     Conv2D(
-        128, (3, 3), activation='relu', padding='same', name='block2_conv1'))
+        128, (3, 3), activation='elu', padding='same', name='block2_conv1'))
 model.add(
     Conv2D(
-        128, (3, 3), activation='relu', padding='same', name='block2_conv2'))
+        128, (3, 3), activation='elu', padding='same', name='block2_conv2'))
 
 model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool'))
 
@@ -165,7 +180,7 @@ model.add(
     Conv2D(
         256,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block3_conv1',
     ))
@@ -173,7 +188,7 @@ model.add(
     Conv2D(
         256,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block3_conv2',
     ))
@@ -181,7 +196,7 @@ model.add(
     Conv2D(
         256,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block3_conv3',
     ))
@@ -192,7 +207,7 @@ model.add(
     Conv2D(
         512,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block4_conv1',
     ))
@@ -200,7 +215,7 @@ model.add(
     Conv2D(
         512,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block4_conv2',
     ))
@@ -208,18 +223,19 @@ model.add(
     Conv2D(
         512,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block4_conv3',
     ))
 model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool'))
+model.add(Dropout(0.5))
 
 # Block 5
 model.add(
     Conv2D(
         512,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block5_conv1',
     ))
@@ -227,7 +243,7 @@ model.add(
     Conv2D(
         512,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block5_conv2',
     ))
@@ -235,18 +251,19 @@ model.add(
     Conv2D(
         512,
         (3, 3),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='block5_conv3',
     ))
 model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool'))
+model.add(Dropout(0.5))
 
 # Convolutional layers transfered from fully-connected layers
 model.add(
     Conv2D(
         4096,
         (7, 7),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='fc1',
     ))
@@ -255,7 +272,7 @@ model.add(
     Conv2D(
         4096,
         (1, 1),
-        activation='relu',
+        activation='elu',
         padding='same',
         name='fc2',
     ))
@@ -271,14 +288,19 @@ model.add(
         strides=(1, 1),
     ))
 
-#model.add(
-#    Conv2DTranspose(
-#        2, (32, 32), strides=(16, 16), activation='softmax', padding='same'))
+model.add(
+    Conv2DTranspose(
+        2, (64, 64), strides=(32, 32), activation='softmax', padding='same'))
 
-model.add(BilinearUpSampling2D(target_size=(256, 256,2)))
+#model.add(BilinearUpSampling2D(target_size=(256, 256,2)))
+#    o = Conv2DTranspose( nClasses , kernel_size=(8,8) ,  strides=(8,8) , use_bias=False, data_format=IMAGE_ORDERING  )(o)
+#        o = (Activation('softmax'))(o)
+
 opt = Adam(lr=1e-6)  # nesterov=True)
-model.compile(
-    loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+opt = SGD(lr=1E-2, decay=5**(-4), momentum=0.9, nesterov=True)
+
+model.compile(loss='categorical_crossentropy',
+              optimizer=opt, metrics=['accuracy'])
 print(model.summary())
 #model.load_weights('./allsamples-keras-improvement-03-0.62.hdf')
 # In[3]:

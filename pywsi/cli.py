@@ -1232,7 +1232,6 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
         basename = path_leaf(wsi).replace('.tif', '')
         #if basename!= 'tumor_110':
         #    continue
-        print(basename)
         if jsondir:
             json_filepath = os.path.join(jsondir, basename + '.json')
             if not os.path.isfile(json_filepath):
@@ -1247,7 +1246,6 @@ def create_tumor_map_cmd(indir, jsondir, imgmaskdir, modelf, patchsize,
             continue
         all_samples = get_all_patches_from_slide(wsi, json_filepath, False,
                                                  patchsize)
-        print(all_samples.head())
         if 'img_path' not in all_samples.columns:
             assert imgmaskdir is not None, 'Need to provide directory if img_path column is missing'
             tile_loc = all_samples.tile_loc.astype(str)
@@ -1591,7 +1589,6 @@ def validate_segmented_cmd(df):
 
 def save_vahadane(filepaths):
     rgb_filepath, save_filepath = filepaths
-    print('Using: {}'.format(rgb_filepath))
     if '.pickle' not in rgb_filepath:
         rgb_patch = read_as_rgb(rgb_filepath)
     else:
