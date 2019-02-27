@@ -12,6 +12,7 @@ def sparse_accuracy_ignoring_last_label(y_true, y_pred):
     y_true = tf.stack(unpacked[:-1], axis=-1)
 
     return K.sum(
-        tf.to_float(legal_labels & K.equal(
-            K.argmax(y_true, axis=-1), K.argmax(y_pred, axis=-1)))) / K.sum(
-                tf.to_float(legal_labels))
+        tf.to_float(
+            legal_labels & K.equal(K.argmax(y_true, axis=-1), K.argmax(y_pred, axis=-1))
+        )
+    ) / K.sum(tf.to_float(legal_labels))

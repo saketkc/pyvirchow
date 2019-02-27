@@ -8,7 +8,7 @@ def RGB2OD(image):
     """Convert Intensities to Optical Density"""
     assert np.issubdtype(image.dtype, np.uint8)
     image[np.where(image <= 0)] = 1
-    return (-np.log(image / 255.0))
+    return -np.log(image / 255.0)
 
 
 def OD2RGB(OD):
@@ -62,7 +62,7 @@ def get_nonwhite_mask(rgb_image, threshold=0.8):
     lab_image = rgb2lab(rgb_image)
     L = lab_image[:, :, 0]
     L_scaled = L / 255.0
-    return (L_scaled < threshold)
+    return L_scaled < threshold
 
 
 def normalize_rows(X, ord=1):

@@ -1,12 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-#import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 import numpy as np
 import skimage.measure
 
 from ._max_clustering_cython import _max_clustering_cython
+
 """
 This and _max_clustering_cython.pyx moudles are courtesy of
 https://github.com/DigitalSlideArchive/HistomicsTK/tree/master/histomicstk
@@ -58,8 +55,7 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
     """
 
     # find local maxima of all foreground pixels
-    mval, mind = _max_clustering_cython(im_response,
-                                        im_fgnd_mask.astype(np.int32), r)
+    mval, mind = _max_clustering_cython(im_response, im_fgnd_mask.astype(np.int32), r)
     # identify connected regions of local maxima and define their seeds
     im_label = skimage.measure.label(im_fgnd_mask & (im_response == mval))
 
@@ -74,15 +70,13 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
     obj_props = skimage.measure.regionprops(im_label, im_response_nmzd)
 
     obj_props = [
-        prop for prop in obj_props
-        if np.isfinite(prop.weighted_centroid).all()
+        prop for prop in obj_props if np.isfinite(prop.weighted_centroid).all()
     ]
 
     num_labels = len(obj_props)
 
     # extract object seeds
-    seeds = np.array(
-        [obj_props[i].weighted_centroid for i in range(num_labels)])
+    seeds = np.array([obj_props[i].weighted_centroid for i in range(num_labels)])
     seeds = np.round(seeds).astype(np.int)
 
     # fix seeds outside the object region - happens for non-convex objects
@@ -106,8 +100,7 @@ def max_clustering(im_response, im_fgnd_mask, r=10):
 
     # get seed responses
 
-    assert im_response.shape[1] >= 1, 'im_response.shape: {}'.format(
-        im_response.shape)
+    assert im_response.shape[1] >= 1, "im_response.shape: {}".format(im_response.shape)
 
     try:
         max_response = im_response[seeds[:, 0], seeds[:, 1]]

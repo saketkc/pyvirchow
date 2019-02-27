@@ -11,9 +11,7 @@ def softmax_sparse_crossentropy_ignoring_last_label(y_true, y_pred):
     y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))
     log_softmax = tf.nn.log_softmax(y_pred)
 
-    y_true = K.one_hot(
-        tf.to_int32(K.flatten(y_true)),
-        K.int_shape(y_pred)[-1] + 1)
+    y_true = K.one_hot(tf.to_int32(K.flatten(y_true)), K.int_shape(y_pred)[-1] + 1)
     unpacked = tf.unstack(y_true, axis=-1)
     y_true = tf.stack(unpacked[:-1], axis=-1)
 
@@ -28,5 +26,5 @@ def softmax_sparse_crossentropy_ignoring_last_label(y_true, y_pred):
 # tensorlow only
 def binary_crossentropy_with_logits(ground_truth, predictions):
     return K.mean(
-        K.binary_crossentropy(ground_truth, predictions, from_logits=True),
-        axis=-1)
+        K.binary_crossentropy(ground_truth, predictions, from_logits=True), axis=-1
+    )

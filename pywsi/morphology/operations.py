@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -23,7 +18,7 @@ from skimage.measure import label, regionprops
 from skimage.segmentation import clear_border
 
 
-def get_channel_hsv(hsv_image, channel='saturation'):
+def get_channel_hsv(hsv_image, channel="saturation"):
     """Get only particular channel values from hsv image
 
 
@@ -35,15 +30,14 @@ def get_channel_hsv(hsv_image, channel='saturation'):
     channel: string
              'hue'/'saturation'/'value'
     """
-    assert channel in ['hue', 'saturation',
-                       'value'], "Unkown channel specified"
-    if channel == 'hue':
+    assert channel in ["hue", "saturation", "value"], "Unkown channel specified"
+    if channel == "hue":
         return hsv_image[:, :, 0]
 
-    if channel == 'saturation':
+    if channel == "saturation":
         return hsv_image[:, :, 1]
 
-    if channel == 'value':
+    if channel == "value":
         return hsv_image[:, :, 2]
 
 
@@ -181,11 +175,13 @@ def close_open(image, open_kernel_size=5, close_kernel_size=5, use_disk=True):
     return opened
 
 
-def otsu_thresholding(rgb_image,
-                      channel='saturation',
-                      open_kernel_size=5,
-                      close_kernel_size=5,
-                      use_disk=True):
+def otsu_thresholding(
+    rgb_image,
+    channel="saturation",
+    open_kernel_size=5,
+    close_kernel_size=5,
+    use_disk=True,
+):
     """Perform OTSU thresholding followed by closing-then-opening
 
     rgb_image: np.uint8
@@ -203,11 +199,12 @@ def otsu_thresholding(rgb_image,
     hsv_image = np.array(hsv_image)
     hsv_ch = get_channel_hsv(hsv_image, channel)
     otsu = threshold_otsu(hsv_ch)
-    thresholded = (hsv_ch > otsu)
+    thresholded = hsv_ch > otsu
 
-    close_then_open = close_open(thresholded, open_kernel_size,
-                                 close_kernel_size, use_disk)
-    assert close_then_open.dtype == bool, 'Mask not boolean'
+    close_then_open = close_open(
+        thresholded, open_kernel_size, close_kernel_size, use_disk
+    )
+    assert close_then_open.dtype == bool, "Mask not boolean"
     return close_then_open
 
 
@@ -247,7 +244,8 @@ def plot_contours(bw_image, rgb_image, ax=None):
               Input
     """
     image_label_overlay, bounding_boxes = contours_and_bounding_boxes(
-        bw_image, rgb_image)
+        bw_image, rgb_image
+    )
     if not ax:
         fig, ax = plt.subplots(figsize=(10, 6))
     else:
@@ -255,7 +253,8 @@ def plot_contours(bw_image, rgb_image, ax=None):
     ax.imshow(rgb_image)
     for xy, width, height in bounding_boxes:
         rect = mpatches.Rectangle(
-            xy, width, height, fill=False, edgecolor='red', linewidth=2)
+            xy, width, height, fill=False, edgecolor="red", linewidth=2
+        )
         ax.add_patch(rect)
     ax.set_axis_off()
     fig.tight_layout()

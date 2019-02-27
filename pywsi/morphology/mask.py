@@ -28,10 +28,8 @@ def mpl_polygon_to_shapely_scaled(polygon, x0=0, y0=0, scale_factor=1):
     xy = polygon.get_xy()
     shapely_polygon = shapelyPolygon(xy)
     return scale(
-        shapely_polygon,
-        xfact=scale_factor,
-        yfact=scale_factor,
-        origin=(x0, y0))
+        shapely_polygon, xfact=scale_factor, yfact=scale_factor, origin=(x0, y0)
+    )
 
 
 def mpl_rect_to_shapely_scaled(rectangle, x0=0, y0=0, scale_factor=1):
@@ -78,8 +76,7 @@ def get_common_interior_polygons(polygon, list_of_polygons):
     list_of_common_polygons = []
     for index, outside_polygon in enumerate(list_of_polygons):
         if isinstance(outside_polygon, Polygon):
-            outside_polygon = shapelyPolygon(
-                outside_polygon.get_xy()).buffer(0)
+            outside_polygon = shapelyPolygon(outside_polygon.get_xy()).buffer(0)
         if polygon.is_valid and outside_polygon.is_valid:
             if polygon.within(outside_polygon):
                 list_of_common_polygons.append(index)

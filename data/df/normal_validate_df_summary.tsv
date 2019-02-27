@@ -1,3 +1,2 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3c8c2ff6cc99d6eda7a278c16790fea81c4b28899707bd7ac79ae4db7ef8dc61
-size 131
+count	mean	std	min	25%	50%	75%	max	total
+13.0	20053.923076923078	13488.247436574418	2966.0	8735.0	16560.0	30871.0	41933.0	260701.0

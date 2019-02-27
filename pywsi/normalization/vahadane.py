@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import spams
 
 from .macenko import MacenkoNormalization
@@ -32,18 +27,19 @@ class VahadaneNormalization(MacenkoNormalization):
         OD = OD.reshape((-1, 3))
         if self.maskout_white:
             nonwhite_mask = get_nonwhite_mask(
-                source_image, self.nonwhite_threshold).reshape((-1, ))
+                source_image, self.nonwhite_threshold
+            ).reshape((-1,))
             OD = OD[nonwhite_mask]
-        OD = (OD[(OD > self.beta).any(axis=1), :])
+        OD = OD[(OD > self.beta).any(axis=1), :]
         self.OD = OD
         param = {
-            'K': 2,
-            'lambda1': self.lambda1,
-            'mode': 2,
-            'modeD': 0,
-            'posD': True,
-            'posAlpha': True,
-            'verbose': False
+            "K": 2,
+            "lambda1": self.lambda1,
+            "mode": 2,
+            "modeD": 0,
+            "posD": True,
+            "posAlpha": True,
+            "verbose": False,
         }
         stain_matrix = spams.trainDL(OD.T, **param).T
         if stain_matrix[0, 0] < stain_matrix[1, 0]:

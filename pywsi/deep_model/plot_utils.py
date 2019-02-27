@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -31,9 +26,9 @@ def plot_input_mask_grid(X, Y):
     for i in range(0, 2 * x_size - 1):
         ax[i].imshow(X[i])
         ax[i + 1].imshow(Y[i])
-        ax[i].axis('off')
-        ax[i + 1].axis('off')
-    f.set_title('NoTruth Masks 32x256x256x1')
+        ax[i].axis("off")
+        ax[i + 1].axis("off")
+    f.set_title("NoTruth Masks 32x256x256x1")
     return f, axes
 
 
@@ -60,27 +55,21 @@ def plot_blend(patch, prediction, ax, alpha=0.75):
     Z1 = rgb2gray(patch)
     Z2 = prediction
 
-    im1 = ax.imshow(Z1, cmap='gray', extent=extent)
-    im2 = ax.imshow(
-        Z2, cmap='coolwarm', alpha=alpha, vmin=0.0, vmax=1.0, extent=extent)
+    im1 = ax.imshow(Z1, cmap="gray", extent=extent)
+    im2 = ax.imshow(Z2, cmap="coolwarm", alpha=alpha, vmin=0.0, vmax=1.0, extent=extent)
 
-    #plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
+    # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
     divider = make_axes_locatable(ax)
     fig = ax.get_figure()
-    cax = divider.append_axes('right', size='5%', pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
     cbar = fig.colorbar(im2, cax=cax)
-    cbar.set_label(
-        'Probability of pixel being a tumor', weight='bold', fontsize=12)
+    cbar.set_label("Probability of pixel being a tumor", weight="bold", fontsize=12)
     cbar.ax.tick_params(labelsize=12)
-    ax.axis('off')
+    ax.axis("off")
     return ax
 
 
-def plot_patch_with_pred(patch,
-                         truth=None,
-                         prediction=None,
-                         title_str='',
-                         alpha=0.6):
+def plot_patch_with_pred(patch, truth=None, prediction=None, title_str="", alpha=0.6):
     """
 
     Parameters
@@ -102,21 +91,21 @@ def plot_patch_with_pred(patch,
     axc = plt.subplot(gs[:, 3])
 
     ax0.imshow(patch)
-    ax0.set_title('Original')
+    ax0.set_title("Original")
 
     if truth:
-        ax1.imshow(truth.argmax(axis=2), cmap='gray', vmin=0, vmax=1)
-        ax1.set_title('Truth mask (white=tumor, black=normal)')
+        ax1.imshow(truth.argmax(axis=2), cmap="gray", vmin=0, vmax=1)
+        ax1.set_title("Truth mask (white=tumor, black=normal)")
 
-    p = ax2.imshow(prediction, cmap='coolwarm', vmin=0, vmax=1)
-    ax2.set_title('Prediction heatmap')
+    p = ax2.imshow(prediction, cmap="coolwarm", vmin=0, vmax=1)
+    ax2.set_title("Prediction heatmap")
 
-    ax3.imshow((prediction > 0.5).astype(np.int), cmap='gray', vmin=0, vmax=1)
-    ax3.set_title('Prediction mask (white=tumor, black=normal)')
+    ax3.imshow((prediction > 0.5).astype(np.int), cmap="gray", vmin=0, vmax=1)
+    ax3.set_title("Prediction mask (white=tumor, black=normal)")
 
     plot_blend(patch, prediction, ax4, alpha)
-    ax4.set_title('Original+Prediction blend')
+    ax4.set_title("Original+Prediction blend")
 
     fig.suptitle(title_str)
-    fig.colorbar(p, cax=axc, orientation='vertical')
-    axc.set_title('Probability pixel is tumor')
+    fig.colorbar(p, cax=axc, orientation="vertical")
+    axc.set_title("Probability pixel is tumor")

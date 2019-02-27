@@ -47,8 +47,7 @@ def collapse_small_area(labelled_image, minimum_area):
     collapsed_image = labelled_image.copy()
     collapsed_image = collapse_labels(collapsed_image)
 
-    pixel_count, edges = np.histogram(
-        collapsed_image, bins=collapsed_image.max() + 1)
+    pixel_count, edges = np.histogram(collapsed_image, bins=collapsed_image.max() + 1)
     positions = ms.find_objects(collapsed_image)
     for i in range(1, pixel_count.size):
         if pixel_count[i] < minimum_area:

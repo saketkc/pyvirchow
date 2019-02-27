@@ -9,71 +9,74 @@ from keras.objectives import *
 from keras.metrics import binary_accuracy
 from keras.models import load_model
 import keras.backend as K
-#import keras.utils.visualize_util as vis_util
-from models import *
-from loss_function import *
-from metrics import *
-from SegDataGenerator import *
+
+# import keras.utils.visualize_util as vis_util
+from .models import *
+from .loss_function import *
+from .metrics import *
+from .SegDataGenerator import *
 import time
 
 
-def train(batch_size,
-          epochs,
-          lr_base,
-          lr_power,
-          weight_decay,
-          classes,
-          model_name,
-          train_file_path,
-          val_file_path,
-          data_dir,
-          label_dir,
-          val_data_dir,
-          val_label_dir,
-          target_size=None,
-          batchnorm_momentum=0.9,
-          resume_training=False,
-          class_weight=None,
-          dataset='VOC2012',
-          loss_fn=softmax_sparse_crossentropy_ignoring_last_label,
-          metrics=[sparse_accuracy_ignoring_last_label],
-          loss_shape=None,
-          label_suffix='.png',
-          data_suffix='.jpg',
-          ignore_label=255,
-          label_cval=255):
+def train(
+    batch_size,
+    epochs,
+    lr_base,
+    lr_power,
+    weight_decay,
+    classes,
+    model_name,
+    train_file_path,
+    val_file_path,
+    data_dir,
+    label_dir,
+    val_data_dir,
+    val_label_dir,
+    target_size=None,
+    batchnorm_momentum=0.9,
+    resume_training=False,
+    class_weight=None,
+    dataset="VOC2012",
+    loss_fn=softmax_sparse_crossentropy_ignoring_last_label,
+    metrics=[sparse_accuracy_ignoring_last_label],
+    loss_shape=None,
+    label_suffix=".png",
+    data_suffix=".jpg",
+    ignore_label=255,
+    label_cval=255,
+):
     if target_size:
-        input_shape = target_size + (3, )
+        input_shape = target_size + (3,)
     else:
         input_shape = (None, None, 3)
-    batch_shape = (batch_size, ) + input_shape
+    batch_shape = (batch_size,) + input_shape
 
     ###########################################################
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    save_path = os.path.join(current_dir, 'Models/' + model_name)
+    save_path = os.path.join(current_dir, "Models/" + model_name)
     os.makedirs(save_path, exist_ok=True)
     if os.path.exists(save_path) is False:
         os.mkdir(save_path)
 
-    mode = 'power_decay'
+    mode = "power_decay"
 
     # ###############learning rate scheduler####################
     def lr_scheduler(epoch, lr):
-        '''if lr_dict.has_key(epoch):
+        """if lr_dict.has_key(epoch):
             lr = lr_dict[epoch]
-            print 'lr: %f' % lr'''
-        print(epoch, mode)
-        if mode == 'power_decay':
+            print 'lr: %f' % lr"""
+        print((epoch, mode))
+        if mode == "power_decay":
             # original lr scheduler
-            lr = lr * ((1 - float(epoch) / epochs)**lr_power)
-        if mode == 'exp_decay':
+            lr = lr * ((1 - float(epoch) / epochs) ** lr_power)
+        if mode == "exp_decay":
             # exponential decay
-            lr = (float(lr)**float(lr_power))**float(epoch + 1)
+            lr = (float(lr) ** float(lr_power)) ** float(epoch + 1)
         # adam default lr
-        if mode == 'adam':
+        if mode == "adam":
             lr = 0.001
 
-        if mode == 'progressive_drops':
+        if mode == "progressive_drops":
             # drops as progression proceeds, good for sgd
             if epoch > 0.9 * epochs:
                 lr = 0.0001
@@ -84,19 +87,20 @@ def train(batch_size,
             else:
                 lr = 0.1
 
-        print('lr: %f' % lr)
+        print(("lr: %f" % lr))
         return lr
 
     scheduler = LearningRateScheduler(lr_scheduler)
 
     # ###################### make model ########################
-    checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
+    checkpoint_path = os.path.join(save_path, "checkpoint_weights.hdf5")
 
     model = globals()[model_name](
         weight_decay=weight_decay,
         input_shape=input_shape,
         batch_momentum=batchnorm_momentum,
-        classes=classes)
+        classes=classes,
+    )
 
     # ###################### optimizer ########################
     optimizer = SGD(lr=lr_base, momentum=0.9)
@@ -107,7 +111,7 @@ def train(batch_size,
         model.load_weights(checkpoint_path, by_name=True)
     model_path = os.path.join(save_path, "model.json")
     # save model structure
-    f = open(model_path, 'w')
+    f = open(model_path, "w")
     model_json = model.to_json()
     f.write(model_json)
     f.close
@@ -122,27 +126,29 @@ def train(batch_size,
     callbacks = [scheduler]
 
     # ####################### tfboard ###########################
-    #if K.backend() == 'tensorflow':
+    # if K.backend() == 'tensorflow':
     #    tensorboard = TensorBoard(log_dir=os.path.join(save_path, 'logs'), histogram_freq=10, write_graph=True)
     #    callbacks.append(tensorboard)
     # ################### checkpoint saver#######################
     checkpoint = ModelCheckpoint(
-        filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'),
-        save_weights_only=True)  #.{epoch:d}
+        filepath=os.path.join(save_path, "checkpoint_weights.hdf5"),
+        save_weights_only=True,
+    )  # .{epoch:d}
     callbacks.append(checkpoint)
     # set data generator and train
     train_datagen = SegDataGenerator(
         zoom_range=[0.5, 2.0],
         zoom_maintain_shape=True,
-        crop_mode='none',
+        crop_mode="none",
         crop_size=target_size,
         # pad_size=(505, 505),
-        rotation_range=0.,
+        rotation_range=0.0,
         shear_range=0,
         horizontal_flip=True,
-        channel_shift_range=20.,
-        fill_mode='constant',
-        label_cval=label_cval)
+        channel_shift_range=20.0,
+        fill_mode="constant",
+        label_cval=label_cval,
+    )
     val_datagen = SegDataGenerator()
 
     def get_file_len(file_path):
@@ -153,8 +159,7 @@ def train(batch_size,
 
     # from Keras documentation: Total number of steps (batches of samples) to yield from generator before declaring one epoch finished
     # and starting the next epoch. It should typically be equal to the number of unique samples of your dataset divided by the batch size.
-    steps_per_epoch = int(
-        np.ceil(get_file_len(train_file_path) / float(batch_size)))
+    steps_per_epoch = int(np.ceil(get_file_len(train_file_path) / float(batch_size)))
 
     history = model.fit_generator(
         generator=train_datagen.flow_from_directory(
@@ -165,7 +170,7 @@ def train(batch_size,
             label_suffix=label_suffix,
             classes=classes,
             target_size=target_size,
-            color_mode='rgb',
+            color_mode="rgb",
             batch_size=batch_size,
             shuffle=True,
             loss_shape=loss_shape,
@@ -179,56 +184,58 @@ def train(batch_size,
         validation_data=val_datagen.flow_from_directory(
             file_path=val_file_path,
             data_dir=val_data_dir,
-            data_suffix='.img.joblib.jpg',
+            data_suffix=".img.joblib.jpg",
             label_dir=val_label_dir,
-            label_suffix='.mask.joblib.npy',
+            label_suffix=".mask.joblib.npy",
             classes=classes,
             target_size=target_size,
-            color_mode='rgb',
+            color_mode="rgb",
             batch_size=batch_size,
-            shuffle=False),
+            shuffle=False,
+        ),
         nb_val_samples=64,
-        class_weight=class_weight)
+        class_weight=class_weight,
+    )
 
-    model.save_weights(save_path + '/model.hdf5')
+    model.save_weights(save_path + "/model.hdf5")
 
 
-if __name__ == '__main__':
-    model_name = 'AtrousFCN_Resnet50_16s'
-    #model_name = 'Atrous_DenseNet'
-    #model_name = 'DenseNet_FCN'
+if __name__ == "__main__":
+    model_name = "AtrousFCN_Resnet50_16s"
+    # model_name = 'Atrous_DenseNet'
+    # model_name = 'DenseNet_FCN'
     batch_size = 16
     batchnorm_momentum = 0.95
     epochs = 250
     lr_base = 0.01 * (float(batch_size) / 16)
     lr_power = 0.9
     resume_training = False
-    if model_name is 'AtrousFCN_Resnet50_16s':
+    if model_name is "AtrousFCN_Resnet50_16s":
         weight_decay = 0.0001 / 2
     else:
         weight_decay = 1e-4
     target_size = (256, 256)
-    train_file_path = '/home/saketkc/github/pyvirchow/data/txt/train_images.txt'
-    val_file_path = '/home/saketkc/github/pyvirchow/data/txt/validate_images.txt'
-    data_dir = '/mnt/disks/data/histopath_data/pyvirchow-out-df-patches/'
-    label_dir = '/mnt/disks/data/histopath_data/pyvirchow-out-df-patches/'
-    val_data_dir = '/mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate6/'
-    val_label_dir = '/mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate6/'
-    data_suffix = '.jpg'
-    label_suffix = '.png'
+    train_file_path = "/home/saketkc/github/pyvirchow/data/txt/train_images.txt"
+    val_file_path = "/home/saketkc/github/pyvirchow/data/txt/validate_images.txt"
+    data_dir = "/mnt/disks/data/histopath_data/pyvirchow-out-df-patches/"
+    label_dir = "/mnt/disks/data/histopath_data/pyvirchow-out-df-patches/"
+    val_data_dir = "/mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate6/"
+    val_label_dir = "/mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate6/"
+    data_suffix = ".jpg"
+    label_suffix = ".png"
     classes = 2
     loss_fn = binary_crossentropy_with_logits
     metrics = [binary_accuracy]
-    #loss_shape = (target_size[0] * target_size[1] * classes,)
+    # loss_shape = (target_size[0] * target_size[1] * classes,)
     loss_shape = None
-    label_suffix = '.mask.joblib.npy'
-    data_suffix = '.img.joblib.jpg'
+    label_suffix = ".mask.joblib.npy"
+    data_suffix = ".img.joblib.jpg"
     ignore_label = None
     label_cval = 255
 
     class_weight = None
-    #config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
-    config = tf.ConfigProto(device_count={'GPU': 2})
+    # config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+    config = tf.ConfigProto(device_count={"GPU": 2})
     session = tf.Session(config=config)
     K.set_session(session)
     train(
@@ -255,4 +262,5 @@ if __name__ == '__main__':
         data_suffix=data_suffix,
         label_suffix=label_suffix,
         ignore_label=ignore_label,
-        label_cval=label_cval)
+        label_cval=label_cval,
+    )
