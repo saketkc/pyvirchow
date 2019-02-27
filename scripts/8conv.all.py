@@ -5,7 +5,7 @@ import numpy as np
 import joblib
 import pandas as pd
 import os
-from pywsi.io.tiling import generate_tiles, get_all_patches_from_slide, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, get_all_patches_from_slide, generate_tiles_fast
 patchsize = 32
 
 import tensorflow as tf
@@ -26,7 +26,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD, RMSprop
 
-from pywsi.io.tiling import generate_tiles, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, generate_tiles_fast
 
 NUM_CLASSES = 2  # not_tumor, tumor
 BATCH_SIZE = 32
@@ -50,10 +50,10 @@ model.add(Conv2DTranspose(2, (31, 31), strides=(16, 16), activation='softmax', p
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 train_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/train_df_with_mask.tsv'
 )
 validation_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/validate_df_with_mask.tsv'
 )
 
 if not os.path.isfile('/tmp/white.img.pickle'):

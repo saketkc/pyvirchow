@@ -23,7 +23,7 @@ rule convert_to_json:
         prefix='lesion_annotation_json'
     shell:
         r'''
-        pywsi xmltojson --infile {input} --savedir {params.prefix}
+        pyvirchow xmltojson --infile {input} --savedir {params.prefix}
         '''
 
 rule extract_patch_df:
@@ -35,7 +35,7 @@ rule extract_patch_df:
         patchsize='256'
     shell:
         r'''
-        pywsi tif-to-df --tif {input} \
+        pyvirchow tif-to-df --tif {input} \
         --jsondir {params.jsondir} \
         --patchsize {params.patchsize} \
         --savedir {params.savedir}
@@ -50,7 +50,7 @@ rule extract_patches:
         patchsize='256'
     shell:
         r'''
-        pywsi add-patch-mask-col --df {input} \
+        pyvirchow add-patch-mask-col --df {input} \
         --imgmaskdir {params.imgmaskdir} \
         --patchsize {params.patchsize} \
         --savedf {output.tsv}
@@ -61,7 +61,7 @@ rule patch_and_mask:
     output: '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask.tsv'
     shell:
         r'''
-        pywsi patch-and-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches/  --savedf {output}
+        pyvirchow patch-and-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches/  --savedf {output}
         '''
 
 rule segment_And_mask:
@@ -69,7 +69,7 @@ rule segment_And_mask:
     output: '/mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask_segmented.tsv'
     shell:
         r'''
-        pywsi segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-segmented/  --finaldf {output}
+        pyvirchow segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-segmented/  --finaldf {output}
         '''
 
 rule segment_And_mask_validate:
@@ -77,8 +77,8 @@ rule segment_And_mask_validate:
     output: '/mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask_segmented.tsv'
     shell:
         r'''
-        pywsi segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate-segmented/  --finaldf {output}
+        pyvirchow segment-from-mask --df {input} --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate-segmented/  --finaldf {output}
         '''
-# pywsi patches-df --indir /mnt/disks/data/histopath_data/CAMELYON16/testing/images/ --savedir /mnt/disks/data/histopath_data/pyvirchow-out-testing-df  --jsondir /mnt/disks/data/histopath_data/pyvirchow-out/testing/lesion_annotation_json/
-# pywsi segment-from-df-fast --df /mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask.tsv  --finaldf /mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask_segmented_vahadane.tsv --segmethod vahadane --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate-vahadane --ncpu 4
-# pywsi segment-from-df-fast --df /mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask.tsv  --finaldf /mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask_segmented_vahadane.tsv --segmethod vahadane --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-vahadane
+# pyvirchow patches-df --indir /mnt/disks/data/histopath_data/CAMELYON16/testing/images/ --savedir /mnt/disks/data/histopath_data/pyvirchow-out-testing-df  --jsondir /mnt/disks/data/histopath_data/pyvirchow-out/testing/lesion_annotation_json/
+# pyvirchow segment-from-df-fast --df /mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask.tsv  --finaldf /mnt/disks/data/histopath_data/pyvirchow-out-df/validate_df_with_mask_segmented_vahadane.tsv --segmethod vahadane --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-validate-vahadane --ncpu 4
+# pyvirchow segment-from-df-fast --df /mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask.tsv  --finaldf /mnt/disks/data/histopath_data/pyvirchow-out-df/train_df_with_mask_segmented_vahadane.tsv --segmethod vahadane --savedir /mnt/disks/data/histopath_data/pyvirchow-out-df-patches-vahadane

@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use pywsi in a project::
+To use pyvirchow in a project::
 
-    import pywsi
+    import pyvirchow

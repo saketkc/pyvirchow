@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Console script for pywsi."""
+"""Console script for pyvirchow."""
 
 import os
 import six
@@ -7,27 +7,27 @@ import six
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 # os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-from pywsi.io.operations import get_annotation_bounding_boxes
-from pywsi.io.operations import get_annotation_polygons
-from pywsi.io.operations import path_leaf
-from pywsi.io.operations import read_as_rgb
-from pywsi.io.operations import WSIReader
-from pywsi.io.tiling import get_all_patches_from_slide
-from pywsi.io.tiling import save_images_and_mask, generate_tiles, generate_tiles_fast
-from pywsi.normalization import VahadaneNormalization
+from pyvirchow.io.operations import get_annotation_bounding_boxes
+from pyvirchow.io.operations import get_annotation_polygons
+from pyvirchow.io.operations import path_leaf
+from pyvirchow.io.operations import read_as_rgb
+from pyvirchow.io.operations import WSIReader
+from pyvirchow.io.tiling import get_all_patches_from_slide
+from pyvirchow.io.tiling import save_images_and_mask, generate_tiles, generate_tiles_fast
+from pyvirchow.normalization import VahadaneNormalization
 
-from pywsi.morphology.patch_extractor import TissuePatch
-from pywsi.morphology.mask import get_common_interior_polygons
+from pyvirchow.morphology.patch_extractor import TissuePatch
+from pyvirchow.morphology.mask import get_common_interior_polygons
 from tqdm import tqdm
 import warnings
 from multiprocessing import Pool
-from pywsi.segmentation import label_nuclei, summarize_region_properties
-from pywsi.misc.parallel import ParallelExecutor
+from pyvirchow.segmentation import label_nuclei, summarize_region_properties
+from pyvirchow.misc.parallel import ParallelExecutor
 
-# from pywsi.deep_model.model import slide_level_map
-# from pywsi.deep_model.random_forest import random_forest
+# from pyvirchow.deep_model.model import slide_level_map
+# from pyvirchow.deep_model.random_forest import random_forest
 
-from pywsi.misc import xmltojson
+from pyvirchow.misc import xmltojson
 from scipy.misc import imsave
 from skimage.color import rgb2hsv
 
@@ -105,7 +105,7 @@ COLUMNS = [
     cls=HelpColorsGroup, help_headers_color="yellow", help_options_color="green"
 )
 def cli():
-    """pywsi: tool for processing WSIs"""
+    """pyvirchow: tool for processing WSIs"""
     pass
 
 
@@ -1216,12 +1216,12 @@ def predict_from_model(patch, model):
 @click.option(
     "--imgmaskdir",
     help="Directory where the patches and mask are stored",
-    default="/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/",
+    default="/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_img_and_mask/",
 )
 @click.option(
     "--modelf",
     help="Root directory with all jsons",
-    default="/Z/personal-folders/interns/saket/github/pywsi/notebooks/weights-improvement-12-0.98.hdf",
+    default="/Z/personal-folders/interns/saket/github/pyvirchow/notebooks/weights-improvement-12-0.98.hdf",
 )
 @click.option(
     "--patchsize", type=int, default=256, help="Patch size which to extract patches"
@@ -1386,7 +1386,7 @@ def generate_rows(samples, num_samples, batch_size=1):
                 if batch_sample.is_tissue:
                     feature = pd.read_table(
                         os.path.join(
-                            "/Z/personal-folders/interns/saket/github/pywsi",
+                            "/Z/personal-folders/interns/saket/github/pyvirchow",
                             batch_sample.segmented_tsv,
                         )
                     )
@@ -1422,7 +1422,7 @@ def generate_rows(samples, num_samples, batch_size=1):
 @click.option(
     "--modelf",
     help="Root directory with all jsons",
-    default="/Z/personal-folders/interns/saket/github/pywsi/models/random_forest_all_train.tf.model.meta",
+    default="/Z/personal-folders/interns/saket/github/pyvirchow/models/random_forest_all_train.tf.model.meta",
 )
 @click.option(
     "--patchsize", type=int, default=256, help="Patch size which to extract patches"
@@ -1531,7 +1531,7 @@ def create_tumor_map_rf_cmd(tif, df, modelf, patchsize, savedir):
 @click.option(
     "--imgmaskdir",
     help="Directory where the patches and mask are stored",
-    default="/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/",
+    default="/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_img_and_mask/",
 )
 @click.option("--savedf", help="Save edited dataframe to", required=True)
 @click.option("--fast", help="Do not check of existense of images", is_flag=True)

@@ -25,7 +25,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD, RMSprop
 
-from pywsi.io.tiling import generate_tiles, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, generate_tiles_fast
 
 NUM_CLASSES = 2  # not_tumor, tumor
 BATCH_SIZE = 32
@@ -74,17 +74,17 @@ model.compile(loss = "categorical_crossentropy", optimizer = opt, metrics=['accu
 
 """
 train_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/train_df.tsv'
 )
 validation_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/validate_df.tsv'
 )
 """
 train_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/train_df_with_mask.tsv'
 )
 validation_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/validate_df_with_mask.tsv'
 )
 
 

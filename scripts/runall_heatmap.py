@@ -4,16 +4,16 @@ TRAIN_TUMOR_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/t
 TRAIN_NORMAL_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/normal'
 TRAIN_ANNOTATION_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/lesion_annotations_json'
 TEST_WSI_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/images'
-PATCH_SAVEDIR = '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/'
+PATCH_SAVEDIR = '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/'
 TEST_ANNOTATION_DIR = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/lesion_annotations_json'
-NOT_AVAIL_IMG = '/Z/personal-folders/interns/saket/github/pywsi/pywsi/web/assets/No_image_available.png'
+NOT_AVAIL_IMG = '/Z/personal-folders/interns/saket/github/pyvirchow/pyvirchow/web/assets/No_image_available.png'
 PREDICTED_HEATMAP_DIR = {
     'cnn':
-    '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd',
-    'rf': '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_rf'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/wsi_heatmap_sgd',
+    'rf': '/Z/personal-folders/interns/saket/github/pyvirchow/data/wsi_heatmap_rf'
 }
 PATCH_SIZE = 256
-DATA_DIR = '/Z/personal-folders/interns/saket/github/pywsi/data'
+DATA_DIR = '/Z/personal-folders/interns/saket/github/pyvirchow/data'
 
 
 TUMOR_VALIDATE_SLIDES = ['tumor_005',
@@ -45,8 +45,8 @@ for slide in TUMOR_VALIDATE_SLIDES[::-1]:
     df_path = os.path.join(PATCH_SAVEDIR, slide +'.tsv')
     df_with_mask_path = df_path.replace('.tsv', '')+'_with_mask.tsv'
     df_with_mask_segmented_path = df_path.replace('.tsv', '')+'_with_mask_segmented.tsv'
-    pickle_file = '/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd/{}.joblib.pickle'.format(slide)
+    pickle_file = '/Z/personal-folders/interns/saket/github/pyvirchow/data/wsi_heatmap_sgd/{}.joblib.pickle'.format(slide)
     if os.path.isfile(pickle_file):
         continue
-    cmd = 'pywsi heatmap --indir {} --jsondir /Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/lesion_annotations_json --savedir /Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd'.format(slide_path)
+    cmd = 'pyvirchow heatmap --indir {} --jsondir /Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/lesion_annotations_json --savedir /Z/personal-folders/interns/saket/github/pyvirchow/data/wsi_heatmap_sgd'.format(slide_path)
     os.system(cmd)

@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install pywsi, run this command in your terminal:
+To install pyvirchow, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install pywsi
+    $ pip install pyvirchow
 
-This is the preferred method to install pywsi, as it will always install the most recent stable release.
+This is the preferred method to install pyvirchow, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,19 +26,19 @@ you through the process.
 From sources
 ------------
 
-The sources for pywsi can be downloaded from the `Github repo`_.
+The sources for pyvirchow can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/saketkc/pywsi
+    $ git clone git://github.com/saketkc/pyvirchow
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/saketkc/pywsi/tarball/master
+    $ curl  -OL https://github.com/saketkc/pyvirchow/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/saketkc/pywsi
-.. _tarball: https://github.com/saketkc/pywsi/tarball/master
+.. _Github repo: https://github.com/saketkc/pyvirchow
+.. _tarball: https://github.com/saketkc/pyvirchow/tarball/master

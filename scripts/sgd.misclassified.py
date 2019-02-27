@@ -22,7 +22,7 @@ from sklearn.metrics import confusion_matrix
 import joblib
 from keras.models import load_model
 
-from pywsi.io.tiling import generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles_fast
 
 NUM_CLASSES = 2  # not_tumor, tumor
 BATCH_SIZE = 32
@@ -33,10 +33,10 @@ N_EPOCHS = 50
 model = load_model('./sgd-allsamples-keras-improvement-16-0.72.hdf')
 
 train_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/train_df_with_mask.tsv'
 )
 validation_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/validate_df_with_mask.tsv'
 )
 
 

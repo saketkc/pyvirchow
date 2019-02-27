@@ -1,21 +1,21 @@
-pywsi.normalization package
+pyvirchow.normalization package
 ===========================
 
 Submodules
 ----------
 
-pywsi.normalization.macenko module
+pyvirchow.normalization.macenko module
 ----------------------------------
 
-.. automodule:: pywsi.normalization.macenko
+.. automodule:: pyvirchow.normalization.macenko
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.normalization.reinhard module
+pyvirchow.normalization.reinhard module
 -----------------------------------
 
-.. automodule:: pywsi.normalization.reinhard
+.. automodule:: pyvirchow.normalization.reinhard
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ pywsi.normalization.reinhard module
 Module contents
 ---------------
 
-.. automodule:: pywsi.normalization
+.. automodule:: pyvirchow.normalization
     :members:
     :undoc-members:
     :show-inheritance:

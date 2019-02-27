@@ -10,12 +10,12 @@
         "include_dirs": [
             "/home/cmb-panasas2/skchoudh/software_frozen/anaconda27/envs/histopath/lib/python3.5/site-packages/numpy/core/include"
         ],
-        "name": "pywsi.segmentation._max_clustering_cython",
+        "name": "pyvirchow.segmentation._max_clustering_cython",
         "sources": [
-            "pywsi/segmentation/_max_clustering_cython.pyx"
+            "pyvirchow/segmentation/_max_clustering_cython.pyx"
         ]
     },
-    "module_name": "pywsi.segmentation._max_clustering_cython"
+    "module_name": "pyvirchow.segmentation._max_clustering_cython"
 }
 END: Cython Metadata */
 
@@ -578,8 +578,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__pywsi__segmentation___max_clustering_cython
-#define __PYX_HAVE_API__pywsi__segmentation___max_clustering_cython
+#define __PYX_HAVE__pyvirchow__segmentation___max_clustering_cython
+#define __PYX_HAVE_API__pyvirchow__segmentation___max_clustering_cython
 /* Early includes */
 #include <string.h>
 #include <stdio.h>
@@ -813,7 +813,7 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "pywsi/segmentation/_max_clustering_cython.pyx",
+  "pyvirchow/segmentation/_max_clustering_cython.pyx",
   "__init__.pxd",
   "stringsource",
   "type.pxd",
@@ -2066,7 +2066,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 
 /* Module declarations from 'cython' */
 
-/* Module declarations from 'pywsi.segmentation._max_clustering_cython' */
+/* Module declarations from 'pyvirchow.segmentation._max_clustering_cython' */
 static PyTypeObject *__pyx_array_type = 0;
 static PyTypeObject *__pyx_MemviewEnum_type = 0;
 static PyTypeObject *__pyx_memoryview_type = 0;
@@ -2115,11 +2115,11 @@ static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_long_t = { "long_t", NULL
 static __Pyx_TypeInfo __Pyx_TypeInfo_double = { "double", NULL, sizeof(double), { 0 }, 0, 'R', 0, 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_int = { "int", NULL, sizeof(int), { 0 }, 0, IS_UNSIGNED(int) ? 'U' : 'I', IS_UNSIGNED(int), 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_long = { "long", NULL, sizeof(long), { 0 }, 0, IS_UNSIGNED(long) ? 'U' : 'I', IS_UNSIGNED(long), 0 };
-#define __Pyx_MODULE_NAME "pywsi.segmentation._max_clustering_cython"
-extern int __pyx_module_is_main_pywsi__segmentation___max_clustering_cython;
-int __pyx_module_is_main_pywsi__segmentation___max_clustering_cython = 0;
+#define __Pyx_MODULE_NAME "pyvirchow.segmentation._max_clustering_cython"
+extern int __pyx_module_is_main_pyvirchow__segmentation___max_clustering_cython;
+int __pyx_module_is_main_pyvirchow__segmentation___max_clustering_cython = 0;
 
-/* Implementation of 'pywsi.segmentation._max_clustering_cython' */
+/* Implementation of 'pyvirchow.segmentation._max_clustering_cython' */
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_RuntimeError;
@@ -2271,10 +2271,10 @@ static const char __pyx_k_got_differing_extents_in_dimensi[] = "got differing ex
 static const char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not Fortran contiguous";
 static const char __pyx_k_no_default___reduce___due_to_non[] = "no default __reduce__ due to non-trivial __cinit__";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
-static const char __pyx_k_pywsi_segmentation__max_clusteri[] = "pywsi/segmentation/_max_clustering_cython.pyx";
+static const char __pyx_k_pyvirchow_segmentation__max_clusteri[] = "pyvirchow/segmentation/_max_clustering_cython.pyx";
 static const char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
 static const char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
-static const char __pyx_k_pywsi_segmentation__max_clusteri_2[] = "pywsi.segmentation._max_clustering_cython";
+static const char __pyx_k_pyvirchow_segmentation__max_clusteri_2[] = "pyvirchow.segmentation._max_clustering_cython";
 static PyObject *__pyx_n_s_ASCII;
 static PyObject *__pyx_kp_s_Buffer_view_does_not_expose_stri;
 static PyObject *__pyx_kp_s_Can_only_create_a_buffer_that_is;
@@ -2382,8 +2382,8 @@ static PyObject *__pyx_n_s_peak_found;
 static PyObject *__pyx_n_s_pickle;
 static PyObject *__pyx_n_s_px;
 static PyObject *__pyx_n_s_py;
-static PyObject *__pyx_kp_s_pywsi_segmentation__max_clusteri;
-static PyObject *__pyx_n_s_pywsi_segmentation__max_clusteri_2;
+static PyObject *__pyx_kp_s_pyvirchow_segmentation__max_clusteri;
+static PyObject *__pyx_n_s_pyvirchow_segmentation__max_clusteri_2;
 static PyObject *__pyx_n_s_pyx_PickleError;
 static PyObject *__pyx_n_s_pyx_checksum;
 static PyObject *__pyx_n_s_pyx_getbuffer;
@@ -2422,7 +2422,7 @@ static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_unpack;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_clustering_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_im, __Pyx_memviewslice __pyx_v_im_fgnd_mask, double __pyx_v_rad); /* proto */
+static PyObject *__pyx_pf_5pyvirchow_12segmentation_22_max_clustering_cython__max_clustering_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_im, __Pyx_memviewslice __pyx_v_im_fgnd_mask, double __pyx_v_rad); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
@@ -2518,7 +2518,7 @@ static PyObject *__pyx_codeobj__32;
 static PyObject *__pyx_codeobj__39;
 /* Late includes */
 
-/* "pywsi/segmentation/_max_clustering_cython.pyx":14
+/* "pyvirchow/segmentation/_max_clustering_cython.pyx":14
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _max_clustering_cython(double[:, :] im not None, int[:, :] im_fgnd_mask not None, double rad):             # <<<<<<<<<<<<<<
@@ -2527,9 +2527,9 @@ static PyObject *__pyx_codeobj__39;
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5pywsi_12segmentation_22_max_clustering_cython_1_max_clustering_cython(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_5pywsi_12segmentation_22_max_clustering_cython_1_max_clustering_cython = {"_max_clustering_cython", (PyCFunction)__pyx_pw_5pywsi_12segmentation_22_max_clustering_cython_1_max_clustering_cython, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_5pywsi_12segmentation_22_max_clustering_cython_1_max_clustering_cython(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5pyvirchow_12segmentation_22_max_clustering_cython_1_max_clustering_cython(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_5pyvirchow_12segmentation_22_max_clustering_cython_1_max_clustering_cython = {"_max_clustering_cython", (PyCFunction)__pyx_pw_5pyvirchow_12segmentation_22_max_clustering_cython_1_max_clustering_cython, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_5pyvirchow_12segmentation_22_max_clustering_cython_1_max_clustering_cython(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   __Pyx_memviewslice __pyx_v_im = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_im_fgnd_mask = { 0, 0, { 0 }, { 0 }, { 0 } };
   double __pyx_v_rad;
@@ -2588,7 +2588,7 @@ static PyObject *__pyx_pw_5pywsi_12segmentation_22_max_clustering_cython_1_max_c
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_max_clustering_cython", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 14, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("pywsi.segmentation._max_clustering_cython._max_clustering_cython", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("pyvirchow.segmentation._max_clustering_cython._max_clustering_cython", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -2598,7 +2598,7 @@ static PyObject *__pyx_pw_5pywsi_12segmentation_22_max_clustering_cython_1_max_c
   if (unlikely(((PyObject *)__pyx_v_im_fgnd_mask.memview) == Py_None)) {
     PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "im_fgnd_mask"); __PYX_ERR(0, 14, __pyx_L1_error)
   }
-  __pyx_r = __pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_clustering_cython(__pyx_self, __pyx_v_im, __pyx_v_im_fgnd_mask, __pyx_v_rad);
+  __pyx_r = __pyx_pf_5pyvirchow_12segmentation_22_max_clustering_cython__max_clustering_cython(__pyx_self, __pyx_v_im, __pyx_v_im_fgnd_mask, __pyx_v_rad);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2609,7 +2609,7 @@ static PyObject *__pyx_pw_5pywsi_12segmentation_22_max_clustering_cython_1_max_c
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_clustering_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_im, __Pyx_memviewslice __pyx_v_im_fgnd_mask, double __pyx_v_rad) {
+static PyObject *__pyx_pf_5pyvirchow_12segmentation_22_max_clustering_cython__max_clustering_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_im, __Pyx_memviewslice __pyx_v_im_fgnd_mask, double __pyx_v_rad) {
   long __pyx_v_sx;
   long __pyx_v_sy;
   long __pyx_v_r;
@@ -2719,7 +2719,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_pybuffernd_maxpath_np.data = NULL;
   __pyx_pybuffernd_maxpath_np.rcbuffer = &__pyx_pybuffer_maxpath_np;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":16
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":16
  * def _max_clustering_cython(double[:, :] im not None, int[:, :] im_fgnd_mask not None, double rad):
  * 
  *     cdef long sx = im.shape[1]             # <<<<<<<<<<<<<<
@@ -2728,7 +2728,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
   __pyx_v_sx = (__pyx_v_im.shape[1]);
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":17
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":17
  * 
  *     cdef long sx = im.shape[1]
  *     cdef long sy = im.shape[0]             # <<<<<<<<<<<<<<
@@ -2737,7 +2737,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
   __pyx_v_sy = (__pyx_v_im.shape[0]);
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":18
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":18
  *     cdef long sx = im.shape[1]
  *     cdef long sy = im.shape[0]
  *     cdef long r = int(rad + 0.5)             # <<<<<<<<<<<<<<
@@ -2746,7 +2746,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
   __pyx_v_r = ((long)(__pyx_v_rad + 0.5));
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":23
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":23
  *     cdef long[:] px, py
  * 
  *     py, px = np.nonzero(im_fgnd_mask)             # <<<<<<<<<<<<<<
@@ -2863,7 +2863,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_t_8.memview = NULL;
   __pyx_t_8.data = NULL;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":25
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":25
  *     py, px = np.nonzero(im_fgnd_mask)
  * 
  *     cdef long num_pixels = py.shape[0]             # <<<<<<<<<<<<<<
@@ -2872,7 +2872,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
   __pyx_v_num_pixels = (__pyx_v_py.shape[0]);
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":28
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":28
  * 
  *     # find local maximum of all requested pixels
  *     cdef double[:, ::1] local_max_val = np.zeros([sy, sx], dtype=np.float)             # <<<<<<<<<<<<<<
@@ -2921,7 +2921,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_t_9.memview = NULL;
   __pyx_t_9.data = NULL;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":29
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":29
  *     # find local maximum of all requested pixels
  *     cdef double[:, ::1] local_max_val = np.zeros([sy, sx], dtype=np.float)
  *     cdef long[:, ::1] local_max_ind = np.zeros([sy, sx], dtype=np.int)             # <<<<<<<<<<<<<<
@@ -2970,7 +2970,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_t_10.memview = NULL;
   __pyx_t_10.data = NULL;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":30
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":30
  *     cdef double[:, ::1] local_max_val = np.zeros([sy, sx], dtype=np.float)
  *     cdef long[:, ::1] local_max_ind = np.zeros([sy, sx], dtype=np.int)
  *     cdef int[:, ::1] peak_found = np.zeros([sy, sx], dtype=np.int32)             # <<<<<<<<<<<<<<
@@ -3019,7 +3019,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_t_11.memview = NULL;
   __pyx_t_11.data = NULL;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":31
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":31
  *     cdef long[:, ::1] local_max_ind = np.zeros([sy, sx], dtype=np.int)
  *     cdef int[:, ::1] peak_found = np.zeros([sy, sx], dtype=np.int32)
  *     cdef double min_im_val = np.min(im)             # <<<<<<<<<<<<<<
@@ -3083,7 +3083,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_min_im_val = __pyx_t_12;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":36
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":36
  *     cdef double mval, cval, nval
  *     cdef int changed
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -3098,7 +3098,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
       #endif
       /*try:*/ {
 
-        /* "pywsi/segmentation/_max_clustering_cython.pyx":37
+        /* "pyvirchow/segmentation/_max_clustering_cython.pyx":37
  *     cdef int changed
  *     with nogil:
  *         for i in range(num_pixels):             # <<<<<<<<<<<<<<
@@ -3110,7 +3110,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
         for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
           __pyx_v_i = __pyx_t_15;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":39
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":39
  *         for i in range(num_pixels):
  * 
  *             cx = px[i]             # <<<<<<<<<<<<<<
@@ -3120,7 +3120,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_16 = __pyx_v_i;
           __pyx_v_cx = (*((long *) ( /* dim=0 */ (__pyx_v_px.data + __pyx_t_16 * __pyx_v_px.strides[0]) )));
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":41
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":41
  *             cx = px[i]
  * 
  *             if cx < 0 or cx >= sx:             # <<<<<<<<<<<<<<
@@ -3138,7 +3138,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_L11_bool_binop_done:;
           if (__pyx_t_17) {
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":42
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":42
  * 
  *             if cx < 0 or cx >= sx:
  *                 continue             # <<<<<<<<<<<<<<
@@ -3147,7 +3147,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             goto __pyx_L8_continue;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":41
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":41
  *             cx = px[i]
  * 
  *             if cx < 0 or cx >= sx:             # <<<<<<<<<<<<<<
@@ -3156,7 +3156,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           }
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":44
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":44
  *                 continue
  * 
  *             cy = py[i]             # <<<<<<<<<<<<<<
@@ -3166,7 +3166,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_19 = __pyx_v_i;
           __pyx_v_cy = (*((long *) ( /* dim=0 */ (__pyx_v_py.data + __pyx_t_19 * __pyx_v_py.strides[0]) )));
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":46
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":46
  *             cy = py[i]
  * 
  *             if cy < 0 or cy >= sy:             # <<<<<<<<<<<<<<
@@ -3184,7 +3184,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_L14_bool_binop_done:;
           if (__pyx_t_17) {
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":47
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":47
  * 
  *             if cy < 0 or cy >= sy:
  *                 continue             # <<<<<<<<<<<<<<
@@ -3193,7 +3193,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             goto __pyx_L8_continue;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":46
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":46
  *             cy = py[i]
  * 
  *             if cy < 0 or cy >= sy:             # <<<<<<<<<<<<<<
@@ -3202,7 +3202,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           }
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":49
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":49
  *                 continue
  * 
  *             cval = im[cy, cx]             # <<<<<<<<<<<<<<
@@ -3213,7 +3213,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_21 = __pyx_v_cx;
           __pyx_v_cval = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_im.data + __pyx_t_20 * __pyx_v_im.strides[0]) ) + __pyx_t_21 * __pyx_v_im.strides[1]) )));
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":51
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":51
  *             cval = im[cy, cx]
  * 
  *             my = cy             # <<<<<<<<<<<<<<
@@ -3222,7 +3222,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_my = __pyx_v_cy;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":52
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":52
  * 
  *             my = cy
  *             mx = cx             # <<<<<<<<<<<<<<
@@ -3231,7 +3231,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_mx = __pyx_v_cx;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":53
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":53
  *             my = cy
  *             mx = cx
  *             mval = cval             # <<<<<<<<<<<<<<
@@ -3240,7 +3240,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_mval = __pyx_v_cval;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":55
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":55
  *             mval = cval
  * 
  *             changed = 0             # <<<<<<<<<<<<<<
@@ -3249,7 +3249,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_changed = 0;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":57
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":57
  *             changed = 0
  * 
  *             for ox in range(-r, r+1):             # <<<<<<<<<<<<<<
@@ -3261,7 +3261,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           for (__pyx_t_24 = (-__pyx_v_r); __pyx_t_24 < __pyx_t_23; __pyx_t_24+=1) {
             __pyx_v_ox = __pyx_t_24;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":59
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":59
  *             for ox in range(-r, r+1):
  * 
  *                 nx = cx + ox             # <<<<<<<<<<<<<<
@@ -3270,7 +3270,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             __pyx_v_nx = (__pyx_v_cx + __pyx_v_ox);
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":61
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":61
  *                 nx = cx + ox
  * 
  *                 if nx < 0 or nx >= sx:             # <<<<<<<<<<<<<<
@@ -3288,7 +3288,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_L19_bool_binop_done:;
             if (__pyx_t_17) {
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":62
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":62
  * 
  *                 if nx < 0 or nx >= sx:
  *                     continue             # <<<<<<<<<<<<<<
@@ -3297,7 +3297,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               goto __pyx_L16_continue;
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":61
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":61
  *                 nx = cx + ox
  * 
  *                 if nx < 0 or nx >= sx:             # <<<<<<<<<<<<<<
@@ -3306,7 +3306,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             }
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":64
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":64
  *                     continue
  * 
  *                 for oy in range(-r, r+1):             # <<<<<<<<<<<<<<
@@ -3318,7 +3318,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             for (__pyx_t_27 = (-__pyx_v_r); __pyx_t_27 < __pyx_t_26; __pyx_t_27+=1) {
               __pyx_v_oy = __pyx_t_27;
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":66
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":66
  *                 for oy in range(-r, r+1):
  * 
  *                     if (ox * ox + oy * oy) > rad * rad:             # <<<<<<<<<<<<<<
@@ -3328,7 +3328,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
               __pyx_t_17 = ((((__pyx_v_ox * __pyx_v_ox) + (__pyx_v_oy * __pyx_v_oy)) > (__pyx_v_rad * __pyx_v_rad)) != 0);
               if (__pyx_t_17) {
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":67
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":67
  * 
  *                     if (ox * ox + oy * oy) > rad * rad:
  *                         continue             # <<<<<<<<<<<<<<
@@ -3337,7 +3337,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
                 goto __pyx_L21_continue;
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":66
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":66
  *                 for oy in range(-r, r+1):
  * 
  *                     if (ox * ox + oy * oy) > rad * rad:             # <<<<<<<<<<<<<<
@@ -3346,7 +3346,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               }
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":69
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":69
  *                         continue
  * 
  *                     ny = cy + oy             # <<<<<<<<<<<<<<
@@ -3355,7 +3355,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               __pyx_v_ny = (__pyx_v_cy + __pyx_v_oy);
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":71
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":71
  *                     ny = cy + oy
  * 
  *                     if ny < 0 or ny >= sy:             # <<<<<<<<<<<<<<
@@ -3373,7 +3373,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
               __pyx_L25_bool_binop_done:;
               if (__pyx_t_17) {
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":72
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":72
  * 
  *                     if ny < 0 or ny >= sy:
  *                         continue             # <<<<<<<<<<<<<<
@@ -3382,7 +3382,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
                 goto __pyx_L21_continue;
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":71
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":71
  *                     ny = cy + oy
  * 
  *                     if ny < 0 or ny >= sy:             # <<<<<<<<<<<<<<
@@ -3391,7 +3391,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               }
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":74
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":74
  *                         continue
  * 
  *                     nval = min_im_val             # <<<<<<<<<<<<<<
@@ -3400,7 +3400,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               __pyx_v_nval = __pyx_v_min_im_val;
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":76
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":76
  *                     nval = min_im_val
  * 
  *                     if im_fgnd_mask[ny, nx]:             # <<<<<<<<<<<<<<
@@ -3412,7 +3412,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
               __pyx_t_17 = ((*((int *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_im_fgnd_mask.data + __pyx_t_28 * __pyx_v_im_fgnd_mask.strides[0]) ) + __pyx_t_29 * __pyx_v_im_fgnd_mask.strides[1]) ))) != 0);
               if (__pyx_t_17) {
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":77
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":77
  * 
  *                     if im_fgnd_mask[ny, nx]:
  *                         nval = im[ny, nx]             # <<<<<<<<<<<<<<
@@ -3423,7 +3423,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
                 __pyx_t_31 = __pyx_v_nx;
                 __pyx_v_nval = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_im.data + __pyx_t_30 * __pyx_v_im.strides[0]) ) + __pyx_t_31 * __pyx_v_im.strides[1]) )));
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":76
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":76
  *                     nval = min_im_val
  * 
  *                     if im_fgnd_mask[ny, nx]:             # <<<<<<<<<<<<<<
@@ -3432,7 +3432,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               }
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":79
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":79
  *                         nval = im[ny, nx]
  * 
  *                     if nval > mval:             # <<<<<<<<<<<<<<
@@ -3442,7 +3442,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
               __pyx_t_17 = ((__pyx_v_nval > __pyx_v_mval) != 0);
               if (__pyx_t_17) {
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":81
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":81
  *                     if nval > mval:
  * 
  *                         changed = True             # <<<<<<<<<<<<<<
@@ -3451,7 +3451,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
                 __pyx_v_changed = 1;
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":82
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":82
  * 
  *                         changed = True
  *                         mval = nval             # <<<<<<<<<<<<<<
@@ -3460,7 +3460,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
                 __pyx_v_mval = __pyx_v_nval;
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":83
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":83
  *                         changed = True
  *                         mval = nval
  *                         mx = nx             # <<<<<<<<<<<<<<
@@ -3469,7 +3469,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
                 __pyx_v_mx = __pyx_v_nx;
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":84
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":84
  *                         mval = nval
  *                         mx = nx
  *                         my = ny             # <<<<<<<<<<<<<<
@@ -3478,7 +3478,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
                 __pyx_v_my = __pyx_v_ny;
 
-                /* "pywsi/segmentation/_max_clustering_cython.pyx":79
+                /* "pyvirchow/segmentation/_max_clustering_cython.pyx":79
  *                         nval = im[ny, nx]
  * 
  *                     if nval > mval:             # <<<<<<<<<<<<<<
@@ -3491,7 +3491,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_L16_continue:;
           }
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":86
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":86
  *                         my = ny
  * 
  *             local_max_val[cy, cx] = mval             # <<<<<<<<<<<<<<
@@ -3502,7 +3502,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_33 = __pyx_v_cx;
           *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_local_max_val.data + __pyx_t_32 * __pyx_v_local_max_val.strides[0]) )) + __pyx_t_33)) )) = __pyx_v_mval;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":87
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":87
  * 
  *             local_max_val[cy, cx] = mval
  *             local_max_ind[cy, cx] = my * sx + mx             # <<<<<<<<<<<<<<
@@ -3513,7 +3513,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_35 = __pyx_v_cx;
           *((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_local_max_ind.data + __pyx_t_34 * __pyx_v_local_max_ind.strides[0]) )) + __pyx_t_35)) )) = ((__pyx_v_my * __pyx_v_sx) + __pyx_v_mx);
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":89
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":89
  *             local_max_ind[cy, cx] = my * sx + mx
  * 
  *             if not changed:  # this pixel itself is the maximum in its neighborhood             # <<<<<<<<<<<<<<
@@ -3523,7 +3523,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_17 = ((!(__pyx_v_changed != 0)) != 0);
           if (__pyx_t_17) {
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":90
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":90
  * 
  *             if not changed:  # this pixel itself is the maximum in its neighborhood
  *                 peak_found[cy, cx] = 1             # <<<<<<<<<<<<<<
@@ -3534,7 +3534,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_37 = __pyx_v_cx;
             *((int *) ( /* dim=1 */ ((char *) (((int *) ( /* dim=0 */ (__pyx_v_peak_found.data + __pyx_t_36 * __pyx_v_peak_found.strides[0]) )) + __pyx_t_37)) )) = 1;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":89
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":89
  *             local_max_ind[cy, cx] = my * sx + mx
  * 
  *             if not changed:  # this pixel itself is the maximum in its neighborhood             # <<<<<<<<<<<<<<
@@ -3546,7 +3546,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
         }
       }
 
-      /* "pywsi/segmentation/_max_clustering_cython.pyx":36
+      /* "pyvirchow/segmentation/_max_clustering_cython.pyx":36
  *     cdef double mval, cval, nval
  *     cdef int changed
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -3565,7 +3565,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
       }
   }
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":93
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":93
  * 
  *     # find local peaks of all requested pixels
  *     cdef np.ndarray[np.long_t, ndim=2, mode='c'] maxpath_np = np.zeros([1000, 2], dtype=np.long)             # <<<<<<<<<<<<<<
@@ -3618,7 +3618,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_v_maxpath_np = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":94
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":94
  *     # find local peaks of all requested pixels
  *     cdef np.ndarray[np.long_t, ndim=2, mode='c'] maxpath_np = np.zeros([1000, 2], dtype=np.long)
  *     cdef long[:, ::1] maxpath = maxpath_np             # <<<<<<<<<<<<<<
@@ -3630,7 +3630,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_t_10.memview = NULL;
   __pyx_t_10.data = NULL;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":96
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":96
  *     cdef long[:, ::1] maxpath = maxpath_np
  *     cdef long end_x, end_y, end_pos, end_ind, end_max_ind
  *     cdef long path_len = maxpath.shape[0]             # <<<<<<<<<<<<<<
@@ -3639,7 +3639,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
   __pyx_v_path_len = (__pyx_v_maxpath.shape[0]);
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":97
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":97
  *     cdef long end_x, end_y, end_pos, end_ind, end_max_ind
  *     cdef long path_len = maxpath.shape[0]
  *     cdef long s = np.sum(peak_found)             # <<<<<<<<<<<<<<
@@ -3703,7 +3703,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_v_s = __pyx_t_13;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":98
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":98
  *     cdef long path_len = maxpath.shape[0]
  *     cdef long s = np.sum(peak_found)
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -3718,7 +3718,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
       #endif
       /*try:*/ {
 
-        /* "pywsi/segmentation/_max_clustering_cython.pyx":99
+        /* "pyvirchow/segmentation/_max_clustering_cython.pyx":99
  *     cdef long s = np.sum(peak_found)
  *     with nogil:
  *         for i in range(num_pixels):             # <<<<<<<<<<<<<<
@@ -3730,7 +3730,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
         for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
           __pyx_v_i = __pyx_t_15;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":101
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":101
  *         for i in range(num_pixels):
  * 
  *             cx = px[i]             # <<<<<<<<<<<<<<
@@ -3740,7 +3740,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_39 = __pyx_v_i;
           __pyx_v_cx = (*((long *) ( /* dim=0 */ (__pyx_v_px.data + __pyx_t_39 * __pyx_v_px.strides[0]) )));
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":103
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":103
  *             cx = px[i]
  * 
  *             if cx < 0 or cx >= sx:             # <<<<<<<<<<<<<<
@@ -3758,7 +3758,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_L36_bool_binop_done:;
           if (__pyx_t_17) {
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":104
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":104
  * 
  *             if cx < 0 or cx >= sx:
  *                 continue             # <<<<<<<<<<<<<<
@@ -3767,7 +3767,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             goto __pyx_L33_continue;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":103
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":103
  *             cx = px[i]
  * 
  *             if cx < 0 or cx >= sx:             # <<<<<<<<<<<<<<
@@ -3776,7 +3776,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           }
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":106
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":106
  *                 continue
  * 
  *             cy = py[i]             # <<<<<<<<<<<<<<
@@ -3786,7 +3786,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_40 = __pyx_v_i;
           __pyx_v_cy = (*((long *) ( /* dim=0 */ (__pyx_v_py.data + __pyx_t_40 * __pyx_v_py.strides[0]) )));
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":108
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":108
  *             cy = py[i]
  * 
  *             if cy < 0 or cy >= sy:             # <<<<<<<<<<<<<<
@@ -3804,7 +3804,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_L39_bool_binop_done:;
           if (__pyx_t_17) {
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":109
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":109
  * 
  *             if cy < 0 or cy >= sy:
  *                 continue             # <<<<<<<<<<<<<<
@@ -3813,7 +3813,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             goto __pyx_L33_continue;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":108
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":108
  *             cy = py[i]
  * 
  *             if cy < 0 or cy >= sy:             # <<<<<<<<<<<<<<
@@ -3822,7 +3822,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           }
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":112
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":112
  * 
  *             # initialize tracking trajectory
  *             end_pos = 0             # <<<<<<<<<<<<<<
@@ -3831,7 +3831,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_end_pos = 0;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":114
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":114
  *             end_pos = 0
  * 
  *             end_x = cx             # <<<<<<<<<<<<<<
@@ -3840,7 +3840,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_end_x = __pyx_v_cx;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":115
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":115
  * 
  *             end_x = cx
  *             end_y = cy             # <<<<<<<<<<<<<<
@@ -3849,7 +3849,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_end_y = __pyx_v_cy;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":116
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":116
  *             end_x = cx
  *             end_y = cy
  *             end_ind = cy * sx + cx             # <<<<<<<<<<<<<<
@@ -3858,7 +3858,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
           __pyx_v_end_ind = ((__pyx_v_cy * __pyx_v_sx) + __pyx_v_cx);
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":117
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":117
  *             end_y = cy
  *             end_ind = cy * sx + cx
  *             end_max_ind = local_max_ind[end_y, end_x]             # <<<<<<<<<<<<<<
@@ -3869,7 +3869,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_42 = __pyx_v_end_x;
           __pyx_v_end_max_ind = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_local_max_ind.data + __pyx_t_41 * __pyx_v_local_max_ind.strides[0]) )) + __pyx_t_42)) )));
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":119
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":119
  *             end_max_ind = local_max_ind[end_y, end_x]
  * 
  *             maxpath[end_pos, 0] = end_x             # <<<<<<<<<<<<<<
@@ -3880,7 +3880,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_44 = 0;
           *((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_maxpath.data + __pyx_t_43 * __pyx_v_maxpath.strides[0]) )) + __pyx_t_44)) )) = __pyx_v_end_x;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":120
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":120
  * 
  *             maxpath[end_pos, 0] = end_x
  *             maxpath[end_pos, 1] = end_y             # <<<<<<<<<<<<<<
@@ -3891,7 +3891,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           __pyx_t_46 = 1;
           *((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_maxpath.data + __pyx_t_45 * __pyx_v_maxpath.strides[0]) )) + __pyx_t_46)) )) = __pyx_v_end_y;
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":122
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":122
  *             maxpath[end_pos, 1] = end_y
  * 
  *             while not peak_found[end_y, end_x]:             # <<<<<<<<<<<<<<
@@ -3904,7 +3904,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_17 = ((!((*((int *) ( /* dim=1 */ ((char *) (((int *) ( /* dim=0 */ (__pyx_v_peak_found.data + __pyx_t_47 * __pyx_v_peak_found.strides[0]) )) + __pyx_t_48)) ))) != 0)) != 0);
             if (!__pyx_t_17) break;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":125
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":125
  * 
  *                 # increment trajectory counter
  *                 end_pos += 1             # <<<<<<<<<<<<<<
@@ -3913,7 +3913,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             __pyx_v_end_pos = (__pyx_v_end_pos + 1);
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":128
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":128
  * 
  *                 # if overflow, increase size
  *                 if end_pos >= path_len:             # <<<<<<<<<<<<<<
@@ -3923,7 +3923,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_17 = ((__pyx_v_end_pos >= __pyx_v_path_len) != 0);
             if (__pyx_t_17) {
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":129
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":129
  *                 # if overflow, increase size
  *                 if end_pos >= path_len:
  *                     with gil:             # <<<<<<<<<<<<<<
@@ -3936,7 +3936,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
                   #endif
                   /*try:*/ {
 
-                    /* "pywsi/segmentation/_max_clustering_cython.pyx":130
+                    /* "pyvirchow/segmentation/_max_clustering_cython.pyx":130
  *                 if end_pos >= path_len:
  *                     with gil:
  *                         maxpath_np.resize([path_len * 2, 2])             # <<<<<<<<<<<<<<
@@ -4004,7 +4004,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
                     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
                   }
 
-                  /* "pywsi/segmentation/_max_clustering_cython.pyx":129
+                  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":129
  *                 # if overflow, increase size
  *                 if end_pos >= path_len:
  *                     with gil:             # <<<<<<<<<<<<<<
@@ -4028,7 +4028,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
                   }
               }
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":131
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":131
  *                     with gil:
  *                         maxpath_np.resize([path_len * 2, 2])
  *                     maxpath = maxpath_np             # <<<<<<<<<<<<<<
@@ -4041,7 +4041,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
               __pyx_t_10.memview = NULL;
               __pyx_t_10.data = NULL;
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":132
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":132
  *                         maxpath_np.resize([path_len * 2, 2])
  *                     maxpath = maxpath_np
  *                     path_len = maxpath.shape[0]             # <<<<<<<<<<<<<<
@@ -4050,7 +4050,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
               __pyx_v_path_len = (__pyx_v_maxpath.shape[0]);
 
-              /* "pywsi/segmentation/_max_clustering_cython.pyx":128
+              /* "pyvirchow/segmentation/_max_clustering_cython.pyx":128
  * 
  *                 # if overflow, increase size
  *                 if end_pos >= path_len:             # <<<<<<<<<<<<<<
@@ -4059,7 +4059,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             }
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":135
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":135
  * 
  *                 # add local max to trajectory
  *                 end_ind = end_max_ind             # <<<<<<<<<<<<<<
@@ -4068,7 +4068,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             __pyx_v_end_ind = __pyx_v_end_max_ind;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":136
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":136
  *                 # add local max to trajectory
  *                 end_ind = end_max_ind
  *                 end_x = end_ind % sx             # <<<<<<<<<<<<<<
@@ -4077,7 +4077,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             __pyx_v_end_x = (__pyx_v_end_ind % __pyx_v_sx);
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":137
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":137
  *                 end_ind = end_max_ind
  *                 end_x = end_ind % sx
  *                 end_y = end_ind / sx             # <<<<<<<<<<<<<<
@@ -4086,7 +4086,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
  */
             __pyx_v_end_y = (__pyx_v_end_ind / __pyx_v_sx);
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":138
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":138
  *                 end_x = end_ind % sx
  *                 end_y = end_ind / sx
  *                 end_max_ind = local_max_ind[end_y, end_x]             # <<<<<<<<<<<<<<
@@ -4097,7 +4097,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_50 = __pyx_v_end_x;
             __pyx_v_end_max_ind = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_local_max_ind.data + __pyx_t_49 * __pyx_v_local_max_ind.strides[0]) )) + __pyx_t_50)) )));
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":140
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":140
  *                 end_max_ind = local_max_ind[end_y, end_x]
  * 
  *                 maxpath[end_pos, 0] = end_x             # <<<<<<<<<<<<<<
@@ -4108,7 +4108,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_52 = 0;
             *((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_maxpath.data + __pyx_t_51 * __pyx_v_maxpath.strides[0]) )) + __pyx_t_52)) )) = __pyx_v_end_x;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":141
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":141
  * 
  *                 maxpath[end_pos, 0] = end_x
  *                 maxpath[end_pos, 1] = end_y             # <<<<<<<<<<<<<<
@@ -4120,7 +4120,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             *((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_maxpath.data + __pyx_t_53 * __pyx_v_maxpath.strides[0]) )) + __pyx_t_54)) )) = __pyx_v_end_y;
           }
 
-          /* "pywsi/segmentation/_max_clustering_cython.pyx":143
+          /* "pyvirchow/segmentation/_max_clustering_cython.pyx":143
  *                 maxpath[end_pos, 1] = end_y
  * 
  *             for i in range(end_pos+1):             # <<<<<<<<<<<<<<
@@ -4132,7 +4132,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
           for (__pyx_t_24 = 0; __pyx_t_24 < __pyx_t_23; __pyx_t_24+=1) {
             __pyx_v_i = __pyx_t_24;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":145
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":145
  *             for i in range(end_pos+1):
  * 
  *                 cx = maxpath[i, 0]             # <<<<<<<<<<<<<<
@@ -4143,7 +4143,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_56 = 0;
             __pyx_v_cx = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_maxpath.data + __pyx_t_55 * __pyx_v_maxpath.strides[0]) )) + __pyx_t_56)) )));
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":146
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":146
  * 
  *                 cx = maxpath[i, 0]
  *                 cy = maxpath[i, 1]             # <<<<<<<<<<<<<<
@@ -4154,7 +4154,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_58 = 1;
             __pyx_v_cy = (*((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_maxpath.data + __pyx_t_57 * __pyx_v_maxpath.strides[0]) )) + __pyx_t_58)) )));
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":148
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":148
  *                 cy = maxpath[i, 1]
  * 
  *                 local_max_ind[cy, cx] = end_max_ind             # <<<<<<<<<<<<<<
@@ -4165,7 +4165,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_60 = __pyx_v_cx;
             *((long *) ( /* dim=1 */ ((char *) (((long *) ( /* dim=0 */ (__pyx_v_local_max_ind.data + __pyx_t_59 * __pyx_v_local_max_ind.strides[0]) )) + __pyx_t_60)) )) = __pyx_v_end_max_ind;
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":149
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":149
  * 
  *                 local_max_ind[cy, cx] = end_max_ind
  *                 local_max_val[cy, cx] = local_max_val[end_y, end_x]             # <<<<<<<<<<<<<<
@@ -4178,7 +4178,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
             __pyx_t_64 = __pyx_v_cx;
             *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_local_max_val.data + __pyx_t_63 * __pyx_v_local_max_val.strides[0]) )) + __pyx_t_64)) )) = (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_local_max_val.data + __pyx_t_61 * __pyx_v_local_max_val.strides[0]) )) + __pyx_t_62)) )));
 
-            /* "pywsi/segmentation/_max_clustering_cython.pyx":150
+            /* "pyvirchow/segmentation/_max_clustering_cython.pyx":150
  *                 local_max_ind[cy, cx] = end_max_ind
  *                 local_max_val[cy, cx] = local_max_val[end_y, end_x]
  *                 peak_found[cy, cx] = 1             # <<<<<<<<<<<<<<
@@ -4193,7 +4193,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
         }
       }
 
-      /* "pywsi/segmentation/_max_clustering_cython.pyx":98
+      /* "pyvirchow/segmentation/_max_clustering_cython.pyx":98
  *     cdef long path_len = maxpath.shape[0]
  *     cdef long s = np.sum(peak_found)
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -4219,7 +4219,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
       }
   }
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":152
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":152
  *                 peak_found[cy, cx] = 1
  * 
  *     return np.asarray(local_max_val), np.asarray(local_max_ind)             # <<<<<<<<<<<<<<
@@ -4343,7 +4343,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":14
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":14
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _max_clustering_cython(double[:, :] im not None, int[:, :] im_fgnd_mask not None, double rad):             # <<<<<<<<<<<<<<
@@ -4370,7 +4370,7 @@ static PyObject *__pyx_pf_5pywsi_12segmentation_22_max_clustering_cython__max_cl
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_maxpath_np.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("pywsi.segmentation._max_clustering_cython._max_clustering_cython", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("pyvirchow.segmentation._max_clustering_cython._max_clustering_cython", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -19890,7 +19890,7 @@ static PyBufferProcs __pyx_tp_as_buffer_array = {
 
 static PyTypeObject __pyx_type___pyx_array = {
   PyVarObject_HEAD_INIT(0, 0)
-  "pywsi.segmentation._max_clustering_cython.array", /*tp_name*/
+  "pyvirchow.segmentation._max_clustering_cython.array", /*tp_name*/
   sizeof(struct __pyx_array_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_array, /*tp_dealloc*/
@@ -19998,7 +19998,7 @@ static PyMethodDef __pyx_methods_Enum[] = {
 
 static PyTypeObject __pyx_type___pyx_MemviewEnum = {
   PyVarObject_HEAD_INIT(0, 0)
-  "pywsi.segmentation._max_clustering_cython.Enum", /*tp_name*/
+  "pyvirchow.segmentation._max_clustering_cython.Enum", /*tp_name*/
   sizeof(struct __pyx_MemviewEnum_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_Enum, /*tp_dealloc*/
@@ -20248,7 +20248,7 @@ static PyBufferProcs __pyx_tp_as_buffer_memoryview = {
 
 static PyTypeObject __pyx_type___pyx_memoryview = {
   PyVarObject_HEAD_INIT(0, 0)
-  "pywsi.segmentation._max_clustering_cython.memoryview", /*tp_name*/
+  "pyvirchow.segmentation._max_clustering_cython.memoryview", /*tp_name*/
   sizeof(struct __pyx_memoryview_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_memoryview, /*tp_dealloc*/
@@ -20375,7 +20375,7 @@ static struct PyGetSetDef __pyx_getsets__memoryviewslice[] = {
 
 static PyTypeObject __pyx_type___pyx_memoryviewslice = {
   PyVarObject_HEAD_INIT(0, 0)
-  "pywsi.segmentation._max_clustering_cython._memoryviewslice", /*tp_name*/
+  "pyvirchow.segmentation._max_clustering_cython._memoryviewslice", /*tp_name*/
   sizeof(struct __pyx_memoryviewslice_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc__memoryviewslice, /*tp_dealloc*/
@@ -20583,8 +20583,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_pickle, __pyx_k_pickle, sizeof(__pyx_k_pickle), 0, 0, 1, 1},
   {&__pyx_n_s_px, __pyx_k_px, sizeof(__pyx_k_px), 0, 0, 1, 1},
   {&__pyx_n_s_py, __pyx_k_py, sizeof(__pyx_k_py), 0, 0, 1, 1},
-  {&__pyx_kp_s_pywsi_segmentation__max_clusteri, __pyx_k_pywsi_segmentation__max_clusteri, sizeof(__pyx_k_pywsi_segmentation__max_clusteri), 0, 0, 1, 0},
-  {&__pyx_n_s_pywsi_segmentation__max_clusteri_2, __pyx_k_pywsi_segmentation__max_clusteri_2, sizeof(__pyx_k_pywsi_segmentation__max_clusteri_2), 0, 0, 1, 1},
+  {&__pyx_kp_s_pyvirchow_segmentation__max_clusteri, __pyx_k_pyvirchow_segmentation__max_clusteri, sizeof(__pyx_k_pyvirchow_segmentation__max_clusteri), 0, 0, 1, 0},
+  {&__pyx_n_s_pyvirchow_segmentation__max_clusteri_2, __pyx_k_pyvirchow_segmentation__max_clusteri_2, sizeof(__pyx_k_pyvirchow_segmentation__max_clusteri_2), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_PickleError, __pyx_k_pyx_PickleError, sizeof(__pyx_k_pyx_PickleError), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_checksum, __pyx_k_pyx_checksum, sizeof(__pyx_k_pyx_checksum), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_getbuffer, __pyx_k_pyx_getbuffer, sizeof(__pyx_k_pyx_getbuffer), 0, 0, 1, 1},
@@ -20967,7 +20967,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__30);
   __Pyx_GIVEREF(__pyx_tuple__30);
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":14
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":14
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _max_clustering_cython(double[:, :] im not None, int[:, :] im_fgnd_mask not None, double rad):             # <<<<<<<<<<<<<<
@@ -20977,7 +20977,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__31 = PyTuple_Pack(35, __pyx_n_s_im, __pyx_n_s_im_fgnd_mask, __pyx_n_s_rad, __pyx_n_s_sx, __pyx_n_s_sy, __pyx_n_s_r, __pyx_n_s_px, __pyx_n_s_py, __pyx_n_s_num_pixels, __pyx_n_s_local_max_val, __pyx_n_s_local_max_ind, __pyx_n_s_peak_found, __pyx_n_s_min_im_val, __pyx_n_s_ox, __pyx_n_s_oy, __pyx_n_s_mx, __pyx_n_s_my, __pyx_n_s_cx, __pyx_n_s_cy, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_mval, __pyx_n_s_cval, __pyx_n_s_nval, __pyx_n_s_changed, __pyx_n_s_i, __pyx_n_s_maxpath_np, __pyx_n_s_maxpath, __pyx_n_s_end_x, __pyx_n_s_end_y, __pyx_n_s_end_pos, __pyx_n_s_end_ind, __pyx_n_s_end_max_ind, __pyx_n_s_path_len, __pyx_n_s_s); if (unlikely(!__pyx_tuple__31)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__31);
   __Pyx_GIVEREF(__pyx_tuple__31);
-  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(3, 0, 35, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_pywsi_segmentation__max_clusteri, __pyx_n_s_max_clustering_cython, 14, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(3, 0, 35, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_pyvirchow_segmentation__max_clusteri, __pyx_n_s_max_clustering_cython, 14, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 14, __pyx_L1_error)
 
   /* "View.MemoryView":285
  *         return self.name
@@ -21339,14 +21339,14 @@ if (!__Pyx_RefNanny) {
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_pywsi__segmentation___max_clustering_cython) {
+  if (__pyx_module_is_main_pyvirchow__segmentation___max_clustering_cython) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "pywsi.segmentation._max_clustering_cython")) {
-      if (unlikely(PyDict_SetItemString(modules, "pywsi.segmentation._max_clustering_cython", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "pyvirchow.segmentation._max_clustering_cython")) {
+      if (unlikely(PyDict_SetItemString(modules, "pyvirchow.segmentation._max_clustering_cython", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -21367,7 +21367,7 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":1
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":1
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * cimport cython
@@ -21377,19 +21377,19 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":14
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":14
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * def _max_clustering_cython(double[:, :] im not None, int[:, :] im_fgnd_mask not None, double rad):             # <<<<<<<<<<<<<<
  * 
  *     cdef long sx = im.shape[1]
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5pywsi_12segmentation_22_max_clustering_cython_1_max_clustering_cython, NULL, __pyx_n_s_pywsi_segmentation__max_clusteri_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5pyvirchow_12segmentation_22_max_clustering_cython_1_max_clustering_cython, NULL, __pyx_n_s_pyvirchow_segmentation__max_clusteri_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_max_clustering_cython, __pyx_t_1) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pywsi/segmentation/_max_clustering_cython.pyx":1
+  /* "pyvirchow/segmentation/_max_clustering_cython.pyx":1
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * cimport cython
@@ -21559,11 +21559,11 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_1);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init pywsi.segmentation._max_clustering_cython", 0, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init pyvirchow.segmentation._max_clustering_cython", 0, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init pywsi.segmentation._max_clustering_cython");
+    PyErr_SetString(PyExc_ImportError, "init pyvirchow.segmentation._max_clustering_cython");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

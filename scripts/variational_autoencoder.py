@@ -27,7 +27,7 @@ from keras.models import Sequential
 from keras.models import load_model
 from keras.layers import Lambda, Dropout, Reshape
 
-from pywsi.io.tiling import generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles_fast
 
 from keras.layers import Lambda, Input, Dense
 from keras.models import Model
@@ -63,10 +63,10 @@ def sampling(args):
 
 
 train_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/train_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/train_df_with_mask.tsv'
 )
 validation_samples = pd.read_table(
-    '/Z/personal-folders/interns/saket/github/pywsi/data/patch_df/validate_df_with_mask.tsv'
+    '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_df/validate_df_with_mask.tsv'
 )
 
 # In[4]:

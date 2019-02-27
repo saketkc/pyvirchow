@@ -1,10 +1,10 @@
-pywsi.io package
+pyvirchow.io package
 ================
 
 Module contents
 ---------------
 
-.. automodule:: pywsi.io
+.. automodule:: pyvirchow.io
     :members:
     :undoc-members:
     :show-inheritance:

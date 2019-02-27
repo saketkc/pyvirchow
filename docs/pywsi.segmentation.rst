@@ -1,53 +1,53 @@
-pywsi.segmentation package
+pyvirchow.segmentation package
 ==========================
 
 Submodules
 ----------
 
-pywsi.segmentation.binary\_segmentation module
+pyvirchow.segmentation.binary\_segmentation module
 ----------------------------------------------
 
-.. automodule:: pywsi.segmentation.binary_segmentation
+.. automodule:: pyvirchow.segmentation.binary_segmentation
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.segmentation.diff\_gaussian module
+pyvirchow.segmentation.diff\_gaussian module
 ----------------------------------------
 
-.. automodule:: pywsi.segmentation.diff_gaussian
+.. automodule:: pyvirchow.segmentation.diff_gaussian
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.segmentation.fractal\_dimension module
+pyvirchow.segmentation.fractal\_dimension module
 --------------------------------------------
 
-.. automodule:: pywsi.segmentation.fractal_dimension
+.. automodule:: pyvirchow.segmentation.fractal_dimension
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.segmentation.graph\_cut module
+pyvirchow.segmentation.graph\_cut module
 ------------------------------------
 
-.. automodule:: pywsi.segmentation.graph_cut
+.. automodule:: pyvirchow.segmentation.graph_cut
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.segmentation.helpers module
+pyvirchow.segmentation.helpers module
 ---------------------------------
 
-.. automodule:: pywsi.segmentation.helpers
+.. automodule:: pyvirchow.segmentation.helpers
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.segmentation.max\_clustering module
+pyvirchow.segmentation.max\_clustering module
 -----------------------------------------
 
-.. automodule:: pywsi.segmentation.max_clustering
+.. automodule:: pyvirchow.segmentation.max_clustering
     :members:
     :undoc-members:
     :noindex:
@@ -57,7 +57,7 @@ pywsi.segmentation.max\_clustering module
 Module contents
 ---------------
 
-.. automodule:: pywsi.segmentation
+.. automodule:: pyvirchow.segmentation
     :members:
     :undoc-members:
     :show-inheritance:

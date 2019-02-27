@@ -1,10 +1,10 @@
-pywsi.stats package
+pyvirchow.stats package
 ===================
 
 Module contents
 ---------------
 
-.. automodule:: pywsi.stats
+.. automodule:: pyvirchow.stats
     :members:
     :undoc-members:
     :show-inheritance:

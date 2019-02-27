@@ -20,7 +20,7 @@ from keras.optimizers import SGD, RMSprop
 from keras.optimizers import Adam, SGD
 from keras.layers import *
 
-from pywsi.io.tiling import generate_tiles, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, generate_tiles_fast
 
 def softmax_sparse_crossentropy_ignoring_last_label(y_true, y_pred):
     y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))

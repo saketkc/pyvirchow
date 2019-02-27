@@ -1,21 +1,21 @@
-pywsi.deep\_model package
+pyvirchow.deep\_model package
 =========================
 
 Submodules
 ----------
 
-pywsi.deep\_model.model module
+pyvirchow.deep\_model.model module
 ------------------------------
 
-.. automodule:: pywsi.deep_model.model
+.. automodule:: pyvirchow.deep_model.model
     :members:
     :undoc-members:
     :show-inheritance:
 
-pywsi.deep\_model.plot\_utils module
+pyvirchow.deep\_model.plot\_utils module
 ------------------------------------
 
-.. automodule:: pywsi.deep_model.plot_utils
+.. automodule:: pyvirchow.deep_model.plot_utils
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ pywsi.deep\_model.plot\_utils module
 Module contents
 ---------------
 
-.. automodule:: pywsi.deep_model
+.. automodule:: pyvirchow.deep_model
     :members:
     :undoc-members:
     :show-inheritance:

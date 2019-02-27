@@ -14,17 +14,17 @@ from sklearn.model_selection import cross_val_score
 
 from skimage.color import rgb2gray
 
-from pywsi.io import WSIReader
-from pywsi.io.operations import read_as_rgb
+from pyvirchow.io import WSIReader
+from pyvirchow.io.operations import read_as_rgb
 
-from pywsi.segmentation import poisson_deconvolve, perform_binary_cut, max_clustering
-from pywsi.segmentation import collapse_labels, collapse_small_area, laplace_of_gaussian
-from pywsi.segmentation import gmm_thresholding, label_nuclei, extract_features, summarize_region_properties
+from pyvirchow.segmentation import poisson_deconvolve, perform_binary_cut, max_clustering
+from pyvirchow.segmentation import collapse_labels, collapse_small_area, laplace_of_gaussian
+from pyvirchow.segmentation import gmm_thresholding, label_nuclei, extract_features, summarize_region_properties
 
-from pywsi.normalization import MacenkoNormalization
-from pywsi.normalization import ReinhardNormalization
-from pywsi.normalization import VahadaneNormalization
-from pywsi.normalization import XuNormalization
+from pyvirchow.normalization import MacenkoNormalization
+from pyvirchow.normalization import ReinhardNormalization
+from pyvirchow.normalization import VahadaneNormalization
+from pyvirchow.normalization import XuNormalization
 
 from sklearn.decomposition import PCA, FastICA
 from skimage.color import rgb2gray

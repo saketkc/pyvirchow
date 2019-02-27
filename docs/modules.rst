@@ -1,7 +1,7 @@
-pywsi
+pyvirchow
 =====
 
 .. toctree::
    :maxdepth: 4
 
-   pywsi
+   pyvirchow

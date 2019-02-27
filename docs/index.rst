@@ -1,4 +1,4 @@
-Welcome to pywsi's documentation!
+Welcome to pyvirchow's documentation!
 ======================================
 
 .. toctree::

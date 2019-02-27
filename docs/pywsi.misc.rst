@@ -1,13 +1,13 @@
-pywsi.misc package
+pyvirchow.misc package
 ==================
 
 Submodules
 ----------
 
-pywsi.misc.xmltojson module
+pyvirchow.misc.xmltojson module
 ---------------------------
 
-.. automodule:: pywsi.misc.xmltojson
+.. automodule:: pyvirchow.misc.xmltojson
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ pywsi.misc.xmltojson module
 Module contents
 ---------------
 
-.. automodule:: pywsi.misc
+.. automodule:: pyvirchow.misc
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,10 +1,10 @@
-pywsi.morphology package
+pyvirchow.morphology package
 ========================
 
 Module contents
 ---------------
 
-.. automodule:: pywsi.morphology
+.. automodule:: pyvirchow.morphology
     :members:
     :undoc-members:
     :show-inheritance:

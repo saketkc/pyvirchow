@@ -5,7 +5,7 @@ import numpy as np
 import joblib
 import pandas as pd
 import os
-from pywsi.io.tiling import generate_tiles, get_all_patches_from_slide, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, get_all_patches_from_slide, generate_tiles_fast
 patchsize = 32
 
 import tensorflow as tf
@@ -26,7 +26,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.utils import multi_gpu_model
 from keras.optimizers import SGD, RMSprop
 
-from pywsi.io.tiling import generate_tiles, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, generate_tiles_fast
 
 NUM_CLASSES = 2  # not_tumor, tumor
 BATCH_SIZE = 32
@@ -95,7 +95,7 @@ model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accur
 
 slide_path = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/tumor/tumor_110.tif'
 json_path = '/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/training/lesion_annotations_json/tumor_110.json'
-img_mask_dir = '/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/'
+img_mask_dir = '/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_img_and_mask/'
 
 samples = get_all_patches_from_slide(slide_path=slide_path,
                                          filter_non_tissue=True,

@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import pytest
-from pywsi.stats import welford_simulatenous_update
+from pyvirchow.stats import welford_simulatenous_update
 import numpy as np
 import numpy.testing as npt
 

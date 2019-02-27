@@ -41,26 +41,26 @@ setup(
     "Python Boilerplate contains all the boilerplate you need to create a Python package.",
     entry_points={
         'console_scripts': [
-            'pywsi=pywsi.cli:cli',
+            'pyvirchow=pyvirchow.cli:cli',
         ],
     },
     install_requires=requirements,
     license="BSD license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='pywsi',
-    name='pywsi',
+    keywords='pyvirchow',
+    name='pyvirchow',
     packages=find_packages(),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/saketkc/pywsi',
+    url='https://github.com/saketkc/pyvirchow',
     version='0.1.0',
     zip_safe=False,
     ext_modules=cythonize([
         Extension(
-            'pywsi.segmentation._max_clustering_cython',
-            ['pywsi/segmentation/_max_clustering_cython.pyx'],
+            'pyvirchow.segmentation._max_clustering_cython',
+            ['pyvirchow/segmentation/_max_clustering_cython.pyx'],
             include_dirs=[numpy.get_include()])
     ]),
 )

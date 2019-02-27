@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=pywsi
+set SPHINXPROJ=pyvirchow
 
 if "%1" == "" goto help
 

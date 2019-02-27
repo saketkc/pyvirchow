@@ -5,9 +5,9 @@ from __future__ import unicode_literals
 
 import pytest
 
-from pywsi.morphology.mask import get_common_interior_polygons
+from pyvirchow.morphology.mask import get_common_interior_polygons
 from shapely.geometry import Polygon, box
-from pywsi.io.operations import poly2mask
+from pyvirchow.io.operations import poly2mask
 import numpy as np
 import numpy.testing as npt
 

@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 import joblib
 from joblib import delayed
-from pywsi.misc.parallel import ParallelExecutor
+from pyvirchow.misc.parallel import ParallelExecutor
 folder = sys.argv[1]
 
 aprun = ParallelExecutor(n_jobs=8)

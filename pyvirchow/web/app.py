@@ -19,10 +19,10 @@ import os
 from io import BytesIO
 import base64
 
-from pywsi.io.operations import path_leaf
-from pywsi.io.operations import draw_annotation
-from pywsi.io.operations import WSIReader
-from pywsi.deep_model.plot_utils import plot_blend
+from pyvirchow.io.operations import path_leaf
+from pyvirchow.io.operations import draw_annotation
+from pyvirchow.io.operations import WSIReader
+from pyvirchow.deep_model.plot_utils import plot_blend
 from skimage.io import imread
 
 TRAIN_TUMOR_DIR = (
@@ -36,10 +36,10 @@ TEST_WSI_DIR = (
     "/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/images"
 )
 TEST_ANNOTATION_DIR = "/Z/personal-folders/interns/saket/histopath_data/CAMELYON16/testing/lesion_annotations_json"
-NOT_AVAIL_IMG = "/Z/personal-folders/interns/saket/github/pywsi/pywsi/web/assets/No_image_available.png"
+NOT_AVAIL_IMG = "/Z/personal-folders/interns/saket/github/pyvirchow/pyvirchow/web/assets/No_image_available.png"
 PREDICTED_HEATMAP_DIR = {
-    "cnn": "/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_sgd",
-    "rf": "/Z/personal-folders/interns/saket/github/pywsi/data/wsi_heatmap_rf",
+    "cnn": "/Z/personal-folders/interns/saket/github/pyvirchow/data/wsi_heatmap_sgd",
+    "rf": "/Z/personal-folders/interns/saket/github/pyvirchow/data/wsi_heatmap_rf",
 }
 PATCH_SIZE = 256
 

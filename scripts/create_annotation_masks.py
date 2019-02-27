@@ -15,8 +15,8 @@ import click
 import six
 import pandas as pd
 import glob
-from pywsi.io.operations import WSIReader
-from pywsi.morphology.patch_extractor import TissuePatch
+from pyvirchow.io.operations import WSIReader
+from pyvirchow.morphology.patch_extractor import TissuePatch
 
 from PIL import Image
 click.disable_unicode_literals_warning = True

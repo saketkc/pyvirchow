@@ -1,4 +1,4 @@
-pywsi package
+pyvirchow package
 =============
 
 Subpackages
@@ -6,21 +6,21 @@ Subpackages
 
 .. toctree::
 
-    pywsi.deep_model
-    pywsi.io
-    pywsi.misc
-    pywsi.morphology
-    pywsi.normalization
-    pywsi.segmentation
-    pywsi.stats
+    pyvirchow.deep_model
+    pyvirchow.io
+    pyvirchow.misc
+    pyvirchow.morphology
+    pyvirchow.normalization
+    pyvirchow.segmentation
+    pyvirchow.stats
 
 Submodules
 ----------
 
-pywsi.cli module
+pyvirchow.cli module
 ----------------
 
-.. automodule:: pywsi.cli
+.. automodule:: pyvirchow.cli
     :members:
     :undoc-members:
     :show-inheritance:
@@ -29,7 +29,7 @@ pywsi.cli module
 Module contents
 ---------------
 
-.. automodule:: pywsi
+.. automodule:: pyvirchow
     :members:
     :undoc-members:
     :show-inheritance:

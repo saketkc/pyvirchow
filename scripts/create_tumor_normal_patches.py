@@ -15,7 +15,7 @@ import click
 import six
 import pandas as pd
 import glob
-from pywsi.io.operations import WSIReader
+from pyvirchow.io.operations import WSIReader
 from PIL import Image
 click.disable_unicode_literals_warning = True
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])

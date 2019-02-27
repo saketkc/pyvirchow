@@ -5,7 +5,7 @@ import glob
 import sys
 from tqdm import tqdm
 import pandas as pd
-from pywsi.misc.helpers import order
+from pyvirchow.misc.helpers import order
 
 def main(source_df, final_df_path):
     """Specifically collect summary_regions.tsv"""

@@ -99,7 +99,7 @@ def train(
     model: Keras.model
            Keras model as in load_model
     train_generator: generator
-                     See generate_tiles method in pywsi.io.tiling
+                     See generate_tiles method in pyvirchow.io.tiling
     n_train: int
              Total number of training samples
     batch_size: int

@@ -15,11 +15,11 @@ import click
 from click_help_colors import HelpColorsGroup
 
 from keras.models import load_model
-from pywsi.io.tiling import generate_tiles, generate_tiles_fast
+from pyvirchow.io.tiling import generate_tiles, generate_tiles_fast
 model = load_model('./newdropout-sgd-allsamples-keras-improvement-07-0.76.hdf')
 
 predicted_thumbnails = slide_level_map(slide_path=slide_path, batch_size=32,
-                                       img_mask_dir='/Z/personal-folders/interns/saket/github/pywsi/data/patch_img_and_mask/train_df',
+                                       img_mask_dir='/Z/personal-folders/interns/saket/github/pyvirchow/data/patch_img_and_mask/train_df',
                                        json_filepath=json_filepath, model=modeli
                                        )
 
