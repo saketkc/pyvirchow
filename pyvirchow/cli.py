@@ -1184,8 +1184,14 @@ def process_df_cmd_fast(df, finaldf, segmethod, savedir, ncpu, patchsize):
 def predict_batch_from_model(patches, model):
     """Predict which pixels are tumor.
 
-    input: patch: `batch_size`x256x256x3, rgb image
-    input: model: keras model
+    Parameters
+    ----------
+    patch: batch_sizex256x256x3, rgb image
+
+    model: keras model
+
+    Returns
+    --------
     output: prediction: 256x256x1, per-pixel tumor probability
     """
     predictions = model.predict(patches)
@@ -1195,10 +1201,6 @@ def predict_batch_from_model(patches, model):
 
 def predict_from_model(patch, model):
     """Predict which pixels are tumor.
-
-    input: patch: 256x256x3, rgb image
-    input: model: keras model
-    output: prediction: 256x256x1, per-pixel tumor probability
     """
 
     prediction = model.predict(patch.reshape(1, 256, 256, 3))
