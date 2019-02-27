@@ -1,5 +1,5 @@
 pyvirchow package
-=============
+=================
 
 Subpackages
 -----------
@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     pyvirchow.deep_model
+    pyvirchow.fcn_model
     pyvirchow.io
     pyvirchow.misc
     pyvirchow.morphology
@@ -18,7 +19,7 @@ Submodules
 ----------
 
 pyvirchow.cli module
-----------------
+--------------------
 
 .. automodule:: pyvirchow.cli
     :members:

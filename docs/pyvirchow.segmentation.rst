@@ -1,11 +1,11 @@
 pyvirchow.segmentation package
-==========================
+==============================
 
 Submodules
 ----------
 
 pyvirchow.segmentation.binary\_segmentation module
-----------------------------------------------
+--------------------------------------------------
 
 .. automodule:: pyvirchow.segmentation.binary_segmentation
     :members:
@@ -13,7 +13,7 @@ pyvirchow.segmentation.binary\_segmentation module
     :show-inheritance:
 
 pyvirchow.segmentation.diff\_gaussian module
-----------------------------------------
+--------------------------------------------
 
 .. automodule:: pyvirchow.segmentation.diff_gaussian
     :members:
@@ -21,7 +21,7 @@ pyvirchow.segmentation.diff\_gaussian module
     :show-inheritance:
 
 pyvirchow.segmentation.fractal\_dimension module
---------------------------------------------
+------------------------------------------------
 
 .. automodule:: pyvirchow.segmentation.fractal_dimension
     :members:
@@ -29,7 +29,7 @@ pyvirchow.segmentation.fractal\_dimension module
     :show-inheritance:
 
 pyvirchow.segmentation.graph\_cut module
-------------------------------------
+----------------------------------------
 
 .. automodule:: pyvirchow.segmentation.graph_cut
     :members:
@@ -37,7 +37,7 @@ pyvirchow.segmentation.graph\_cut module
     :show-inheritance:
 
 pyvirchow.segmentation.helpers module
----------------------------------
+-------------------------------------
 
 .. automodule:: pyvirchow.segmentation.helpers
     :members:
@@ -45,12 +45,11 @@ pyvirchow.segmentation.helpers module
     :show-inheritance:
 
 pyvirchow.segmentation.max\_clustering module
------------------------------------------
+---------------------------------------------
 
 .. automodule:: pyvirchow.segmentation.max_clustering
     :members:
     :undoc-members:
-    :noindex:
     :show-inheritance:
 
 

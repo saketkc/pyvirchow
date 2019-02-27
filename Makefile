@@ -50,7 +50,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with flake8
-	flake8 pywsi tests
+	flake8 pyvirchow tests
 
 test: ## run tests quickly with the default Python
 	coverage run --branch -m pytest -s tests && coverage report -m
@@ -59,7 +59,7 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source pywsi -m pytest
+	coverage run --source pyvirchow -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
@@ -68,12 +68,11 @@ develop:
 	python setup.py develop --no-deps
 
 docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/pywsi.rst
+	rm -f docs/pyvirchow.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ pywsi pywsi/inceptionv4/inception.py pywsi/inceptionv4/inception_resnet_v2.py pywsi/inceptionv4/inception_utils.py pywsi/inceptionv4/inception_v1.py pywsi/inceptionv4/inception_v2.py pywsi/inceptionv4/inception_v3.py pywsi/inceptionv4/inception_v4.py pywsi/inceptionv4/inception_v4_test.py pywsi/inceptionv4/__init__.py pywsi/inceptionv4/
+	sphinx-apidoc -o docs/ pyvirchow pyvirchow/inceptionv4/inception.py pyvirchow/inceptionv4/inception_resnet_v2.py pyvirchow/inceptionv4/inception_utils.py pyvirchow/inceptionv4/inception_v1.py pyvirchow/inceptionv4/inception_v2.py pyvirchow/inceptionv4/inception_v3.py pyvirchow/inceptionv4/inception_v4.py pyvirchow/inceptionv4/inception_v4_test.py pyvirchow/inceptionv4/__init__.py pyvirchow/inceptionv4/
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
-	$(BROWSER) docs/_build/html/index.html
 
 servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .

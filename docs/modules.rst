@@ -1,5 +1,5 @@
 pyvirchow
-=====
+=========
 
 .. toctree::
    :maxdepth: 4

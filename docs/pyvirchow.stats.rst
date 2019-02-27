@@ -1,10 +1,10 @@
-pyvirchow.io package
-================
+pyvirchow.stats package
+=======================
 
 Module contents
 ---------------
 
-.. automodule:: pyvirchow.io
+.. automodule:: pyvirchow.stats
     :members:
     :undoc-members:
     :show-inheritance:
