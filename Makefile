@@ -70,7 +70,7 @@ develop:
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/pyvirchow.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ pyvirchow pyvirchow/inceptionv4/inception.py pyvirchow/inceptionv4/inception_resnet_v2.py pyvirchow/inceptionv4/inception_utils.py pyvirchow/inceptionv4/inception_v1.py pyvirchow/inceptionv4/inception_v2.py pyvirchow/inceptionv4/inception_v3.py pyvirchow/inceptionv4/inception_v4.py pyvirchow/inceptionv4/inception_v4_test.py pyvirchow/inceptionv4/__init__.py pyvirchow/inceptionv4/
+	sphinx-apidoc -o docs/ pyvirchow
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 

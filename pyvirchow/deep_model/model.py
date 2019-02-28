@@ -16,6 +16,7 @@ def get_model():
     These parameters are probably not the most optimum.
     But, they seem to work (or I like to believe so.)
 
+    ::
         _________________________________________________________________
         Layer (type)                 Output Shape              Param #
         =================================================================
