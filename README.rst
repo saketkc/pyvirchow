@@ -73,5 +73,5 @@ Ftp_
 
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
-.. _Notebook: notebooks/01.pywsi-demo.ipynb
+.. _Notebook: https://nbviewer.jupyter.org/github/saketkc/pyvirchow/blob/master/notebooks/01.pywsi-demo.ipynb
 .. _Ftp: ftp://parrot.genomics.cn/gigadb/pub/10.5524/100001_101000/100439/CAMELYON16/
