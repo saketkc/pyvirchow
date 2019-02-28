@@ -17,7 +17,7 @@ pyvirchow
 Features
 --------
 
-See the Notebook_.
+See the Demo_ or browser all notebooks_.
 
 Training InceptionV4 on Tumor/Normal patches
 --------------------------------------------
@@ -73,5 +73,6 @@ Ftp_
 
 
 .. _InceptionV4: https://arxiv.org/abs/1602.07261
-.. _Notebook: https://nbviewer.jupyter.org/github/saketkc/pyvirchow/blob/master/notebooks/01.pywsi-demo.ipynb
+.. _Demo: https://nbviewer.jupyter.org/github/saketkc/pyvirchow/blob/master/notebooks/01.pywsi-demo.ipynb
+.. _notebooks: https://nbviewer.jupyter.org/github/saketkc/pyvirchow/blob/master/notebooks/
 .. _Ftp: ftp://parrot.genomics.cn/gigadb/pub/10.5524/100001_101000/100439/CAMELYON16/
