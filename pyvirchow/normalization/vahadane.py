@@ -5,6 +5,8 @@ from .color_conversion import RGB2OD, get_nonwhite_mask
 
 
 class VahadaneNormalization(MacenkoNormalization):
+    """Implementation of Vahadane Normalization: https://pubmed.ncbi.nlm.nih.gov/27164577/
+    """
     def __init__(self, **kwargs):
         super(VahadaneNormalization, self).__init__(**kwargs)
 
