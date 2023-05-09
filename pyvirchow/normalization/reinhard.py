@@ -4,7 +4,7 @@ from skimage.color import lab2rgb
 
 
 class ReinhardNormalization(object):
-    """Reinhard Normalization """
+    """Reinhard Normalization: https://ieeexplore.ieee.org/document/946629 """
 
     def __init__(self):
         self.target_l = None
