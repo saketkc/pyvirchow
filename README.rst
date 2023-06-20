@@ -3,9 +3,6 @@ pyvirchow
 =====
 
 
-.. image:: https://travis-ci.com/saketkc/pyvirchow.svg?token=GsuWFnsdqcXUSp8vzLip&branch=master
-    :target: https://travis-ci.com/saketkc/pyvirchow
-    
 
 .. image:: ./logo/virchow_480x480.jpg
     :target: ./logo/virchow_480x480.jpg
